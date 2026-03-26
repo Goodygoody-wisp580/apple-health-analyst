@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HealthData []>
+<HealthData locale="en_US">
+  <ExportDate value="2026-03-26 08:00:00 +0000"/>
+  <Me HKCharacteristicTypeIdentifierDateOfBirth="" />
+
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-03-20 23:00:00 +0000" endDate="2026-03-21 03:30:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepREM" startDate="2026-03-21 03:30:00 +0000" endDate="2026-03-21 05:30:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepDeep" startDate="2026-03-21 05:30:00 +0000" endDate="2026-03-21 07:00:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAwake" startDate="2026-03-21 07:00:00 +0000" endDate="2026-03-21 07:20:00 +0000"/>
+
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-03-24 23:30:00 +0000" endDate="2026-03-25 01:00:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAwake" startDate="2026-03-25 01:00:00 +0000" endDate="2026-03-25 01:15:00 +0000"/>
+</HealthData>

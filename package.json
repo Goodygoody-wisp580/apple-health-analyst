@@ -1,0 +1,41 @@
+{
+  "name": "apple-health-analyst",
+  "version": "1.0.0",
+  "description": "Analyze Apple Health export ZIP files locally and generate machine + human reports.",
+  "type": "module",
+  "bin": {
+    "apple-health-analyst": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "dev": "tsx src/cli.ts",
+    "check": "npm run build && npm test"
+  },
+  "keywords": [
+    "apple-health",
+    "healthkit",
+    "cli",
+    "codex-skill"
+  ],
+  "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "SKILL.md",
+    "agents/openai.yaml",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "commander": "^14.0.3",
+    "saxes": "^6.0.0",
+    "unzipper": "^0.12.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/unzipper": "^0.10.11",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}

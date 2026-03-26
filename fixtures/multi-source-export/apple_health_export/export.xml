@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HealthData []>
+<HealthData locale="en_US">
+  <ExportDate value="2026-03-26 08:00:00 +0000"/>
+  <Me HKCharacteristicTypeIdentifierDateOfBirth="" />
+
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-01-10 23:00:00 +0000" endDate="2026-01-11 03:00:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepREM" startDate="2026-01-11 03:00:00 +0000" endDate="2026-01-11 04:30:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepDeep" startDate="2026-01-11 04:30:00 +0000" endDate="2026-01-11 06:00:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAwake" startDate="2026-01-11 06:00:00 +0000" endDate="2026-01-11 06:30:00 +0000"/>
+
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-01-11 23:15:00 +0000" endDate="2026-01-12 03:27:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepREM" startDate="2026-01-12 03:27:00 +0000" endDate="2026-01-12 05:03:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepDeep" startDate="2026-01-12 05:03:00 +0000" endDate="2026-01-12 06:30:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAwake" startDate="2026-01-12 06:30:00 +0000" endDate="2026-01-12 06:54:00 +0000"/>
+
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-01-12 23:05:00 +0000" endDate="2026-01-13 03:17:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepREM" startDate="2026-01-13 03:17:00 +0000" endDate="2026-01-13 05:05:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepDeep" startDate="2026-01-13 05:05:00 +0000" endDate="2026-01-13 06:35:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAwake" startDate="2026-01-13 06:35:00 +0000" endDate="2026-01-13 06:50:00 +0000"/>
+
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-03-20 23:10:00 +0000" endDate="2026-03-21 03:22:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepREM" startDate="2026-03-21 03:22:00 +0000" endDate="2026-03-21 05:22:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepDeep" startDate="2026-03-21 05:22:00 +0000" endDate="2026-03-21 07:10:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAwake" startDate="2026-03-21 07:10:00 +0000" endDate="2026-03-21 07:34:00 +0000"/>
+
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-03-21 23:20:00 +0000" endDate="2026-03-22 03:38:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepREM" startDate="2026-03-22 03:38:00 +0000" endDate="2026-03-22 05:44:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAsleepDeep" startDate="2026-03-22 05:44:00 +0000" endDate="2026-03-22 07:50:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Withings" value="HKCategoryValueSleepAnalysisAwake" startDate="2026-03-22 07:50:00 +0000" endDate="2026-03-22 08:08:00 +0000"/>
+
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Riley’s Watch" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-03-20 23:10:00 +0000" endDate="2026-03-21 06:00:00 +0000"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Riley’s Watch" value="HKCategoryValueSleepAnalysisAwake" startDate="2026-03-21 06:00:00 +0000" endDate="2026-03-21 06:20:00 +0000"/>
+
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="Riley’s Watch" unit="count/min" value="58" startDate="2026-01-05 08:00:00 +0000" endDate="2026-01-05 08:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="Riley's Watch" unit="count/min" value="59" startDate="2026-01-20 08:00:00 +0000" endDate="2026-01-20 08:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="Riley’s Watch" unit="count/min" value="61" startDate="2026-03-10 08:00:00 +0000" endDate="2026-03-10 08:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="Riley's Watch" unit="count/min" value="62" startDate="2026-03-22 08:00:00 +0000" endDate="2026-03-22 08:00:00 +0000"/>
+
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="Riley’s Watch" unit="ms" value="46" startDate="2026-01-07 08:00:00 +0000" endDate="2026-01-07 08:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="Riley's Watch" unit="ms" value="44" startDate="2026-01-21 08:00:00 +0000" endDate="2026-01-21 08:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="Riley’s Watch" unit="ms" value="41" startDate="2026-03-08 08:00:00 +0000" endDate="2026-03-08 08:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="Riley's Watch" unit="ms" value="40" startDate="2026-03-18 08:00:00 +0000" endDate="2026-03-18 08:00:00 +0000"/>
+
+  <Record type="HKQuantityTypeIdentifierOxygenSaturation" sourceName="Riley’s Watch" unit="%" value="96" startDate="2026-01-15 08:00:00 +0000" endDate="2026-01-15 08:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierOxygenSaturation" sourceName="Riley's Watch" unit="%" value="97" startDate="2026-03-12 08:00:00 +0000" endDate="2026-03-12 08:00:00 +0000"/>
+
+  <Record type="HKQuantityTypeIdentifierRespiratoryRate" sourceName="Riley’s Watch" unit="count/min" value="16" startDate="2026-01-15 22:00:00 +0000" endDate="2026-01-15 22:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierRespiratoryRate" sourceName="Riley's Watch" unit="count/min" value="17" startDate="2026-03-12 22:00:00 +0000" endDate="2026-03-12 22:00:00 +0000"/>
+
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="Riley’s Watch" unit="mL/min·kg" value="48" startDate="2026-01-18 08:00:00 +0000" endDate="2026-01-18 08:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="Riley's Watch" unit="mL/min·kg" value="47" startDate="2026-03-15 08:00:00 +0000" endDate="2026-03-15 08:00:00 +0000"/>
+
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="Withings Body Scale" unit="kg" value="75.0" startDate="2026-01-04 07:00:00 +0000" endDate="2026-01-04 07:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="Withings Body Scale" unit="kg" value="74.8" startDate="2026-01-20 07:00:00 +0000" endDate="2026-01-20 07:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="Withings Body Scale" unit="kg" value="73.5" startDate="2026-03-10 07:00:00 +0000" endDate="2026-03-10 07:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="Withings Body Scale" unit="kg" value="73.2" startDate="2026-03-22 07:00:00 +0000" endDate="2026-03-22 07:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="Phone Scale" unit="kg" value="73.1" startDate="2026-03-23 07:00:00 +0000" endDate="2026-03-23 07:00:00 +0000"/>
+
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="Withings Body Scale" unit="%" value="18" startDate="2026-01-04 07:00:00 +0000" endDate="2026-01-04 07:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="Withings Body Scale" unit="%" value="17.8" startDate="2026-01-20 07:00:00 +0000" endDate="2026-01-20 07:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="Withings Body Scale" unit="%" value="16.5" startDate="2026-03-10 07:00:00 +0000" endDate="2026-03-10 07:00:00 +0000"/>
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="Withings Body Scale" unit="%" value="16.2" startDate="2026-03-22 07:00:00 +0000" endDate="2026-03-22 07:00:00 +0000"/>
+
+  <Workout workoutActivityType="HKWorkoutActivityTypeBoxing" duration="45" sourceName="Riley’s Watch" startDate="2026-01-18 18:00:00 +0000" endDate="2026-01-18 18:45:00 +0000"/>
+  <Workout workoutActivityType="HKWorkoutActivityTypeRunning" duration="30" sourceName="Riley's Watch" startDate="2026-01-22 07:00:00 +0000" endDate="2026-01-22 07:30:00 +0000"/>
+  <Workout workoutActivityType="HKWorkoutActivityTypeBoxing" duration="50" sourceName="Riley’s Watch" startDate="2026-03-11 18:00:00 +0000" endDate="2026-03-11 18:50:00 +0000"/>
+  <Workout workoutActivityType="HKWorkoutActivityTypeTraditionalStrengthTraining" duration="42" sourceName="Riley's Watch" startDate="2026-03-18 18:00:00 +0000" endDate="2026-03-18 18:42:00 +0000"/>
+
+  <ActivitySummary dateComponents="2026-01-18" activeEnergyBurned="280" appleExerciseTime="25" appleStandHours="8"/>
+  <ActivitySummary dateComponents="2026-01-22" activeEnergyBurned="300" appleExerciseTime="26" appleStandHours="8"/>
+  <ActivitySummary dateComponents="2026-03-11" activeEnergyBurned="340" appleExerciseTime="35" appleStandHours="10"/>
+  <ActivitySummary dateComponents="2026-03-18" activeEnergyBurned="360" appleExerciseTime="40" appleStandHours="10"/>
+</HealthData>

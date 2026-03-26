@@ -1,0 +1,4 @@
+interface:
+  display_name: "Apple Health Analyst"
+  short_description: "Analyze Apple Health exports and explain local reports"
+  default_prompt: "Use $apple-health-analyst to analyze an Apple Health export ZIP and summarize sleep, recovery, activity, and body composition from the generated local reports."

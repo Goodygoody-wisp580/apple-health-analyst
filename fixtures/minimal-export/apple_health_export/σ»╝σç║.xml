@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HealthData []>
+<HealthData locale="en_US">
+  <ExportDate value="2026-03-01 10:00:00 +0000"/>
+  <Me HKCharacteristicTypeIdentifierDateOfBirth="" />
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="Test Scale" unit="kg" value="70.5" startDate="2026-02-28 08:00:00 +0000" endDate="2026-02-28 08:00:00 +0000"/>
+</HealthData>
