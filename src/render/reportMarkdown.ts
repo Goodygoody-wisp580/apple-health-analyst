@@ -97,7 +97,7 @@ export function renderReportMarkdown(insights: InsightBundle, narrative: Narrati
     `- 身体成分：体重 ${fmt(insights.analysis.bodyComposition.metrics.bodyMass?.recent30d.average ?? null, ` ${insights.analysis.bodyComposition.metrics.bodyMass?.unit ?? ""}`)}，体脂率 ${fmt(insights.analysis.bodyComposition.metrics.bodyFatPercentage?.recent30d.average ?? null, ` ${insights.analysis.bodyComposition.metrics.bodyFatPercentage?.unit ?? ""}`)}`,
     ...(insights.analysis.menstrualCycle
       ? [
-          `- 月经周期：平均 ${fmt(insights.analysis.menstrualCycle.avgCycleLengthDays, " 天")}，经期 ${fmt(insights.analysis.menstrualCycle.avgPeriodDurationDays, " 天")}，规律性${insights.analysis.menstrualCycle.regularity === "regular" ? "良好" : insights.analysis.menstrualCycle.regularity === "somewhat_irregular" ? "中等" : "较差"}（标准差 ${fmt(insights.analysis.menstrualCycle.cycleLengthStdDays, " 天")}，共 ${insights.analysis.menstrualCycle.totalPeriods} 个周期）`,
+          `- 生理周期：平均 ${fmt(insights.analysis.menstrualCycle.avgCycleLengthDays, " 天")}，经期 ${fmt(insights.analysis.menstrualCycle.avgPeriodDurationDays, " 天")}，规律性${insights.analysis.menstrualCycle.regularity === "regular" ? "良好" : insights.analysis.menstrualCycle.regularity === "somewhat_irregular" ? "中等" : "较差"}（标准差 ${fmt(insights.analysis.menstrualCycle.cycleLengthStdDays, " 天")}，共 ${insights.analysis.menstrualCycle.totalPeriods} 个周期）`,
         ]
       : []),
     "",

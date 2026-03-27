@@ -993,7 +993,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         <a href="#recovery">恢复</a>
         <a href="#activity">活动</a>
         <a href="#body">身体</a>
-        ${menstrualChart ? '<a href="#menstrual">月经</a>' : ""}
+        ${menstrualChart ? '<a href="#menstrual">生理期</a>' : ""}
         <a href="#appendix">附录</a>
       </div>
     </nav>

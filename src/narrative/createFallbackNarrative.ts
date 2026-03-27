@@ -98,7 +98,7 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
         ...[sleepLongitudinalLine, activityLongitudinalLine].filter(Boolean),
         ...(mc
           ? [
-              `月经周期追踪 ${mc.totalPeriods} 个周期，平均周期 ${fmt(mc.avgCycleLengthDays, " 天")}，经期平均 ${fmt(mc.avgPeriodDurationDays, " 天")}，规律性${mc.regularity === "regular" ? "良好" : mc.regularity === "somewhat_irregular" ? "中等" : "较差"}。`,
+              `生理周期追踪 ${mc.totalPeriods} 个周期，平均周期 ${fmt(mc.avgCycleLengthDays, " 天")}，经期平均 ${fmt(mc.avgPeriodDurationDays, " 天")}，规律性${mc.regularity === "regular" ? "良好" : mc.regularity === "somewhat_irregular" ? "中等" : "较差"}。`,
             ]
           : []),
       ],
@@ -131,7 +131,7 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
           : "",
         bodyLongitudinalLine,
         ...(mc && mc.regularity === "irregular"
-          ? [`月经周期不规律（标准差 ${mc.cycleLengthStdDays} 天），建议关注是否受压力、作息或饮食影响。`]
+          ? [`生理周期不规律（标准差 ${mc.cycleLengthStdDays} 天），建议关注是否受压力、作息或饮食影响。`]
           : []),
         ...(mc && mc.intermenstrualBleedingCount > 5
           ? [`经间期出血记录较多（${mc.intermenstrualBleedingCount} 次），建议妇科检查排查原因。`]
@@ -177,10 +177,10 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
           : "",
         `"基于我的年龄和活动量，每周运动多少分钟比较合适？"`,
         ...(mc && mc.regularity === "irregular"
-          ? [`"我的月经周期标准差偏大（${mc.cycleLengthStdDays} 天），需要做哪些检查？"`]
+          ? [`"我的生理周期标准差偏大（${mc.cycleLengthStdDays} 天），需要做哪些检查？"`]
           : []),
         ...(mc && mc.avgCycleLengthDays !== null && (mc.avgCycleLengthDays < 21 || mc.avgCycleLengthDays > 38)
-          ? [`"我的月经周期平均 ${mc.avgCycleLengthDays} 天，偏离正常范围，这可能和什么有关？"`]
+          ? [`"我的生理周期平均 ${mc.avgCycleLengthDays} 天，偏离正常范围，这可能和什么有关？"`]
           : []),
         `"我需要做哪些定期体检来补充可穿戴设备无法覆盖的健康维度？"`,
       ].filter(Boolean),
@@ -203,7 +203,7 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
         if (chart.id === "sleep") return /睡眠/.test(hint);
         if (chart.id === "recovery") return /静息心率|HRV|恢复/.test(hint);
         if (chart.id === "activity") return /活动量|锻炼|训练/.test(hint);
-        if (chart.id === "menstrualCycle") return /月经|经期|周期/.test(hint);
+        if (chart.id === "menstrualCycle") return /生理|经期|周期/.test(hint);
         return /体重|体脂|摄入/.test(hint);
       });
       return {

@@ -414,9 +414,9 @@ function buildInterpretationHints(
   if (summary.menstrualCycle && summary.menstrualCycle.totalPeriods >= 3) {
     const mc = summary.menstrualCycle;
     if (mc.regularity === "regular") {
-      hints.push(`月经周期规律（平均 ${mc.avgCycleLengthDays} 天，标准差 ${mc.cycleLengthStdDays} 天），这对整体激素平衡是积极信号。`);
+      hints.push(`生理周期规律（平均 ${mc.avgCycleLengthDays} 天，标准差 ${mc.cycleLengthStdDays} 天），这对整体激素平衡是积极信号。`);
     } else if (mc.regularity === "irregular") {
-      hints.push(`月经周期不规律（标准差 ${mc.cycleLengthStdDays} 天），建议结合睡眠和压力数据综合判断，必要时咨询妇科医生。`);
+      hints.push(`生理周期不规律（标准差 ${mc.cycleLengthStdDays} 天），建议结合睡眠和压力数据综合判断，必要时咨询妇科医生。`);
     }
   }
 
@@ -683,7 +683,7 @@ function buildMenstrualCycleCharts(
 
   return {
     id: "menstrualCycle",
-    title: "月经周期趋势",
+    title: "生理周期趋势",
     subtitle:
       cycleLengths.length > 0
         ? `共追踪 ${periods.length} 个周期，平均周期 ${roundNumber(cycleLengths.reduce((s, v) => s + v, 0) / cycleLengths.length)} 天。`
@@ -783,7 +783,7 @@ export function buildSourceConfidence(summary: AnalysisSummary): SourceConfidenc
               : summary.menstrualCycle.totalPeriods >= 3
                 ? "medium"
                 : "low") as SourceConfidence["level"],
-            summary: `月经周期数据覆盖 ${summary.menstrualCycle.totalPeriods} 个周期，${summary.menstrualCycle.coverageDays} 天记录。`,
+            summary: `生理周期数据覆盖 ${summary.menstrualCycle.totalPeriods} 个周期，${summary.menstrualCycle.coverageDays} 天记录。`,
           },
         ]
       : []),
@@ -848,7 +848,7 @@ export function buildDataGaps(summary: AnalysisSummary): DataGap[] {
       id: "menstrual_sparse",
       module: "menstrualCycle",
       severity: "warning",
-      summary: "月经周期记录较少，周期规律性评估可信度有限。",
+      summary: "生理周期记录较少，周期规律性评估可信度有限。",
     });
   }
 
@@ -981,8 +981,8 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
         id: "menstrual_irregular",
         module: "menstrualCycle",
         severity: "medium",
-        title: "月经周期不规律",
-        summary: "近期月经周期波动较大，建议关注生活节奏、压力和营养状况。",
+        title: "生理周期不规律",
+        summary: "近期生理周期波动较大，建议关注生活节奏、压力和营养状况。",
         evidence: [`周期标准差 ${mc.cycleLengthStdDays} 天`, `平均周期 ${mc.avgCycleLengthDays} 天`],
         recommendationFocus: "保持规律作息和均衡饮食，如持续不规律建议妇科检查。",
         seekCare: mc.cycleLengthStdDays > 10,
@@ -993,7 +993,7 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
         id: "menstrual_cycle_length_abnormal",
         module: "menstrualCycle",
         severity: "medium",
-        title: "月经周期偏离正常范围",
+        title: "生理周期偏离正常范围",
         summary: `平均周期 ${mc.avgCycleLengthDays} 天，正常范围为 21-38 天。`,
         evidence: [`平均周期 ${mc.avgCycleLengthDays} 天`],
         recommendationFocus: "建议咨询妇科医生，排查激素水平或其他潜在原因。",
@@ -1110,7 +1110,7 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
         id: "menstrual_regular",
         module: "menstrualCycle",
         direction: "stable",
-        title: "月经周期规律",
+        title: "生理周期规律",
         summary: `平均周期 ${mc.avgCycleLengthDays} 天，标准差 ${mc.cycleLengthStdDays} 天，周期稳定。`,
         evidence: [`共 ${mc.totalPeriods} 个周期`, `标准差 ${mc.cycleLengthStdDays} 天`],
       });
@@ -1126,7 +1126,7 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
           id: "menstrual_cycle_shift",
           module: "menstrualCycle",
           direction: "mixed",
-          title: "月经周期长度变化",
+          title: "生理周期长度变化",
           summary: `近 90 天平均周期 ${mc.recent90d.avgCycleLengthDays} 天，历史平均 ${mc.historical.avgCycleLengthDays} 天，变化 ${delta > 0 ? "+" : ""}${roundNumber(delta)} 天。`,
           evidence: [
             `近 90 天均值 ${mc.recent90d.avgCycleLengthDays} 天`,

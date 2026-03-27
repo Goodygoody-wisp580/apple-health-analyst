@@ -227,7 +227,7 @@ export function analyzeMenstrualCycle(
   // Notes
   const notes: string[] = [];
   if (periods.length < 3) {
-    notes.push("月经周期记录较少，周期规律性评估可信度有限。");
+    notes.push("生理周期记录较少，周期规律性评估可信度有限。");
   }
   if (contraceptiveUse) {
     notes.push(`检测到避孕药使用记录（${contraceptiveUse}），可能影响周期规律性。`);
@@ -241,7 +241,7 @@ export function analyzeMenstrualCycle(
     warnings.push({
       code: "menstrual_irregular",
       module: "menstrualCycle",
-      message: `月经周期不规律，周期标准差 ${cycleLengthStd} 天。`,
+      message: `生理周期不规律，周期标准差 ${cycleLengthStd} 天。`,
     });
   }
   if (avgCycleLength !== null && (avgCycleLength < 21 || avgCycleLength > 38)) {
