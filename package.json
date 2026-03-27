@@ -1,7 +1,7 @@
 {
   "name": "apple-health-analyst",
   "version": "1.0.0",
-  "description": "Analyze Apple Health export ZIP files locally and generate machine + human reports.",
+  "description": "在本地分析 Apple Health 导出 ZIP，并生成机器可读与人工可读报告。",
   "type": "module",
   "bin": {
     "apple-health-analyst": "./dist/cli.js"

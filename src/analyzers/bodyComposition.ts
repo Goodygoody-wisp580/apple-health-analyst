@@ -101,7 +101,7 @@ export function analyzeBodyComposition(
     metrics,
     notes:
       Object.keys(metrics).length > 0
-        ? ["Body composition trends are reported from the most consistent recent scale source."]
-        : ["No body mass or body fat samples were available in the selected time window."],
+        ? ["身体成分趋势基于近期最稳定的体重秤数据源汇报。"]
+        : ["所选时间窗口内没有可用的体重或体脂样本。"],
   };
 }

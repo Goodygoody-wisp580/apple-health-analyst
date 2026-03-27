@@ -239,7 +239,7 @@ export async function parseHealthExport(
     },
     Workout: (attributes) => {
       parsed.workoutCount += 1;
-      const sourceName = attributes.sourceName ?? "Unknown source";
+      const sourceName = attributes.sourceName ?? "未知来源";
       const startDate = attributes.startDate ? new Date(attributes.startDate) : null;
       const endDate = attributes.endDate ? new Date(attributes.endDate) : startDate;
 

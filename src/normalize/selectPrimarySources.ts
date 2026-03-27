@@ -162,6 +162,6 @@ export function selectPrimarySources(parsed: ParsedHealthExport, window: TimeWin
         .map((metric) => [metric, firstOrNull(rankSources(parsed.records[metric], window))])
         .filter((entry) => Boolean(entry[1])),
     ) as PrimarySources["bodyComposition"],
-    activity: "ActivitySummary + Workout",
+    activity: "活动摘要 + 训练记录",
   };
 }

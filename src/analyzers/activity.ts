@@ -84,7 +84,7 @@ export function analyzeActivity(
 
   return {
     status: filteredSummaries.length > 0 || filteredWorkouts.length > 0 ? "ok" : "insufficient_data",
-    source: "ActivitySummary + Workout",
+    source: "活动摘要 + 训练记录",
     coverageDays: filteredSummaries.length,
     recent30d,
     baseline90d,
@@ -99,7 +99,7 @@ export function analyzeActivity(
     },
     notes:
       filteredSummaries.length > 0 || filteredWorkouts.length > 0
-        ? ["Daily activity trends come from ActivitySummary; workout types are counted separately."]
-        : ["No activity summaries or workouts were available in the selected time window."],
+        ? ["日常活动趋势来自活动摘要，训练类型单独统计。"]
+        : ["所选时间窗口内没有可用的活动摘要或训练记录。"],
   };
 }

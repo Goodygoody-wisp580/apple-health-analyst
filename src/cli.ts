@@ -44,7 +44,7 @@ function parseFormats(input: string): OutputFormat[] {
   const supported: OutputFormat[] = ["markdown", "json", "html"];
   for (const value of values) {
     if (!supported.includes(value as OutputFormat)) {
-      throw new Error(`Unsupported format: ${value}. Use markdown,json,html.`);
+      throw new Error(`不支持的输出格式：${value}。请使用 markdown,json,html。`);
     }
   }
 
@@ -168,15 +168,15 @@ async function analyze(zipPath: string, options: { from?: string; to?: string; f
 
 export async function runCli(argv: string[]) {
   const program = new Command();
-  program.name(PACKAGE_NAME).description("Analyze Apple Health export ZIP files.");
+  program.name(PACKAGE_NAME).description("分析 Apple Health 导出 ZIP 文件。");
 
   program
     .command("analyze")
-    .argument("<exportZip>", "Path to the Apple Health export ZIP")
-    .option("--from <date>", "Limit analysis to data on or after YYYY-MM-DD")
-    .option("--to <date>", "Limit analysis to data on or before YYYY-MM-DD")
-    .option("--format <formats>", "Comma-separated output formats", "markdown,json,html")
-    .option("--out <dir>", "Output directory", "./output")
+    .argument("<exportZip>", "Apple Health 导出 ZIP 文件路径")
+    .option("--from <date>", "只分析 YYYY-MM-DD 及之后的数据")
+    .option("--to <date>", "只分析 YYYY-MM-DD 及之前的数据")
+    .option("--format <formats>", "逗号分隔的输出格式", "markdown,json,html")
+    .option("--out <dir>", "输出目录", "./output")
     .action(async (exportZip, options) => {
       await analyze(exportZip, options);
     });

@@ -181,7 +181,7 @@ export function analyzeSleep(
           deepPct: null,
         },
         partialNights: [],
-        notes: ["No usable sleep records were found for the selected time window."],
+        notes: ["所选时间窗口内没有可用的睡眠记录。"],
       },
       warnings: [],
     };
@@ -240,16 +240,16 @@ export function analyzeSleep(
       totalSleepHours: round(night.totalSleepHours) ?? 0,
     })),
     notes: staged
-      ? ["Stage percentages are only calculated from the selected primary sleep source."]
-      : ["The selected sleep source does not provide stage-level data."],
+      ? ["睡眠阶段占比仅基于选定的主睡眠数据源计算。"]
+      : ["选定的睡眠数据源不提供分阶段睡眠数据。"],
   };
 
   const warnings: WarningMessage[] = partialNights.map((night) => ({
     code: "partial_sleep_night",
     module: "sleep",
-    message: `Excluded ${night.nightKey} from sleep trends because it only contains ${round(
+    message: `已将 ${night.nightKey} 排除在睡眠趋势之外，因为该夜晚仅包含 ${round(
       night.totalSleepHours,
-    )} hours of sleep.`,
+    )} 小时睡眠。`,
   }));
 
   return { result, warnings };

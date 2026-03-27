@@ -106,7 +106,7 @@ export function analyzeRecovery(
     metrics,
     notes:
       Object.keys(metrics).length > 0
-        ? ["Recovery metrics are reported per primary source and are not merged across devices."]
-        : ["No recovery metrics were available in the selected time window."],
+        ? ["恢复指标按各自的主数据源汇报，不会跨设备合并。"]
+        : ["所选时间窗口内没有可用的恢复指标。"],
   };
 }

@@ -62,6 +62,6 @@ describe("cli", () => {
         "--out",
         outDir,
       ]),
-    ).rejects.toThrow("Unsupported format");
+    ).rejects.toThrow("不支持的输出格式");
   });
 });

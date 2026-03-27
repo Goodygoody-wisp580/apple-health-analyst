@@ -46,5 +46,5 @@ export async function findMainXml(entries: ZipEntryLike[]): Promise<ZipEntryLike
     }
   }
 
-  throw new Error("Could not locate the Apple Health export XML inside the ZIP archive.");
+  throw new Error("无法在 ZIP 压缩包中定位 Apple Health 导出 XML。");
 }
