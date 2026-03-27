@@ -186,6 +186,17 @@ export interface SleepWindowSummary {
   };
 }
 
+export interface SleepHealthInsights {
+  sleepTrend: "improving" | "declining" | "stable" | null;
+  sleepTrendDelta: number | null;
+  deepSleepAssessment: string;
+  remSleepAssessment: string;
+  normalRangeAssessment: string;
+  interpretation: string;
+  actionableAdvice: string[];
+  doctorTalkingPoints: string[];
+}
+
 export interface SleepAnalysis {
   status: ModuleStatus;
   source: string | null;
@@ -202,13 +213,25 @@ export interface SleepAnalysis {
     deepPct: number | null;
   };
   partialNights: Array<{ date: string; totalSleepHours: number }>;
+  healthInsights: SleepHealthInsights;
   notes: string[];
+}
+
+export interface RecoveryHealthInsights {
+  rhrTrend: "improving" | "worsening" | "stable" | null;
+  hrvTrend: "improving" | "worsening" | "stable" | null;
+  spo2Assessment: string;
+  normalRangeAssessment: string;
+  interpretation: string;
+  actionableAdvice: string[];
+  doctorTalkingPoints: string[];
 }
 
 export interface RecoveryAnalysis {
   status: ModuleStatus;
   sources: Partial<Record<RecoveryMetricKey, string>>;
   metrics: Partial<Record<RecoveryMetricKey, NumericComparison>>;
+  healthInsights: RecoveryHealthInsights;
   notes: string[];
 }
 
@@ -219,6 +242,17 @@ export interface ActivityWindowSummary {
   standHours: number | null;
   workouts: number;
   topWorkoutTypes: Array<{ type: string; count: number }>;
+}
+
+export interface ActivityHealthInsights {
+  activityTrend: "improving" | "declining" | "stable" | null;
+  activityTrendDelta: number | null;
+  whoGuidelineAssessment: string;
+  workoutVariety: string;
+  normalRangeAssessment: string;
+  interpretation: string;
+  actionableAdvice: string[];
+  doctorTalkingPoints: string[];
 }
 
 export interface ActivityAnalysis {
@@ -233,6 +267,7 @@ export interface ActivityAnalysis {
     standHours: number | null;
     workouts: number | null;
   };
+  healthInsights: ActivityHealthInsights;
   notes: string[];
 }
 

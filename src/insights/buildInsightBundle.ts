@@ -29,7 +29,8 @@ import {
   type TimeWindow,
   type WorkoutSample,
 } from "../types.js";
-import { buildNightSummaries, roundNumber, summarizeSleepWindow } from "../analyzers/sleepShared.js";
+import { round, average, subtract } from "../analyzers/mathUtils.js";
+import { buildNightSummaries, summarizeSleepWindow } from "../analyzers/sleepShared.js";
 
 import { compressTimeSeries } from "./chartUtils.js";
 
@@ -55,20 +56,6 @@ function unique<T>(values: T[]): T[] {
   return [...new Set(values)];
 }
 
-function average(values: number[]): number | null {
-  if (values.length === 0) {
-    return null;
-  }
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function subtract(left: number | null, right: number | null): number | null {
-  if (left === null || right === null) {
-    return null;
-  }
-  return roundNumber(left - right);
-}
-
 function daysBetweenInclusive(start: Date | null, end: Date | null): number {
   if (!start || !end) {
     return 0;
@@ -82,7 +69,7 @@ function historicalWindow(
 ): HistoricalNumericWindow {
   return {
     sampleCount: values.length,
-    average: roundNumber(average(values)),
+    average: round(average(values)),
   };
 }
 
@@ -94,21 +81,21 @@ function summarizeActivityWindow(activitySummaries: ActivitySummarySample[], wor
 
   return {
     dayCount: activitySummaries.length,
-    activeEnergyBurnedKcal: roundNumber(
+    activeEnergyBurnedKcal: round(
       average(
         activitySummaries
           .map((sample) => sample.activeEnergyBurned)
           .filter((value): value is number => value !== null),
       ),
     ),
-    exerciseMinutes: roundNumber(
+    exerciseMinutes: round(
       average(
         activitySummaries
           .map((sample) => sample.appleExerciseTime)
           .filter((value): value is number => value !== null),
       ),
     ),
-    standHours: roundNumber(
+    standHours: round(
       average(
         activitySummaries
           .map((sample) => sample.appleStandHours)
@@ -176,7 +163,7 @@ function buildNumericHistoricalContext(
     latest: latestRecord
       ? {
           timestamp: latestRecord.startDate.toISOString(),
-          value: roundNumber(latestRecord.value) ?? latestRecord.value,
+          value: round(latestRecord.value) ?? latestRecord.value,
         }
       : null,
     recent30d: recentWindow,
@@ -686,7 +673,7 @@ function buildMenstrualCycleCharts(
     title: "生理周期趋势",
     subtitle:
       cycleLengths.length > 0
-        ? `共追踪 ${periods.length} 个周期，平均周期 ${roundNumber(cycleLengths.reduce((s, v) => s + v, 0) / cycleLengths.length)} 天。`
+        ? `共追踪 ${periods.length} 个周期，平均周期 ${round(cycleLengths.reduce((s, v) => s + v, 0) / cycleLengths.length)} 天。`
         : `共追踪 ${periods.length} 个经期。`,
     series: [
       {
@@ -1127,7 +1114,7 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
           module: "menstrualCycle",
           direction: "mixed",
           title: "生理周期长度变化",
-          summary: `近 90 天平均周期 ${mc.recent90d.avgCycleLengthDays} 天，历史平均 ${mc.historical.avgCycleLengthDays} 天，变化 ${delta > 0 ? "+" : ""}${roundNumber(delta)} 天。`,
+          summary: `近 90 天平均周期 ${mc.recent90d.avgCycleLengthDays} 天，历史平均 ${mc.historical.avgCycleLengthDays} 天，变化 ${delta > 0 ? "+" : ""}${round(delta)} 天。`,
           evidence: [
             `近 90 天均值 ${mc.recent90d.avgCycleLengthDays} 天`,
             `历史均值 ${mc.historical.avgCycleLengthDays} 天`,

@@ -95,6 +95,12 @@ export function renderReportMarkdown(insights: InsightBundle, narrative: Narrati
     `- 恢复：静息心率 ${fmt(insights.analysis.recovery.metrics.restingHeartRate?.recent30d.average ?? null, ` ${insights.analysis.recovery.metrics.restingHeartRate?.unit ?? ""}`)}，HRV ${fmt(insights.analysis.recovery.metrics.hrv?.recent30d.average ?? null, ` ${insights.analysis.recovery.metrics.hrv?.unit ?? ""}`)}`,
     `- 活动：近 30 天锻炼 ${fmt(insights.analysis.activity.recent30d.exerciseMinutes, " 分钟")}，训练 ${insights.analysis.activity.recent30d.workouts} 次`,
     `- 身体成分：体重 ${fmt(insights.analysis.bodyComposition.metrics.bodyMass?.recent30d.average ?? null, ` ${insights.analysis.bodyComposition.metrics.bodyMass?.unit ?? ""}`)}，体脂率 ${fmt(insights.analysis.bodyComposition.metrics.bodyFatPercentage?.recent30d.average ?? null, ` ${insights.analysis.bodyComposition.metrics.bodyFatPercentage?.unit ?? ""}`)}`,
+    `- 睡眠解读：${insights.analysis.sleep.healthInsights.interpretation}`,
+    `- 睡眠正常范围：${insights.analysis.sleep.healthInsights.normalRangeAssessment}`,
+    `- 恢复解读：${insights.analysis.recovery.healthInsights.interpretation}`,
+    `- 恢复正常范围：${insights.analysis.recovery.healthInsights.normalRangeAssessment}`,
+    `- 活动解读：${insights.analysis.activity.healthInsights.interpretation}`,
+    `- 活动正常范围：${insights.analysis.activity.healthInsights.normalRangeAssessment}`,
     ...(insights.analysis.menstrualCycle
       ? [
           `- 生理周期：平均 ${fmt(insights.analysis.menstrualCycle.avgCycleLengthDays, " 天")}，经期 ${fmt(insights.analysis.menstrualCycle.avgPeriodDurationDays, " 天")}，共 ${insights.analysis.menstrualCycle.totalPeriods} 个周期`,

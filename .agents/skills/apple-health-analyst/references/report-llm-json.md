@@ -19,7 +19,7 @@
   "data_limitations": ["string"],
   "chart_callouts": [
     {
-      "chart_id": "sleep | recovery | activity | bodyComposition",
+      "chart_id": "sleep | recovery | activity | bodyComposition | menstrualCycle",
       "title": "string",
       "summary": "string"
     }

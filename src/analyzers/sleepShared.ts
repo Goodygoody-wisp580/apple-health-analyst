@@ -1,4 +1,7 @@
 import type { SleepSample } from "../types.js";
+import { round, average } from "./mathUtils.js";
+
+export { round as roundNumber, average as averageNumbers };
 
 export type NightSummary = {
   nightKey: string;
@@ -12,20 +15,6 @@ export type NightSummary = {
   startDate: Date;
   endDate: Date;
 };
-
-export function roundNumber(value: number | null): number | null {
-  if (value === null || Number.isNaN(value)) {
-    return null;
-  }
-  return Math.round(value * 100) / 100;
-}
-
-export function averageNumbers(values: number[]): number | null {
-  if (values.length === 0) {
-    return null;
-  }
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
 
 function medianTime(values: Date[]): string | null {
   if (values.length === 0) {
@@ -121,34 +110,34 @@ export function buildNightSummaries(records: SleepSample[], effectiveEnd: Date):
 export function summarizeSleepWindow(nights: NightSummary[]) {
   return {
     nights: nights.length,
-    avgSleepHours: roundNumber(averageNumbers(nights.map((night) => night.totalSleepHours))),
-    avgAwakeHours: roundNumber(averageNumbers(nights.map((night) => night.awakeHours))),
+    avgSleepHours: round(average(nights.map((night) => night.totalSleepHours))),
+    avgAwakeHours: round(average(nights.map((night) => night.awakeHours))),
     medianBedtime: medianTime(nights.map((night) => night.startDate)),
     medianWakeTime: medianTime(nights.map((night) => night.endDate)),
     stagePct: {
-      core: roundNumber(
-        averageNumbers(
+      core: round(
+        average(
           nights
             .filter((night) => night.totalSleepHours > 0)
             .map((night) => (night.coreHours / night.totalSleepHours) * 100),
         ),
       ),
-      rem: roundNumber(
-        averageNumbers(
+      rem: round(
+        average(
           nights
             .filter((night) => night.totalSleepHours > 0)
             .map((night) => (night.remHours / night.totalSleepHours) * 100),
         ),
       ),
-      deep: roundNumber(
-        averageNumbers(
+      deep: round(
+        average(
           nights
             .filter((night) => night.totalSleepHours > 0)
             .map((night) => (night.deepHours / night.totalSleepHours) * 100),
         ),
       ),
-      unspecified: roundNumber(
-        averageNumbers(
+      unspecified: round(
+        average(
           nights
             .filter((night) => night.totalSleepHours > 0)
             .map((night) => (night.unspecifiedHours / night.totalSleepHours) * 100),

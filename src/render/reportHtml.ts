@@ -1085,7 +1085,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         </div>
         <div class="module__body">
           <div class="module__chart">
-            <p class="section-intro">${escapeHtml(sleepCallout)}</p>
+            <p class="section-intro">${escapeHtml(insights.analysis.sleep.healthInsights.interpretation || sleepCallout)}</p>
             <div class="chart-wrap">
               ${sleepSvg}
               ${renderLegend([
@@ -1094,6 +1094,11 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
                 { label: "REM 占比", color: "#A78BFA" },
               ])}
             </div>
+            ${insights.analysis.sleep.healthInsights.normalRangeAssessment ? `
+            <div class="note-block" style="margin:14px 0;background:var(--sleep-bg);border-radius:var(--radius-sm);padding:12px 16px">
+              <h4 style="color:var(--sleep);margin-bottom:4px">正常范围评估</h4>
+              <p style="font-size:13px;line-height:1.6">${escapeHtml(insights.analysis.sleep.healthInsights.normalRangeAssessment)}</p>
+            </div>` : ""}
           </div>
           <aside class="module__aside">
             <div class="metric-rail">
@@ -1113,6 +1118,16 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
                 <div class="metric-rail__note">近期</div>
               </div>
             </div>
+            ${insights.analysis.sleep.healthInsights.actionableAdvice.length > 0 ? `
+            <div class="note-block">
+              <h4>健康建议</h4>
+              <ul>${insights.analysis.sleep.healthInsights.actionableAdvice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+            </div>` : ""}
+            ${insights.analysis.sleep.healthInsights.doctorTalkingPoints.length > 0 ? `
+            <div class="note-block">
+              <h4>就诊参考问题</h4>
+              <ul>${insights.analysis.sleep.healthInsights.doctorTalkingPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
+            </div>` : ""}
             ${sleepConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(sleepConf.summary)}</p></div>` : ""}
           </aside>
         </div>
@@ -1127,7 +1142,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         </div>
         <div class="module__body">
           <div class="module__chart">
-            <p class="section-intro">${escapeHtml(recoveryCallout)}</p>
+            <p class="section-intro">${escapeHtml(insights.analysis.recovery.healthInsights.interpretation || recoveryCallout)}</p>
             <table class="ledger">
               <thead>
                 <tr>
@@ -1147,15 +1162,24 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
                 ${renderRecoveryRow("最大摄氧量", insights.analysis.recovery.metrics.vo2Max, "#6366F1")}
               </tbody>
             </table>
+            ${insights.analysis.recovery.healthInsights.normalRangeAssessment ? `
+            <div class="note-block" style="margin:14px 0 0 0;background:var(--recovery-bg);border-radius:var(--radius-sm);padding:12px 16px">
+              <h4 style="color:var(--recovery);margin-bottom:4px">正常范围评估</h4>
+              <p style="font-size:13px;line-height:1.6">${escapeHtml(insights.analysis.recovery.healthInsights.normalRangeAssessment)}</p>
+            </div>` : ""}
           </div>
           <aside class="module__aside">
-            ${recoveryConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(recoveryConf.summary)}</p></div>` : ""}
+            ${insights.analysis.recovery.healthInsights.actionableAdvice.length > 0 ? `
             <div class="note-block">
-              <h4>重点留意</h4>
-              <ul>
-                ${(narrative.watchouts.length > 0 ? narrative.watchouts.slice(0, 3) : ["当前未提供额外提醒。"]).map((w) => `<li>${escapeHtml(w)}</li>`).join("")}
-              </ul>
-            </div>
+              <h4>健康建议</h4>
+              <ul>${insights.analysis.recovery.healthInsights.actionableAdvice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+            </div>` : ""}
+            ${insights.analysis.recovery.healthInsights.doctorTalkingPoints.length > 0 ? `
+            <div class="note-block">
+              <h4>就诊参考问题</h4>
+              <ul>${insights.analysis.recovery.healthInsights.doctorTalkingPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
+            </div>` : ""}
+            ${recoveryConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(recoveryConf.summary)}</p></div>` : ""}
           </aside>
         </div>
       </section>
@@ -1169,7 +1193,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         </div>
         <div class="module__body">
           <div class="module__chart">
-            <p class="section-intro">${escapeHtml(activityCallout)}</p>
+            <p class="section-intro">${escapeHtml(insights.analysis.activity.healthInsights.interpretation || activityCallout)}</p>
             <div class="chart-wrap">
               ${activitySvg}
               ${renderLegend([
@@ -1193,15 +1217,24 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
               </div>
             </div>
             ${workoutBars ? `<div class="chart-wrap" style="margin-top:14px">${workoutBars}</div>` : ""}
+            ${insights.analysis.activity.healthInsights.normalRangeAssessment ? `
+            <div class="note-block" style="margin:14px 0 0 0;background:var(--activity-bg);border-radius:var(--radius-sm);padding:12px 16px">
+              <h4 style="color:var(--activity);margin-bottom:4px">WHO 对标评估</h4>
+              <p style="font-size:13px;line-height:1.6">${escapeHtml(insights.analysis.activity.healthInsights.normalRangeAssessment)}</p>
+            </div>` : ""}
           </div>
           <aside class="module__aside">
-            ${activityConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(activityConf.summary)}</p></div>` : ""}
+            ${insights.analysis.activity.healthInsights.actionableAdvice.length > 0 ? `
             <div class="note-block">
-              <h4>接下来两周</h4>
-              <ul>
-                ${narrative.actions_next_2_weeks.slice(0, 4).map((a) => `<li>${escapeHtml(a)}</li>`).join("")}
-              </ul>
-            </div>
+              <h4>健康建议</h4>
+              <ul>${insights.analysis.activity.healthInsights.actionableAdvice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+            </div>` : ""}
+            ${insights.analysis.activity.healthInsights.doctorTalkingPoints.length > 0 ? `
+            <div class="note-block">
+              <h4>就诊参考问题</h4>
+              <ul>${insights.analysis.activity.healthInsights.doctorTalkingPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
+            </div>` : ""}
+            ${activityConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(activityConf.summary)}</p></div>` : ""}
           </aside>
         </div>
       </section>

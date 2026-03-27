@@ -9,7 +9,7 @@ import type {
   WarningMessage,
 } from "../types.js";
 
-import { roundNumber } from "./sleepShared.js";
+import { round } from "./mathUtils.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -160,9 +160,9 @@ export function analyzeMenstrualCycle(
   const coverageDays = uniqueDays.size;
 
   // Averages
-  const avgCycleLength = roundNumber(average(cycleLengths));
-  const cycleLengthStd = roundNumber(stdDev(cycleLengths));
-  const avgPeriodDuration = roundNumber(average(periods.map((p) => p.durationDays)));
+  const avgCycleLength = round(average(cycleLengths));
+  const cycleLengthStd = round(stdDev(cycleLengths));
+  const avgPeriodDuration = round(average(periods.map((p) => p.durationDays)));
   const regularity = classifyRegularity(cycleLengthStd);
 
   // Flow distribution (excluding "none")
@@ -172,16 +172,16 @@ export function analyzeMenstrualCycle(
   );
   const flowDistribution = {
     light: totalFlowDays > 0
-      ? roundNumber(periods.reduce((s, p) => s + p.flowIntensity.light, 0) / totalFlowDays * 100) ?? 0
+      ? round(periods.reduce((s, p) => s + p.flowIntensity.light, 0) / totalFlowDays * 100) ?? 0
       : 0,
     medium: totalFlowDays > 0
-      ? roundNumber(periods.reduce((s, p) => s + p.flowIntensity.medium, 0) / totalFlowDays * 100) ?? 0
+      ? round(periods.reduce((s, p) => s + p.flowIntensity.medium, 0) / totalFlowDays * 100) ?? 0
       : 0,
     heavy: totalFlowDays > 0
-      ? roundNumber(periods.reduce((s, p) => s + p.flowIntensity.heavy, 0) / totalFlowDays * 100) ?? 0
+      ? round(periods.reduce((s, p) => s + p.flowIntensity.heavy, 0) / totalFlowDays * 100) ?? 0
       : 0,
     unspecified: totalFlowDays > 0
-      ? roundNumber(periods.reduce((s, p) => s + p.flowIntensity.unspecified, 0) / totalFlowDays * 100) ?? 0
+      ? round(periods.reduce((s, p) => s + p.flowIntensity.unspecified, 0) / totalFlowDays * 100) ?? 0
       : 0,
   };
 
@@ -207,7 +207,7 @@ export function analyzeMenstrualCycle(
   const intermenstrualBleedingCount = intermenstrualSamples.length;
   const intermenstrualBleedingFrequencyPerCycle =
     cycleLengths.length > 0
-      ? roundNumber(intermenstrualBleedingCount / (cycleLengths.length + 1))
+      ? round(intermenstrualBleedingCount / (cycleLengths.length + 1))
       : null;
 
   // Contraceptive
@@ -231,11 +231,11 @@ export function analyzeMenstrualCycle(
 
   // ── Health Insights: trend detection, pattern interpretation, actionable advice ──
 
-  const recentAvgCycle = roundNumber(average(recent90dCycleLengths));
-  const historicalAvgCycle = roundNumber(average(historicalCycleLengths));
+  const recentAvgCycle = round(average(recent90dCycleLengths));
+  const historicalAvgCycle = round(average(historicalCycleLengths));
   const cycleTrendDelta =
     recentAvgCycle !== null && historicalAvgCycle !== null && historicalCycleLengths.length >= 3
-      ? roundNumber(recentAvgCycle - historicalAvgCycle)
+      ? round(recentAvgCycle - historicalAvgCycle)
       : null;
   const cycleTrend: MenstrualCycleAnalysis["healthInsights"]["cycleTrend"] =
     cycleTrendDelta === null ? null

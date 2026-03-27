@@ -23,6 +23,9 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
   const activityHistory = insights.historicalContext.activity;
   const bodyMassHistory = insights.historicalContext.bodyComposition.bodyMass;
   const spanDays = insights.historicalContext.scope.totalSpanDays;
+  const sl = insights.analysis.sleep.healthInsights;
+  const rv = insights.analysis.recovery.healthInsights;
+  const ac = insights.analysis.activity.healthInsights;
   const mc = insights.analysis.menstrualCycle;
   const sleepLongitudinalLine =
     sleepHistory.allTime.avgSleepHours !== null
@@ -96,6 +99,9 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
           .slice(0, 2)
           .map((change) => `${change.title}：${change.summary}`),
         ...[sleepLongitudinalLine, activityLongitudinalLine].filter(Boolean),
+        sl.interpretation,
+        rv.interpretation,
+        ac.interpretation,
         ...(mc ? [mc.healthInsights.interpretation] : []),
       ],
       "当前可读样本有限，建议先延长记录周期，再看更稳定的趋势结论。",
@@ -126,6 +132,9 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
           ? "训练后 HRV 恢复不充分，当前训练负荷可能超出恢复能力。"
           : "",
         bodyLongitudinalLine,
+        ...sl.actionableAdvice.filter((a) => /留意|建议|关注|检查/.test(a)).slice(0, 1),
+        ...rv.actionableAdvice.filter((a) => /留意|建议|关注|检查/.test(a)).slice(0, 1),
+        ...ac.actionableAdvice.filter((a) => /留意|建议|关注|检查/.test(a)).slice(0, 1),
         ...(mc ? mc.healthInsights.actionableAdvice.filter((a) => /留意|建议|关注|检查/.test(a)).slice(0, 2) : []),
       ].filter(Boolean) as string[],
       "没有发现需要立即放大的风险信号，但仍建议关注睡眠、恢复和活动的一致性。",
@@ -166,7 +175,9 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
         cm.sleepConsistency.regularity === "low"
           ? `"我的作息不太规律，这会影响哪些健康指标？有没有针对性的改善方案？"`
           : "",
-        `"基于我的年龄和活动量，每周运动多少分钟比较合适？"`,
+        ...sl.doctorTalkingPoints.slice(0, 1),
+        ...rv.doctorTalkingPoints.slice(0, 1),
+        ...ac.doctorTalkingPoints.slice(0, 1),
         ...(mc ? mc.healthInsights.doctorTalkingPoints.slice(0, 2) : []),
         `"我需要做哪些定期体检来补充可穿戴设备无法覆盖的健康维度？"`,
       ].filter(Boolean),

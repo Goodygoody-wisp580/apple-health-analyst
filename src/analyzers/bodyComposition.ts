@@ -6,19 +6,7 @@ import type {
   TimeWindow,
 } from "../types.js";
 
-function round(value: number | null): number | null {
-  if (value === null || Number.isNaN(value)) {
-    return null;
-  }
-  return Math.round(value * 100) / 100;
-}
-
-function average(values: number[]): number | null {
-  if (values.length === 0) {
-    return null;
-  }
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
+import { round, average } from "./mathUtils.js";
 
 function uniqueDays(records: QuantitySample[]): number {
   return new Set(records.map((record) => record.startDate.toISOString().slice(0, 10))).size;
