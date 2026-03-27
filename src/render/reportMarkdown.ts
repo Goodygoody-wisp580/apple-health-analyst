@@ -1,117 +1,87 @@
-import type { AnalysisSummary, NumericComparison } from "../types.js";
-
-function statusLabel(status: string): string {
-  return status === "ok" ? "正常" : "数据不足";
-}
-
-function warningModuleLabel(module: string): string {
-  const labels: Record<string, string> = {
-    sleep: "睡眠",
-    recovery: "恢复",
-    activity: "活动",
-    bodyComposition: "身体成分",
-    overview: "概览",
-  };
-  return labels[module] ?? module;
-}
-
-function metricKeyLabel(metric: string): string {
-  const labels: Record<string, string> = {
-    restingHeartRate: "静息心率",
-    hrv: "HRV",
-    oxygenSaturation: "血氧",
-    respiratoryRate: "呼吸频率",
-    vo2Max: "最大摄氧量",
-    bodyMass: "体重",
-    bodyFatPercentage: "体脂率",
-  };
-  return labels[metric] ?? metric;
-}
+import type { InsightBundle, NarrativeReport } from "../types.js";
 
 function fmt(value: number | null, suffix = ""): string {
   return value === null ? "数据不足" : `${value}${suffix}`;
 }
 
-function metricLine(label: string, metric: NumericComparison | undefined): string {
-  if (!metric) {
-    return `- ${label}：数据不足`;
-  }
-  return `- ${label}：近 30 天 ${fmt(metric.recent30d.average, metric.unit ? ` ${metric.unit}` : "")}，基线 90 天 ${fmt(metric.baseline90d.average, metric.unit ? ` ${metric.unit}` : "")}，变化 ${fmt(metric.delta, metric.unit ? ` ${metric.unit}` : "")}，最新值 ${metric.latest ? `${metric.latest.value} ${metric.unit} @ ${metric.latest.timestamp}` : "数据不足"}`;
+function section(title: string, values: string[]): string {
+  return `## ${title}\n${values.map((value) => `- ${value}`).join("\n")}`;
 }
 
-export function renderReportMarkdown(summary: AnalysisSummary): string {
-  const warningLines =
-    summary.warnings.length > 0
-      ? summary.warnings.map((warning) => `- [${warningModuleLabel(warning.module)}] ${warning.message}`).join("\n")
-      : "- 无";
+export function renderReportMarkdown(insights: InsightBundle, narrative: NarrativeReport): string {
+  const callouts = new Map(narrative.chart_callouts.map((item) => [item.chart_id, item]));
+  const lines = [
+    "# Apple Health 健康报告",
+    "",
+    "## 概览",
+    narrative.overview,
+    "",
+    section("关键发现", narrative.key_findings),
+    "",
+    section("做得好的地方", narrative.strengths),
+    "",
+    section("需要重点留意", narrative.watchouts),
+    "",
+    section("接下来两周建议", narrative.actions_next_2_weeks),
+    "",
+    section("何时建议复查或就医", narrative.when_to_seek_care),
+    "",
+    section("数据局限", narrative.data_limitations),
+    "",
+    "## 数据范围",
+    `- 导出日期：${insights.input.exportDate ?? "未知"}`,
+    `- 分析窗口：${insights.coverage.windowStart ?? "起始"} -> ${insights.coverage.windowEnd}`,
+    `- 记录数：${insights.coverage.recordCount}`,
+    `- 训练数：${insights.coverage.workoutCount}`,
+    `- 活动摘要数：${insights.coverage.activitySummaryCount}`,
+    "",
+    "## 主数据源",
+    `- 睡眠：${insights.primarySources.sleep ?? "数据不足"}`,
+    `- 恢复：${Object.entries(insights.primarySources.recovery)
+      .map(([metric, source]) => `${metric}=${source}`)
+      .join("，") || "数据不足"}`,
+    `- 身体成分：${Object.entries(insights.primarySources.bodyComposition)
+      .map(([metric, source]) => `${metric}=${source}`)
+      .join("，") || "数据不足"}`,
+    `- 活动：${insights.primarySources.activity}`,
+    "",
+    "## 确定性信号",
+    ...insights.riskFlags.map(
+      (flag) => `- [${flag.severity.toUpperCase()}] ${flag.title}：${flag.summary}（${flag.evidence.join("；")}）`,
+    ),
+    ...insights.notableChanges.map(
+      (change) => `- [${change.direction}] ${change.title}：${change.summary}（${change.evidence.join("；")}）`,
+    ),
+    "",
+    "## 图表解读",
+    ...insights.charts.map((chart) => {
+      const callout = callouts.get(chart.id);
+      const primarySeries = chart.series[0];
+      const lastValue = primarySeries?.points.at(-1)?.value ?? null;
+      return `- ${chart.title}：${callout?.summary ?? chart.subtitle} 当前主序列最近值为 ${fmt(
+        lastValue,
+        primarySeries?.unit ? ` ${primarySeries.unit}` : "",
+      )}。`;
+    }),
+    "",
+    "## 长期历史参照",
+    `- 历史跨度：约 ${insights.historicalContext.scope.totalSpanDays} 天（${insights.historicalContext.scope.earliestSeen ?? "未知"} -> ${insights.historicalContext.scope.latestSeen ?? "未知"}）`,
+    `- 睡眠：近 30 天 ${fmt(insights.historicalContext.sleep.recent30d.avgSleepHours, " 小时")}，过去 180 天 ${fmt(insights.historicalContext.sleep.trailing180d.avgSleepHours, " 小时")}，全时段 ${fmt(insights.historicalContext.sleep.allTime.avgSleepHours, " 小时")}`,
+    `- 恢复：静息心率近 30 天 ${fmt(insights.historicalContext.recovery.restingHeartRate?.recent30d.average ?? null, ` ${insights.historicalContext.recovery.restingHeartRate?.unit ?? ""}`)}，全时段 ${fmt(insights.historicalContext.recovery.restingHeartRate?.allTime.average ?? null, ` ${insights.historicalContext.recovery.restingHeartRate?.unit ?? ""}`)}；HRV 近 30 天 ${fmt(insights.historicalContext.recovery.hrv?.recent30d.average ?? null, ` ${insights.historicalContext.recovery.hrv?.unit ?? ""}`)}，全时段 ${fmt(insights.historicalContext.recovery.hrv?.allTime.average ?? null, ` ${insights.historicalContext.recovery.hrv?.unit ?? ""}`)}`,
+    `- 活动：近 30 天锻炼 ${fmt(insights.historicalContext.activity.recent30d.exerciseMinutes, " 分钟")}，过去 180 天 ${fmt(insights.historicalContext.activity.trailing180d.exerciseMinutes, " 分钟")}，全时段 ${fmt(insights.historicalContext.activity.allTime.exerciseMinutes, " 分钟")}`,
+    `- 身体成分：体重近 30 天 ${fmt(insights.historicalContext.bodyComposition.bodyMass?.recent30d.average ?? null, ` ${insights.historicalContext.bodyComposition.bodyMass?.unit ?? ""}`)}，全时段 ${fmt(insights.historicalContext.bodyComposition.bodyMass?.allTime.average ?? null, ` ${insights.historicalContext.bodyComposition.bodyMass?.unit ?? ""}`)}；体脂率近 30 天 ${fmt(insights.historicalContext.bodyComposition.bodyFatPercentage?.recent30d.average ?? null, ` ${insights.historicalContext.bodyComposition.bodyFatPercentage?.unit ?? ""}`)}，全时段 ${fmt(insights.historicalContext.bodyComposition.bodyFatPercentage?.allTime.average ?? null, ` ${insights.historicalContext.bodyComposition.bodyFatPercentage?.unit ?? ""}`)}`,
+    ...insights.historicalContext.interpretationHints.map((hint) => `- 解读提示：${hint}`),
+    "",
+    "## 结构化事实快照",
+    `- 睡眠：近 30 天 ${fmt(insights.analysis.sleep.recent30d.avgSleepHours, " 小时")}，基线 ${fmt(insights.analysis.sleep.baseline90d.avgSleepHours, " 小时")}，变化 ${fmt(insights.analysis.sleep.delta.sleepHours, " 小时")}`,
+    `- 恢复：静息心率 ${fmt(insights.analysis.recovery.metrics.restingHeartRate?.recent30d.average ?? null, ` ${insights.analysis.recovery.metrics.restingHeartRate?.unit ?? ""}`)}，HRV ${fmt(insights.analysis.recovery.metrics.hrv?.recent30d.average ?? null, ` ${insights.analysis.recovery.metrics.hrv?.unit ?? ""}`)}`,
+    `- 活动：近 30 天锻炼 ${fmt(insights.analysis.activity.recent30d.exerciseMinutes, " 分钟")}，训练 ${insights.analysis.activity.recent30d.workouts} 次`,
+    `- 身体成分：体重 ${fmt(insights.analysis.bodyComposition.metrics.bodyMass?.recent30d.average ?? null, ` ${insights.analysis.bodyComposition.metrics.bodyMass?.unit ?? ""}`)}，体脂率 ${fmt(insights.analysis.bodyComposition.metrics.bodyFatPercentage?.recent30d.average ?? null, ` ${insights.analysis.bodyComposition.metrics.bodyFatPercentage?.unit ?? ""}`)}`,
+    "",
+    "## 免责声明",
+    narrative.disclaimer,
+    "",
+  ];
 
-  const sleep = summary.sleep;
-  const sleepSource = sleep.source ?? "数据不足";
-
-  return `# Apple Health 分析报告
-
-## 数据范围
-- 导出日期：${summary.input.exportDate ?? "未知"}
-- 分析窗口：${summary.coverage.windowStart ?? "起始"} -> ${summary.coverage.windowEnd}
-- 记录数：${summary.coverage.recordCount}
-- 训练数：${summary.coverage.workoutCount}
-- 活动摘要数：${summary.coverage.activitySummaryCount}
-
-## 主数据源
-- 睡眠：${summary.sources.primary.sleep ?? "数据不足"}
-- 恢复：${Object.entries(summary.sources.primary.recovery)
-    .map(([metric, source]) => `${metricKeyLabel(metric)}=${source}`)
-    .join("，") || "数据不足"}
-- 身体成分：${Object.entries(summary.sources.primary.bodyComposition)
-    .map(([metric, source]) => `${metricKeyLabel(metric)}=${source}`)
-    .join("，") || "数据不足"}
-- 活动：${summary.sources.primary.activity}
-
-## 警告
-${warningLines}
-
-## 睡眠
-- 状态：${statusLabel(sleep.status)}
-- 数据源：${sleepSource}
-- 覆盖夜数：${sleep.coverageDays}
-- 近 30 天睡眠时长：${fmt(sleep.recent30d.avgSleepHours, " 小时")}
-- 基线 90 天睡眠时长：${fmt(sleep.baseline90d.avgSleepHours, " 小时")}
-- 近 30 天清醒时长：${fmt(sleep.recent30d.avgAwakeHours, " 小时")}
-- 基线 90 天清醒时长：${fmt(sleep.baseline90d.avgAwakeHours, " 小时")}
-- 近 30 天中位入睡 / 起床时间：${sleep.recent30d.medianBedtime ?? "数据不足"} / ${sleep.recent30d.medianWakeTime ?? "数据不足"}
-- 基线 90 天中位入睡 / 起床时间：${sleep.baseline90d.medianBedtime ?? "数据不足"} / ${sleep.baseline90d.medianWakeTime ?? "数据不足"}
-- 近 30 天睡眠阶段占比：核心 ${fmt(sleep.recent30d.stagePct.core, "%")}，REM ${fmt(sleep.recent30d.stagePct.rem, "%")}，深度 ${fmt(sleep.recent30d.stagePct.deep, "%")}
-- 已排除的不完整夜晚：${sleep.partialNights.length > 0 ? sleep.partialNights.map((night) => `${night.date} (${night.totalSleepHours}h)`).join("，") : "无"}
-
-## 恢复
-- 状态：${statusLabel(summary.recovery.status)}
-${metricLine("静息心率", summary.recovery.metrics.restingHeartRate)}
-${metricLine("HRV", summary.recovery.metrics.hrv)}
-${metricLine("血氧", summary.recovery.metrics.oxygenSaturation)}
-${metricLine("呼吸频率", summary.recovery.metrics.respiratoryRate)}
-${metricLine("最大摄氧量", summary.recovery.metrics.vo2Max)}
-
-## 活动
-- 状态：${statusLabel(summary.activity.status)}
-- 近 30 天活动能量：${fmt(summary.activity.recent30d.activeEnergyBurnedKcal, " kcal")}
-- 基线 90 天活动能量：${fmt(summary.activity.baseline90d.activeEnergyBurnedKcal, " kcal")}
-- 近 30 天锻炼分钟：${fmt(summary.activity.recent30d.exerciseMinutes, " 分钟")}
-- 基线 90 天锻炼分钟：${fmt(summary.activity.baseline90d.exerciseMinutes, " 分钟")}
-- 近 30 天站立小时：${fmt(summary.activity.recent30d.standHours, " 小时")}
-- 基线 90 天站立小时：${fmt(summary.activity.baseline90d.standHours, " 小时")}
-- 近 30 天训练次数：${summary.activity.recent30d.workouts}
-- 基线 90 天训练次数：${summary.activity.baseline90d.workouts}
-- 近 30 天最高频训练类型：${summary.activity.recent30d.topWorkoutTypes.map((item) => `${item.type} (${item.count})`).join("，") || "无"}
-
-## 身体成分
-- 状态：${statusLabel(summary.bodyComposition.status)}
-${metricLine("体重", summary.bodyComposition.metrics.bodyMass)}
-${metricLine("体脂率", summary.bodyComposition.metrics.bodyFatPercentage)}
-
-## 附件
-- ECG 文件数：${summary.attachments.ecgFiles}
-- 训练路线文件数：${summary.attachments.workoutRouteFiles}
-- 图片附件数：${summary.attachments.imageAttachments}
-- 其他文件数：${summary.attachments.otherFiles}
-`;
+  return `${lines.join("\n")}\n`;
 }

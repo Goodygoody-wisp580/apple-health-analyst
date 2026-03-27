@@ -1,39 +1,19 @@
 #!/usr/bin/env node
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { Command } from "commander";
 
-import { analyzeActivity } from "./analyzers/activity.js";
-import { analyzeBodyComposition } from "./analyzers/bodyComposition.js";
-import { analyzeOverview } from "./analyzers/overview.js";
-import { analyzeRecovery } from "./analyzers/recovery.js";
-import { analyzeSleep } from "./analyzers/sleep.js";
-import { findMainXml } from "./io/findMainXml.js";
-import { readZip } from "./io/readZip.js";
-import { parseHealthExport } from "./io/streamHealthXml.js";
-import { buildTimeWindow } from "./normalize/buildTimeWindow.js";
-import { selectPrimarySources } from "./normalize/selectPrimarySources.js";
-import { renderReportHtml } from "./render/reportHtml.js";
-import { renderReportMarkdown } from "./render/reportMarkdown.js";
-import { renderSummaryJson } from "./render/summaryJson.js";
+import { createFallbackNarrative } from "./narrative/createFallbackNarrative.js";
+import { validateNarrativeReport } from "./narrative/validateNarrativeReport.js";
+import { prepareAnalysis } from "./pipeline/prepareAnalysis.js";
 import {
-  PACKAGE_NAME,
-  PACKAGE_VERSION,
-  type AnalysisSummary,
-  type OutputFormat,
-} from "./types.js";
-
-function formatLocalDate(date: Date | null): string | null {
-  if (!date) {
-    return null;
-  }
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+  formatsToSelection,
+  writePrepareOutputs,
+  writeRenderedOutputs,
+} from "./pipeline/writeOutputs.js";
+import { PACKAGE_NAME, type InsightBundle, type OutputFormat } from "./types.js";
 
 function parseFormats(input: string): OutputFormat[] {
   const values = input
@@ -51,124 +31,109 @@ function parseFormats(input: string): OutputFormat[] {
   return [...new Set(values)] as OutputFormat[];
 }
 
-async function analyze(zipPath: string, options: { from?: string; to?: string; format: string; out: string }) {
-  const resolvedZipPath = path.resolve(zipPath);
+async function readJsonFile(filePath: string): Promise<unknown> {
+  const contents = await readFile(path.resolve(filePath), "utf8");
+  return JSON.parse(contents);
+}
+
+function asInsightBundle(value: unknown): InsightBundle {
+  if (!value || typeof value !== "object") {
+    throw new Error("insights.json 必须是对象。");
+  }
+
+  const candidate = value as Partial<InsightBundle>;
+  if (!Array.isArray(candidate.charts)) {
+    throw new Error("insights.json 缺少 charts。");
+  }
+  if (!candidate.analysis || !candidate.coverage || !candidate.input) {
+    throw new Error("insights.json 结构不完整。");
+  }
+
+  return candidate as InsightBundle;
+}
+
+async function runPrepare(
+  exportZip: string,
+  options: {
+    from?: string;
+    to?: string;
+    out: string;
+  },
+) {
   const outputDir = path.resolve(options.out);
-  const formats = parseFormats(options.format);
+  const prepared = await prepareAnalysis(exportZip, options);
+  await writePrepareOutputs(prepared.summary, prepared.insights, outputDir);
+  return prepared;
+}
 
-  const zip = await readZip(resolvedZipPath);
-  const mainXmlEntry = await findMainXml(zip.files);
-  const parsed = await parseHealthExport(resolvedZipPath, zip.files, mainXmlEntry);
-  const timeWindow = buildTimeWindow(options.from, options.to, parsed.exportDate ?? parsed.coverageEnd ?? new Date());
-  const primarySources = selectPrimarySources(parsed, timeWindow);
-
-  const sleepSource = primarySources.sleep?.canonicalName ?? null;
-  const sleepRecords = sleepSource
-    ? parsed.records.sleep.filter((record) => record.canonicalSource === sleepSource)
-    : [];
-  const sleep = analyzeSleep(sleepRecords, primarySources.sleep?.displayName ?? null, timeWindow);
-
-  const recovery = analyzeRecovery(
-    {
-      restingHeartRate: primarySources.recovery.restingHeartRate
-        ? parsed.records.restingHeartRate.filter(
-            (record) => record.canonicalSource === primarySources.recovery.restingHeartRate?.canonicalName,
-          )
-        : [],
-      hrv: primarySources.recovery.hrv
-        ? parsed.records.hrv.filter((record) => record.canonicalSource === primarySources.recovery.hrv?.canonicalName)
-        : [],
-      oxygenSaturation: primarySources.recovery.oxygenSaturation
-        ? parsed.records.oxygenSaturation.filter(
-            (record) => record.canonicalSource === primarySources.recovery.oxygenSaturation?.canonicalName,
-          )
-        : [],
-      respiratoryRate: primarySources.recovery.respiratoryRate
-        ? parsed.records.respiratoryRate.filter(
-            (record) => record.canonicalSource === primarySources.recovery.respiratoryRate?.canonicalName,
-          )
-        : [],
-      vo2Max: primarySources.recovery.vo2Max
-        ? parsed.records.vo2Max.filter(
-            (record) => record.canonicalSource === primarySources.recovery.vo2Max?.canonicalName,
-          )
-        : [],
-    },
-    {
-      restingHeartRate: primarySources.recovery.restingHeartRate?.displayName,
-      hrv: primarySources.recovery.hrv?.displayName,
-      oxygenSaturation: primarySources.recovery.oxygenSaturation?.displayName,
-      respiratoryRate: primarySources.recovery.respiratoryRate?.displayName,
-      vo2Max: primarySources.recovery.vo2Max?.displayName,
-    },
-    timeWindow,
+async function runRender(
+  options: {
+    insights: string;
+    narrative: string;
+    out: string;
+  },
+) {
+  const outputDir = path.resolve(options.out);
+  const insights = asInsightBundle(await readJsonFile(options.insights));
+  const narrative = validateNarrativeReport(
+    await readJsonFile(options.narrative),
+    insights.charts.map((chart) => chart.id),
   );
 
-  const activity = analyzeActivity(parsed.activitySummaries, parsed.workouts, timeWindow);
-  const bodyComposition = analyzeBodyComposition(
-    {
-      bodyMass: primarySources.bodyComposition.bodyMass
-        ? parsed.records.bodyMass.filter(
-            (record) => record.canonicalSource === primarySources.bodyComposition.bodyMass?.canonicalName,
-          )
-        : [],
-      bodyFatPercentage: primarySources.bodyComposition.bodyFatPercentage
-        ? parsed.records.bodyFatPercentage.filter(
-            (record) =>
-              record.canonicalSource === primarySources.bodyComposition.bodyFatPercentage?.canonicalName,
-          )
-        : [],
-    },
-    {
-      bodyMass: primarySources.bodyComposition.bodyMass?.displayName,
-      bodyFatPercentage: primarySources.bodyComposition.bodyFatPercentage?.displayName,
-    },
-    timeWindow,
-  );
+  await writeRenderedOutputs(insights, narrative, outputDir);
+  return { insights, narrative };
+}
 
-  const overview = analyzeOverview(parsed, primarySources, timeWindow);
-  const summary: AnalysisSummary = {
-    metadata: {
-      tool: PACKAGE_NAME,
-      version: PACKAGE_VERSION,
-      generatedAt: new Date().toISOString(),
-    },
-    input: {
-      zipPath: resolvedZipPath,
-      mainXmlEntry: parsed.mainXmlEntry,
-      from: formatLocalDate(timeWindow.requestedFrom),
-      to: formatLocalDate(timeWindow.requestedTo),
-      exportDate: parsed.exportDate?.toISOString() ?? null,
-      locale: parsed.locale,
-    },
-    coverage: overview.coverage,
-    sources: overview.sources,
-    warnings: [...sleep.warnings],
-    sleep: sleep.result,
-    recovery,
-    activity,
-    bodyComposition,
-    attachments: overview.attachments,
+async function runAnalyze(
+  exportZip: string,
+  options: {
+    from?: string;
+    to?: string;
+    format: string;
+    out: string;
+  },
+) {
+  const outputDir = path.resolve(options.out);
+  const prepared = await prepareAnalysis(exportZip, options);
+  const narrative = validateNarrativeReport(
+    createFallbackNarrative(prepared.insights),
+    prepared.insights.charts.map((chart) => chart.id),
+  );
+  const selection = formatsToSelection(parseFormats(options.format));
+
+  if (selection.json) {
+    await writePrepareOutputs(prepared.summary, prepared.insights, outputDir);
+  }
+  await writeRenderedOutputs(prepared.insights, narrative, outputDir, selection);
+
+  return {
+    ...prepared,
+    narrative,
   };
-
-  await mkdir(outputDir, { recursive: true });
-
-  if (formats.includes("json")) {
-    await writeFile(path.join(outputDir, "summary.json"), renderSummaryJson(summary), "utf8");
-  }
-  if (formats.includes("markdown")) {
-    await writeFile(path.join(outputDir, "report.md"), renderReportMarkdown(summary), "utf8");
-  }
-  if (formats.includes("html")) {
-    await writeFile(path.join(outputDir, "report.html"), renderReportHtml(summary), "utf8");
-  }
-
-  return summary;
 }
 
 export async function runCli(argv: string[]) {
   const program = new Command();
   program.name(PACKAGE_NAME).description("分析 Apple Health 导出 ZIP 文件。");
+
+  program
+    .command("prepare")
+    .argument("<exportZip>", "Apple Health 导出 ZIP 文件路径")
+    .option("--from <date>", "只分析 YYYY-MM-DD 及之后的数据")
+    .option("--to <date>", "只分析 YYYY-MM-DD 及之前的数据")
+    .option("--out <dir>", "输出目录", "./output")
+    .action(async (exportZip, options) => {
+      await runPrepare(exportZip, options);
+    });
+
+  program
+    .command("render")
+    .requiredOption("--insights <file>", "prepare 生成的 insights.json 路径")
+    .requiredOption("--narrative <file>", "LLM 生成的 report.llm.json 路径")
+    .option("--out <dir>", "输出目录", "./output")
+    .action(async (options) => {
+      await runRender(options);
+    });
 
   program
     .command("analyze")
@@ -178,7 +143,7 @@ export async function runCli(argv: string[]) {
     .option("--format <formats>", "逗号分隔的输出格式", "markdown,json,html")
     .option("--out <dir>", "输出目录", "./output")
     .action(async (exportZip, options) => {
-      await analyze(exportZip, options);
+      await runAnalyze(exportZip, options);
     });
 
   await program.parseAsync(argv, { from: "user" });

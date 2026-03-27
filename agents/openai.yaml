@@ -1,4 +1,0 @@
-interface:
-  display_name: "Apple Health 分析助手"
-  short_description: "分析 Apple Health 导出并解读本地报告"
-  default_prompt: "使用 $apple-health-analyst 分析 Apple Health 导出 ZIP，并基于生成的本地报告总结睡眠、恢复、活动和身体成分。"

@@ -1,7 +1,7 @@
 {
   "name": "apple-health-analyst",
   "version": "1.0.0",
-  "description": "在本地分析 Apple Health 导出 ZIP，并生成机器可读与人工可读报告。",
+  "description": "面向 Codex skill 的 Apple Health 本地分析工具，输出结构化洞察、LLM narrative 和离线 HTML 报告。",
   "type": "module",
   "bin": {
     "apple-health-analyst": "./dist/cli.js"
@@ -22,8 +22,7 @@
   "files": [
     "dist",
     "README.md",
-    "SKILL.md",
-    "agents/openai.yaml",
+    ".agents/skills/apple-health-analyst",
     "LICENSE"
   ],
   "dependencies": {

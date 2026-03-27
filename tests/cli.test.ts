@@ -25,6 +25,8 @@ describe("cli", () => {
 
     const files = await readdir(outDir);
     expect(files).toContain("summary.json");
+    expect(files).toContain("insights.json");
+    expect(files).toContain("report.llm.json");
     expect(files).toContain("report.md");
     expect(files).not.toContain("report.html");
   });

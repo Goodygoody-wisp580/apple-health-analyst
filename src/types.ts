@@ -133,6 +133,8 @@ export interface WarningMessage {
   message: string;
 }
 
+export type AnalysisModule = WarningMessage["module"];
+
 export interface NumericWindow {
   sampleCount: number;
   average: number | null;
@@ -258,4 +260,192 @@ export interface AnalysisSummary {
   activity: ActivityAnalysis;
   bodyComposition: BodyCompositionAnalysis;
   attachments: AttachmentSummary;
+}
+
+export const INSIGHT_SCHEMA_VERSION = "2.1.0";
+export const NARRATIVE_REPORT_SCHEMA_VERSION = "1.0.0";
+
+export type ChartGranularity = "day" | "week" | "month";
+export type ChartVisual = "line" | "bar";
+export type SeverityLevel = "low" | "medium" | "high";
+export type ConfidenceLevel = "low" | "medium" | "high";
+export type ChangeDirection = "improving" | "worsening" | "mixed" | "stable";
+
+export interface ChartPoint {
+  start: string;
+  end: string;
+  granularity: ChartGranularity;
+  label: string;
+  value: number | null;
+  sampleCount: number;
+}
+
+export interface ChartSeries {
+  id: string;
+  label: string;
+  unit: string;
+  visual: ChartVisual;
+  points: ChartPoint[];
+}
+
+export interface ChartGroup {
+  id: "sleep" | "recovery" | "activity" | "bodyComposition";
+  title: string;
+  subtitle: string;
+  series: ChartSeries[];
+}
+
+export interface RiskFlag {
+  id: string;
+  module: AnalysisModule;
+  severity: SeverityLevel;
+  title: string;
+  summary: string;
+  evidence: string[];
+  recommendationFocus: string;
+  seekCare: boolean;
+}
+
+export interface NotableChange {
+  id: string;
+  module: AnalysisModule;
+  direction: ChangeDirection;
+  title: string;
+  summary: string;
+  evidence: string[];
+}
+
+export interface DataGap {
+  id: string;
+  module: AnalysisModule;
+  severity: "info" | "warning";
+  summary: string;
+}
+
+export interface SourceConfidence {
+  module: Exclude<AnalysisModule, "overview">;
+  level: ConfidenceLevel;
+  summary: string;
+}
+
+export interface HistoricalNumericWindow {
+  sampleCount: number;
+  average: number | null;
+}
+
+export interface HistoricalSleepDelta {
+  sleepHours: number | null;
+  awakeHours: number | null;
+  deepPct: number | null;
+  remPct: number | null;
+}
+
+export interface NumericHistoricalContext {
+  unit: string;
+  coverageDays: number;
+  sampleCount: number;
+  latest: NumericComparison["latest"];
+  recent30d: HistoricalNumericWindow;
+  baseline90d: HistoricalNumericWindow;
+  trailing180d: HistoricalNumericWindow;
+  allTime: HistoricalNumericWindow;
+  recentVsBaseline90d: number | null;
+  recentVsTrailing180d: number | null;
+  recentVsAllTime: number | null;
+}
+
+export interface SleepHistoricalContext {
+  coverageDays: number;
+  sampleCount: number;
+  staged: boolean;
+  recent30d: SleepWindowSummary;
+  baseline90d: SleepWindowSummary;
+  trailing180d: SleepWindowSummary;
+  allTime: SleepWindowSummary;
+  recentVsBaseline90d: HistoricalSleepDelta;
+  recentVsTrailing180d: HistoricalSleepDelta;
+  recentVsAllTime: HistoricalSleepDelta;
+}
+
+export interface ActivityHistoricalDelta {
+  activeEnergyBurnedKcal: number | null;
+  exerciseMinutes: number | null;
+  standHours: number | null;
+  workouts: number | null;
+}
+
+export interface ActivityHistoricalContext {
+  coverageDays: number;
+  source: string;
+  recent30d: ActivityWindowSummary;
+  baseline90d: ActivityWindowSummary;
+  trailing180d: ActivityWindowSummary;
+  allTime: ActivityWindowSummary;
+  recentVsBaseline90d: ActivityHistoricalDelta;
+  recentVsTrailing180d: ActivityHistoricalDelta;
+  recentVsAllTime: ActivityHistoricalDelta;
+}
+
+export interface InsightHistoricalContext {
+  scope: {
+    earliestSeen: string | null;
+    latestSeen: string | null;
+    totalSpanDays: number;
+  };
+  sleep: SleepHistoricalContext;
+  recovery: Partial<Record<RecoveryMetricKey, NumericHistoricalContext>>;
+  activity: ActivityHistoricalContext;
+  bodyComposition: Partial<Record<BodyMetricKey, NumericHistoricalContext>>;
+  interpretationHints: string[];
+}
+
+export interface InsightNarrativeContext {
+  audience: string;
+  goal: string;
+  language: string;
+  outputSchemaVersion: string;
+  boundaries: string[];
+}
+
+export interface InsightBundle {
+  metadata: {
+    tool: string;
+    version: string;
+    generatedAt: string;
+    schemaVersion: string;
+    language: string;
+  };
+  input: AnalysisSummary["input"];
+  coverage: AnalysisSummary["coverage"];
+  primarySources: AnalysisSummary["sources"]["primary"];
+  analysis: Pick<
+    AnalysisSummary,
+    "warnings" | "sleep" | "recovery" | "activity" | "bodyComposition" | "attachments"
+  >;
+  charts: ChartGroup[];
+  riskFlags: RiskFlag[];
+  notableChanges: NotableChange[];
+  dataGaps: DataGap[];
+  sourceConfidence: SourceConfidence[];
+  historicalContext: InsightHistoricalContext;
+  narrativeContext: InsightNarrativeContext;
+}
+
+export interface NarrativeChartCallout {
+  chart_id: InsightBundle["charts"][number]["id"];
+  title: string;
+  summary: string;
+}
+
+export interface NarrativeReport {
+  schema_version: string;
+  overview: string;
+  key_findings: string[];
+  strengths: string[];
+  watchouts: string[];
+  actions_next_2_weeks: string[];
+  when_to_seek_care: string[];
+  data_limitations: string[];
+  chart_callouts: NarrativeChartCallout[];
+  disclaimer: string;
 }
