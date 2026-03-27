@@ -166,11 +166,13 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
   const recoveryChart = insights.charts.find((chart) => chart.id === "recovery");
   const activityChart = insights.charts.find((chart) => chart.id === "activity");
   const bodyChart = insights.charts.find((chart) => chart.id === "bodyComposition");
+  const menstrualChart = insights.charts.find((chart) => chart.id === "menstrualCycle");
 
   const sleepConf = moduleConfidence(insights, "sleep");
   const recoveryConf = moduleConfidence(insights, "recovery");
   const activityConf = moduleConfidence(insights, "activity");
   const bodyConf = moduleConfidence(insights, "bodyComposition");
+  const menstrualConf = menstrualChart ? moduleConfidence(insights, "menstrualCycle") : undefined;
 
   // Charts
   const sleepSvg = sleepChart
@@ -219,6 +221,18 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
     "bodyComposition",
     bodyChart?.subtitle ?? "身体成分更适合看月度方向。",
   );
+  const menstrualCallout = menstrualChart
+    ? sectionCallout(narrative, "menstrualCycle", menstrualChart.subtitle)
+    : "";
+
+  const menstrualCycleLengthSeries = menstrualChart?.series.find((s) => s.id === "cycle_length");
+  const menstrualPeriodDurationSeries = menstrualChart?.series.find((s) => s.id === "period_duration");
+  const menstrualCycleSvg = menstrualCycleLengthSeries
+    ? renderMultiSeriesLineChart([menstrualCycleLengthSeries], ["#EC4899"], { width: 700, height: 180 })
+    : "";
+  const menstrualPeriodBars = menstrualPeriodDurationSeries
+    ? renderBarChart(menstrualPeriodDurationSeries, "#F472B6", { width: 700, height: 120 })
+    : "";
 
   // Cross-metric data
   const cm = insights.crossMetric;
@@ -254,6 +268,8 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         --activity-bg: #FFF7ED;
         --body: #6B7280;
         --body-bg: #F3F4F6;
+        --menstrual: #EC4899;
+        --menstrual-bg: #FDF2F8;
         --risk: #EF4444;
         --risk-bg: #FEF2F2;
         --positive: #22C55E;
@@ -491,6 +507,8 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       .module--activity .module__index { color: var(--activity); }
       .module--body { border-left: 4px solid var(--body); }
       .module--body .module__index { color: var(--body); }
+      .module--menstrual { border-left: 4px solid var(--menstrual); }
+      .module--menstrual .module__index { color: var(--menstrual); }
 
       .chart-wrap {
         padding: 8px 0 4px;
@@ -975,6 +993,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         <a href="#recovery">恢复</a>
         <a href="#activity">活动</a>
         <a href="#body">身体</a>
+        ${menstrualChart ? '<a href="#menstrual">生理期</a>' : ""}
         <a href="#appendix">附录</a>
       </div>
     </nav>
@@ -1203,6 +1222,71 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
             .join("") ?? "<p style='color:var(--faint);font-size:13px'>身体成分数据不足。</p>"}
         </div>
       </section>
+
+      ${menstrualChart && insights.analysis.menstrualCycle ? (() => {
+        const mc = insights.analysis.menstrualCycle;
+        const hi = mc.healthInsights;
+        const trendLabel = hi.cycleTrend === "lengthening" ? "延长中" : hi.cycleTrend === "shortening" ? "缩短中" : hi.cycleTrend === "stable" ? "稳定" : "—";
+        return `
+      <!-- 05 Menstrual Cycle -->
+      <section id="menstrual" class="module module--menstrual">
+        <div class="module__header">
+          <span class="module__index">05</span>
+          <h2 class="module__title">${escapeHtml(menstrualChart.title)}</h2>
+          ${menstrualConf ? `<span class="badge ${confidenceClass(menstrualConf.level)}">数据${confidenceLabel(menstrualConf.level)}</span>` : ""}
+        </div>
+        <div class="module__body">
+          <div class="module__chart">
+            <p class="section-intro">${escapeHtml(hi.interpretation)}</p>
+            <div class="chart-wrap">
+              ${menstrualCycleSvg}
+              ${renderLegend([{ label: "周期长度", color: "#EC4899" }])}
+            </div>
+            <div class="note-block" style="margin:14px 0;background:var(--menstrual-bg);border-radius:var(--radius-sm);padding:12px 16px">
+              <h4 style="color:var(--menstrual);margin-bottom:4px">正常范围评估</h4>
+              <p style="font-size:13px;line-height:1.6">${escapeHtml(hi.normalRangeAssessment)}</p>
+            </div>
+            ${menstrualPeriodBars ? `<div class="chart-wrap" style="margin-top:14px">
+              ${menstrualPeriodBars}
+              ${renderLegend([{ label: "经期天数", color: "#F472B6" }])}
+            </div>` : ""}
+            <div class="note-block" style="margin:14px 0;background:var(--menstrual-bg);border-radius:var(--radius-sm);padding:12px 16px">
+              <h4 style="color:var(--menstrual);margin-bottom:4px">出血模式分析</h4>
+              <p style="font-size:13px;line-height:1.6">${escapeHtml(hi.flowPattern)}</p>
+            </div>
+          </div>
+          <aside class="module__aside">
+            <div class="metric-rail">
+              <div class="metric-rail__item">
+                <div class="metric-rail__label">平均周期</div>
+                <div class="metric-rail__value">${escapeHtml(fmt(mc.avgCycleLengthDays, " 天"))}</div>
+                <div class="metric-rail__note">${mc.totalPeriods} 个周期</div>
+              </div>
+              <div class="metric-rail__item">
+                <div class="metric-rail__label">平均经期</div>
+                <div class="metric-rail__value">${escapeHtml(fmt(mc.avgPeriodDurationDays, " 天"))}</div>
+                <div class="metric-rail__note">均值</div>
+              </div>
+              <div class="metric-rail__item">
+                <div class="metric-rail__label">周期趋势</div>
+                <div class="metric-rail__value">${escapeHtml(trendLabel)}</div>
+                <div class="metric-rail__note">${hi.cycleTrendDelta !== null ? `${hi.cycleTrendDelta > 0 ? "+" : ""}${hi.cycleTrendDelta} 天` : "—"}</div>
+              </div>
+            </div>
+            <div class="note-block">
+              <h4>健康建议</h4>
+              <ul>${hi.actionableAdvice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+            </div>
+            ${hi.doctorTalkingPoints.length > 0 ? `
+            <div class="note-block">
+              <h4>就诊参考问题</h4>
+              <ul>${hi.doctorTalkingPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
+            </div>` : ""}
+            ${menstrualConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(menstrualConf.summary)}</p></div>` : ""}
+          </aside>
+        </div>
+      </section>`;
+      })() : ""}
 
       <!-- Actions -->
       <div class="actions">

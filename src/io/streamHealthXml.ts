@@ -4,6 +4,10 @@ import { SaxesParser } from "saxes";
 import type {
   ActivitySummarySample,
   AttachmentSummary,
+  BiologicalSex,
+  ContraceptiveSample,
+  IntermenstrualBleedingSample,
+  MenstrualFlowSample,
   MetricKey,
   ParsedHealthExport,
   QuantitySample,
@@ -20,7 +24,15 @@ interface ZipEntryLike {
   stream: () => NodeJS.ReadableStream;
 }
 
-type HandlerName = "HealthData" | "ExportDate" | "Record" | "Workout" | "ActivitySummary";
+type HandlerName = "HealthData" | "Me" | "ExportDate" | "Record" | "Workout" | "ActivitySummary";
+
+type CategoryMetric = "menstrualFlow" | "intermenstrualBleeding" | "contraceptive";
+
+const CATEGORY_RECORD_MAP: Record<string, CategoryMetric | undefined> = {
+  HKCategoryTypeIdentifierMenstrualFlow: "menstrualFlow",
+  HKCategoryTypeIdentifierIntermenstrualBleeding: "intermenstrualBleeding",
+  HKCategoryTypeIdentifierContraceptive: "contraceptive",
+};
 
 const RECORD_TYPE_MAP: Record<string, Exclude<MetricKey, "sleep"> | "sleep" | undefined> = {
   HKCategoryTypeIdentifierSleepAnalysis: "sleep",
@@ -122,6 +134,7 @@ export async function parseHealthExport(
     inputPath: zipPath,
     mainXmlEntry: mainXmlEntry.path,
     locale: null,
+    biologicalSex: null,
     exportDate: null,
     coverageStart: null,
     coverageEnd: null,
@@ -141,6 +154,9 @@ export async function parseHealthExport(
     },
     workouts: [],
     activitySummaries: [],
+    menstrualFlow: [],
+    intermenstrualBleeding: [],
+    contraceptive: [],
     attachments: summarizeAttachments(entries, mainXmlEntry.path),
   };
 
@@ -183,6 +199,15 @@ export async function parseHealthExport(
     HealthData: (attributes) => {
       parsed.locale = attributes.locale ?? null;
     },
+    Me: (attributes) => {
+      const raw = attributes.HKCharacteristicTypeIdentifierBiologicalSex ?? "";
+      const sexMap: Record<string, BiologicalSex> = {
+        HKBiologicalSexFemale: "female",
+        HKBiologicalSexMale: "male",
+        HKBiologicalSexOther: "other",
+      };
+      parsed.biologicalSex = sexMap[raw] ?? null;
+    },
     ExportDate: (attributes) => {
       parsed.exportDate = attributes.value ? new Date(attributes.value) : null;
       updateCoverage(parsed.exportDate);
@@ -201,6 +226,21 @@ export async function parseHealthExport(
 
       if (sourceName) {
         registerSource(sourceName, "record", metric);
+      }
+
+      const categoryMetric = recordType ? CATEGORY_RECORD_MAP[recordType] : undefined;
+      if (categoryMetric && sourceName && startDate && endDate) {
+        const canonicalSource = canonicalizeSourceName(sourceName);
+        const sample = {
+          metric: categoryMetric,
+          sourceName,
+          canonicalSource,
+          startDate,
+          endDate,
+          value: attributes.value ?? "",
+        } as MenstrualFlowSample | IntermenstrualBleedingSample | ContraceptiveSample;
+        parsed[categoryMetric].push(sample as never);
+        return;
       }
 
       if (!metric || !sourceName || !startDate || !endDate) {
