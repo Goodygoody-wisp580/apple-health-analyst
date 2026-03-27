@@ -92,10 +92,13 @@ export interface SourceSummary {
   metricCounts: Partial<Record<MetricKey, number>>;
 }
 
+export type BiologicalSex = "female" | "male" | "other" | null;
+
 export interface ParsedHealthExport {
   inputPath: string;
   mainXmlEntry: string;
   locale: string | null;
+  biologicalSex: BiologicalSex;
   exportDate: Date | null;
   coverageStart: Date | null;
   coverageEnd: Date | null;
@@ -286,6 +289,16 @@ export interface MenstrualCycleAnalysis {
   historical: {
     periods: number;
     avgCycleLengthDays: number | null;
+  };
+  healthInsights: {
+    cycleTrend: "lengthening" | "shortening" | "stable" | null;
+    cycleTrendDelta: number | null;
+    periodDurationTrend: "lengthening" | "shortening" | "stable" | null;
+    flowPattern: string;
+    normalRangeAssessment: string;
+    interpretation: string;
+    actionableAdvice: string[];
+    doctorTalkingPoints: string[];
   };
   notes: string[];
 }

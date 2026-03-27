@@ -4,6 +4,7 @@ import { SaxesParser } from "saxes";
 import type {
   ActivitySummarySample,
   AttachmentSummary,
+  BiologicalSex,
   ContraceptiveSample,
   IntermenstrualBleedingSample,
   MenstrualFlowSample,
@@ -23,7 +24,7 @@ interface ZipEntryLike {
   stream: () => NodeJS.ReadableStream;
 }
 
-type HandlerName = "HealthData" | "ExportDate" | "Record" | "Workout" | "ActivitySummary";
+type HandlerName = "HealthData" | "Me" | "ExportDate" | "Record" | "Workout" | "ActivitySummary";
 
 type CategoryMetric = "menstrualFlow" | "intermenstrualBleeding" | "contraceptive";
 
@@ -133,6 +134,7 @@ export async function parseHealthExport(
     inputPath: zipPath,
     mainXmlEntry: mainXmlEntry.path,
     locale: null,
+    biologicalSex: null,
     exportDate: null,
     coverageStart: null,
     coverageEnd: null,
@@ -196,6 +198,15 @@ export async function parseHealthExport(
   const handlers: Partial<Record<HandlerName, (attributes: Record<string, string>) => void>> = {
     HealthData: (attributes) => {
       parsed.locale = attributes.locale ?? null;
+    },
+    Me: (attributes) => {
+      const raw = attributes.HKCharacteristicTypeIdentifierBiologicalSex ?? "";
+      const sexMap: Record<string, BiologicalSex> = {
+        HKBiologicalSexFemale: "female",
+        HKBiologicalSexMale: "male",
+        HKBiologicalSexOther: "other",
+      };
+      parsed.biologicalSex = sexMap[raw] ?? null;
     },
     ExportDate: (attributes) => {
       parsed.exportDate = attributes.value ? new Date(attributes.value) : null;

@@ -96,11 +96,7 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
           .slice(0, 2)
           .map((change) => `${change.title}：${change.summary}`),
         ...[sleepLongitudinalLine, activityLongitudinalLine].filter(Boolean),
-        ...(mc
-          ? [
-              `生理周期追踪 ${mc.totalPeriods} 个周期，平均周期 ${fmt(mc.avgCycleLengthDays, " 天")}，经期平均 ${fmt(mc.avgPeriodDurationDays, " 天")}，规律性${mc.regularity === "regular" ? "良好" : mc.regularity === "somewhat_irregular" ? "中等" : "较差"}。`,
-            ]
-          : []),
+        ...(mc ? [mc.healthInsights.interpretation] : []),
       ],
       "当前可读样本有限，建议先延长记录周期，再看更稳定的趋势结论。",
     ),
@@ -130,12 +126,7 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
           ? "训练后 HRV 恢复不充分，当前训练负荷可能超出恢复能力。"
           : "",
         bodyLongitudinalLine,
-        ...(mc && mc.regularity === "irregular"
-          ? [`生理周期不规律（标准差 ${mc.cycleLengthStdDays} 天），建议关注是否受压力、作息或饮食影响。`]
-          : []),
-        ...(mc && mc.intermenstrualBleedingCount > 5
-          ? [`经间期出血记录较多（${mc.intermenstrualBleedingCount} 次），建议妇科检查排查原因。`]
-          : []),
+        ...(mc ? mc.healthInsights.actionableAdvice.filter((a) => /留意|建议|关注|检查/.test(a)).slice(0, 2) : []),
       ].filter(Boolean) as string[],
       "没有发现需要立即放大的风险信号，但仍建议关注睡眠、恢复和活动的一致性。",
     ),
@@ -176,12 +167,7 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
           ? `"我的作息不太规律，这会影响哪些健康指标？有没有针对性的改善方案？"`
           : "",
         `"基于我的年龄和活动量，每周运动多少分钟比较合适？"`,
-        ...(mc && mc.regularity === "irregular"
-          ? [`"我的生理周期标准差偏大（${mc.cycleLengthStdDays} 天），需要做哪些检查？"`]
-          : []),
-        ...(mc && mc.avgCycleLengthDays !== null && (mc.avgCycleLengthDays < 21 || mc.avgCycleLengthDays > 38)
-          ? [`"我的生理周期平均 ${mc.avgCycleLengthDays} 天，偏离正常范围，这可能和什么有关？"`]
-          : []),
+        ...(mc ? mc.healthInsights.doctorTalkingPoints.slice(0, 2) : []),
         `"我需要做哪些定期体检来补充可穿戴设备无法覆盖的健康维度？"`,
       ].filter(Boolean),
       `"我想了解我的可穿戴设备数据，哪些指标值得关注？"`,

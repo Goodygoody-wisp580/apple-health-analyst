@@ -1223,7 +1223,11 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         </div>
       </section>
 
-      ${menstrualChart && insights.analysis.menstrualCycle ? `
+      ${menstrualChart && insights.analysis.menstrualCycle ? (() => {
+        const mc = insights.analysis.menstrualCycle;
+        const hi = mc.healthInsights;
+        const trendLabel = hi.cycleTrend === "lengthening" ? "延长中" : hi.cycleTrend === "shortening" ? "缩短中" : hi.cycleTrend === "stable" ? "稳定" : "—";
+        return `
       <!-- 05 Menstrual Cycle -->
       <section id="menstrual" class="module module--menstrual">
         <div class="module__header">
@@ -1233,53 +1237,56 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         </div>
         <div class="module__body">
           <div class="module__chart">
-            <p class="section-intro">${escapeHtml(menstrualCallout)}</p>
+            <p class="section-intro">${escapeHtml(hi.interpretation)}</p>
             <div class="chart-wrap">
               ${menstrualCycleSvg}
               ${renderLegend([{ label: "周期长度", color: "#EC4899" }])}
+            </div>
+            <div class="note-block" style="margin:14px 0;background:var(--menstrual-bg);border-radius:var(--radius-sm);padding:12px 16px">
+              <h4 style="color:var(--menstrual);margin-bottom:4px">正常范围评估</h4>
+              <p style="font-size:13px;line-height:1.6">${escapeHtml(hi.normalRangeAssessment)}</p>
             </div>
             ${menstrualPeriodBars ? `<div class="chart-wrap" style="margin-top:14px">
               ${menstrualPeriodBars}
               ${renderLegend([{ label: "经期天数", color: "#F472B6" }])}
             </div>` : ""}
+            <div class="note-block" style="margin:14px 0;background:var(--menstrual-bg);border-radius:var(--radius-sm);padding:12px 16px">
+              <h4 style="color:var(--menstrual);margin-bottom:4px">出血模式分析</h4>
+              <p style="font-size:13px;line-height:1.6">${escapeHtml(hi.flowPattern)}</p>
+            </div>
           </div>
           <aside class="module__aside">
             <div class="metric-rail">
               <div class="metric-rail__item">
                 <div class="metric-rail__label">平均周期</div>
-                <div class="metric-rail__value">${escapeHtml(fmt(insights.analysis.menstrualCycle.avgCycleLengthDays, " 天"))}</div>
-                <div class="metric-rail__note">${insights.analysis.menstrualCycle.totalPeriods} 个周期</div>
+                <div class="metric-rail__value">${escapeHtml(fmt(mc.avgCycleLengthDays, " 天"))}</div>
+                <div class="metric-rail__note">${mc.totalPeriods} 个周期</div>
               </div>
               <div class="metric-rail__item">
                 <div class="metric-rail__label">平均经期</div>
-                <div class="metric-rail__value">${escapeHtml(fmt(insights.analysis.menstrualCycle.avgPeriodDurationDays, " 天"))}</div>
+                <div class="metric-rail__value">${escapeHtml(fmt(mc.avgPeriodDurationDays, " 天"))}</div>
                 <div class="metric-rail__note">均值</div>
               </div>
               <div class="metric-rail__item">
-                <div class="metric-rail__label">规律性</div>
-                <div class="metric-rail__value">${escapeHtml(
-                  insights.analysis.menstrualCycle.regularity === "regular" ? "规律"
-                    : insights.analysis.menstrualCycle.regularity === "somewhat_irregular" ? "较规律"
-                    : insights.analysis.menstrualCycle.regularity === "irregular" ? "不规律"
-                    : "数据不足"
-                )}</div>
-                <div class="metric-rail__note">标准差 ${escapeHtml(fmt(insights.analysis.menstrualCycle.cycleLengthStdDays, " 天"))}</div>
+                <div class="metric-rail__label">周期趋势</div>
+                <div class="metric-rail__value">${escapeHtml(trendLabel)}</div>
+                <div class="metric-rail__note">${hi.cycleTrendDelta !== null ? `${hi.cycleTrendDelta > 0 ? "+" : ""}${hi.cycleTrendDelta} 天` : "—"}</div>
               </div>
             </div>
-            ${insights.analysis.menstrualCycle.intermenstrualBleedingCount > 0 ? `
             <div class="note-block">
-              <h4>经间期出血</h4>
-              <p>共 ${insights.analysis.menstrualCycle.intermenstrualBleedingCount} 次记录</p>
+              <h4>健康建议</h4>
+              <ul>${hi.actionableAdvice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+            </div>
+            ${hi.doctorTalkingPoints.length > 0 ? `
+            <div class="note-block">
+              <h4>就诊参考问题</h4>
+              <ul>${hi.doctorTalkingPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
             </div>` : ""}
             ${menstrualConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(menstrualConf.summary)}</p></div>` : ""}
-            ${insights.analysis.menstrualCycle.notes.length > 0 ? `
-            <div class="note-block">
-              <h4>备注</h4>
-              <ul>${insights.analysis.menstrualCycle.notes.map((n) => `<li>${escapeHtml(n)}</li>`).join("")}</ul>
-            </div>` : ""}
           </aside>
         </div>
-      </section>` : ""}
+      </section>`;
+      })() : ""}
 
       <!-- Actions -->
       <div class="actions">

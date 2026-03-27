@@ -119,12 +119,15 @@ export async function prepareAnalysis(
     timeWindow,
   );
 
-  const menstrual = analyzeMenstrualCycle(
-    parsed.menstrualFlow,
-    parsed.intermenstrualBleeding,
-    parsed.contraceptive,
-    timeWindow,
-  );
+  const skipMenstrual = parsed.biologicalSex === "male";
+  const menstrual = skipMenstrual
+    ? null
+    : analyzeMenstrualCycle(
+        parsed.menstrualFlow,
+        parsed.intermenstrualBleeding,
+        parsed.contraceptive,
+        timeWindow,
+      );
 
   const overview = analyzeOverview(parsed, primarySources, timeWindow);
   const summary: AnalysisSummary = {
@@ -148,13 +151,13 @@ export async function prepareAnalysis(
       ...recovery.notes.map((msg) => ({ code: "recovery_note", module: "recovery" as const, message: msg })),
       ...activity.notes.map((msg) => ({ code: "activity_note", module: "activity" as const, message: msg })),
       ...bodyComposition.notes.map((msg) => ({ code: "body_note", module: "bodyComposition" as const, message: msg })),
-      ...menstrual.warnings,
+      ...(menstrual?.warnings ?? []),
     ],
     sleep: sleep.result,
     recovery,
     activity,
     bodyComposition,
-    ...(menstrual.result.status !== "insufficient_data" ? { menstrualCycle: menstrual.result } : {}),
+    ...(menstrual && menstrual.result.status !== "insufficient_data" ? { menstrualCycle: menstrual.result } : {}),
     attachments: overview.attachments,
   };
 
