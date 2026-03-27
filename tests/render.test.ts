@@ -39,7 +39,9 @@ describe("render pipeline", () => {
     const narrativeJson = JSON.parse(await readFile(path.join(outDir, "report.llm.json"), "utf8"));
 
     expect(html).toContain("<svg");
-    expect(html).not.toContain("https://");
+    // Only external link should be the GitHub project link in footer
+    const httpsMatches = html.match(/https:\/\//g) ?? [];
+    expect(httpsMatches.length).toBeLessThanOrEqual(1);
     expect(html).toContain('id="sleep"');
     expect(html).toContain('id="recovery"');
     expect(html).toContain("关键发现");

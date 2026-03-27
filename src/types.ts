@@ -449,6 +449,7 @@ export interface NarrativeReport {
   watchouts: string[];
   actions_next_2_weeks: string[];
   when_to_seek_care: string[];
+  questions_for_doctor: string[];
   data_limitations: string[];
   chart_callouts: NarrativeChartCallout[];
   disclaimer: string;

@@ -15,6 +15,7 @@
   "watchouts": ["string"],
   "actions_next_2_weeks": ["string"],
   "when_to_seek_care": ["string"],
+  "questions_for_doctor": ["string"],
   "data_limitations": ["string"],
   "chart_callouts": [
     {
@@ -46,6 +47,13 @@
 - 格式："模式名称 + 数据表现 + 健康影响 + 调整建议"
 - 来源：`insights.json` 中的 `crossMetric.patterns`
 
+### `questions_for_doctor`（就医准备）
+1-3 条，基于用户数据生成的看诊问题：
+- 必须基于用户的实际数据，不能是泛泛的通用问题
+- 带上具体数值，例如"我的静息心率从 58 上升到 63 bpm，这需要进一步检查吗？"
+- 帮助用户在下次看诊时更高效地和医生沟通
+- 来源：`insights.json` 中的 `crossMetric`、`riskFlags`、`notableChanges`
+
 ## 写作要求
 - 所有文本默认中文。
 - 每个数组至少写 1 项，尽量简洁，优先给普通用户能执行的建议。
@@ -66,5 +74,6 @@
 - `watchouts`：1-4 条，写最值得留意的风险和注意事项。
 - `actions_next_2_weeks`：2-4 条，写具体、可执行、周期短的建议。
 - `when_to_seek_care`：1-3 条，保守提醒，不写诊断。
+- `questions_for_doctor`：1-3 条，基于数据的针对性看诊问题，带具体数值。
 - `data_limitations`：1-4 条，说明样本少、来源不稳、覆盖有限等问题。
 - `disclaimer`：固定表达"健康管理参考，不构成医疗诊断"这类边界。

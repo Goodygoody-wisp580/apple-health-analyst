@@ -152,6 +152,22 @@ export function createFallbackNarrative(insights: InsightBundle): NarrativeRepor
       ],
       "如果出现持续恶化的异常数据并伴随明显不适，应及时寻求专业医生帮助。",
     ).slice(0, 3),
+    questions_for_doctor: pickFirstLines(
+      [
+        ...insights.riskFlags
+          .filter((flag) => flag.seekCare)
+          .map((flag) => `"我的可穿戴设备显示${flag.title}，这需要进一步检查吗？"`),
+        cm.recoveryCoherence.rhrTrend === "worsening"
+          ? `"我的静息心率近期呈上升趋势，这可能和什么有关？"`
+          : "",
+        cm.sleepConsistency.regularity === "low"
+          ? `"我的作息不太规律，这会影响哪些健康指标？有没有针对性的改善方案？"`
+          : "",
+        `"基于我的年龄和活动量，每周运动多少分钟比较合适？"`,
+        `"我需要做哪些定期体检来补充可穿戴设备无法覆盖的健康维度？"`,
+      ].filter(Boolean),
+      `"我想了解我的可穿戴设备数据，哪些指标值得关注？"`,
+    ).slice(0, 3),
     data_limitations: pickFirstLines(
       [
         ...insights.dataGaps.map((gap) => gap.summary),

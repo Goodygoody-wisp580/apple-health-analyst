@@ -73,6 +73,7 @@ export function validateNarrativeReport(
     watchouts: ensureStringArray(candidate.watchouts, "watchouts"),
     actions_next_2_weeks: ensureStringArray(candidate.actions_next_2_weeks, "actions_next_2_weeks"),
     when_to_seek_care: ensureStringArray(candidate.when_to_seek_care, "when_to_seek_care"),
+    questions_for_doctor: ensureStringArray(candidate.questions_for_doctor, "questions_for_doctor"),
     data_limitations: ensureStringArray(candidate.data_limitations, "data_limitations"),
     chart_callouts: ensureChartCallouts(candidate.chart_callouts, availableChartIds),
     disclaimer: ensureString(candidate.disclaimer, "disclaimer"),

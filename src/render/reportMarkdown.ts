@@ -42,6 +42,8 @@ export function renderReportMarkdown(insights: InsightBundle, narrative: Narrati
     "",
     section("何时建议复查或就医", narrative.when_to_seek_care),
     "",
+    section("下次看诊可以问医生的问题", narrative.questions_for_doctor),
+    "",
     section("数据局限", narrative.data_limitations),
     "",
     "## 数据范围",

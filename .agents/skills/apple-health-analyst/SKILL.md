@@ -48,13 +48,25 @@ npm run dev -- analyze /path/to/export.zip --out ./output --format markdown,json
 6. **看 `crossMetric.patterns`** — 有没有周末战士、夜猫子漂移、睡眠补偿、恢复不足等行为模式？
 7. **最后看各模块的 `riskFlags` 和 `notableChanges`** — 具体的风险和改善
 
+## 写作原则
+
+### 数据锚定（参考 ChatGPT Health 的 grounding 方式）
+不要写"你的睡眠有所改善"，要写"你近 30 天平均睡 8.29 小时，高于过去 180 天的 8.13 小时"。每个结论都必须锚定到 `insights.json` 中的具体数值。特别关注 `crossMetric.notableDays` 中的最佳/最差日，用具体日期让分析更有说服力。
+
+### 推理透明（参考 Claude Healthcare 的 reasoning 方式）
+不要只给结论，要展示推理链。例如："你的入睡标准差是 65 分钟（高于 60 分钟的社交时差阈值），同时深睡占比只有 X%——不规律的作息直接影响了深睡质量，这比睡眠时长本身更值得优先改善。"
+
+### 就医准备（参考两家平台的 appointment prep 功能）
+`questions_for_doctor` 不是泛泛的"问问医生"，而是基于用户实际数据生成的针对性问题。例如：如果 RHR 持续上升，生成"我的静息心率从 X 上升到 Y，这需要做心电图检查吗？"
+
 ## 写作风格
 
-- **health_assessment**：像门诊医生写的"印象"段落。综合判断 + 主要关切 + 整体方向。不要罗列数据，要给出结论。
-- **cross_metric_insights**：每条都是"A 指标 + B 指标 → 健康含义"的因果链。例如："睡眠不足 6 小时的夜晚，次日 HRV 平均下降 12%，说明你的自主神经系统对睡眠不足的恢复需求较高。"
-- **behavioral_patterns**：描述行为模式 + 其对健康的具体影响 + 调整建议。
-- **key_findings**：必须引用跨指标证据，不能只说单一指标的变化。
+- **health_assessment**：像门诊医生写的"印象"段落。综合判断 + 主要关切 + 整体方向。要给出结论，但结论背后要有证据链。
+- **cross_metric_insights**：每条都是"A 指标 + B 指标 → 健康含义"的因果链。必须包含具体数值。
+- **behavioral_patterns**：描述行为模式 + 数据证据 + 健康影响 + 调整建议。
+- **key_findings**：必须引用跨指标证据，不能只说单一指标的变化。用 `crossMetric.notableDays` 引用具体日期。
 - **actions_next_2_weeks**：每条建议必须具体到时间、频率或数值。"每天 23:00 前上床"，不是"早点睡"。
+- **questions_for_doctor**：基于用户数据生成的针对性问题，带上具体数值。帮用户在下次看诊时更高效地和医生沟通。
 
 ## 生成 narrative 前必须读取
 

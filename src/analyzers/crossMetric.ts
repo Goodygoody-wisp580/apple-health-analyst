@@ -70,8 +70,18 @@ export interface CompositeAssessment {
   summary: string;
 }
 
+export interface NotableDay {
+  date: string;
+  metric: string;
+  value: number;
+  unit: string;
+  type: "best" | "worst";
+  context: string;
+}
+
 export interface CrossMetricAnalysis {
   dailyRows: DailyMetricRow[];
+  notableDays: NotableDay[];
   sleepRecoveryLink: SleepRecoveryLink;
   sleepConsistency: SleepConsistency;
   activityRecoveryBalance: ActivityRecoveryBalance;
@@ -656,6 +666,57 @@ function detectPatterns(rows: DailyMetricRow[]): string[] {
   return patterns;
 }
 
+// ── Notable Days ───────────────────────────────────────────────────
+
+function findNotableDays(rows: DailyMetricRow[]): NotableDay[] {
+  const days: NotableDay[] = [];
+
+  function findExtreme(
+    metric: string,
+    unit: string,
+    getValue: (r: DailyMetricRow) => number | null,
+    bestIs: "high" | "low",
+  ) {
+    const valid = rows.filter((r) => getValue(r) !== null);
+    if (valid.length < 5) return;
+    const sorted = [...valid].sort((a, b) => (getValue(a)! - getValue(b)!));
+    const best = bestIs === "high" ? sorted[sorted.length - 1] : sorted[0];
+    const worst = bestIs === "high" ? sorted[0] : sorted[sorted.length - 1];
+    const avg = averageNumbers(valid.map((r) => getValue(r)!));
+    if (best && avg !== null) {
+      days.push({
+        date: best.date,
+        metric,
+        value: getValue(best)!,
+        unit,
+        type: "best",
+        context: `均值 ${roundNumber(avg)} ${unit}`,
+      });
+    }
+    if (worst && avg !== null && worst.date !== best?.date) {
+      days.push({
+        date: worst.date,
+        metric,
+        value: getValue(worst)!,
+        unit,
+        type: "worst",
+        context: `均值 ${roundNumber(avg)} ${unit}`,
+      });
+    }
+  }
+
+  findExtreme("睡眠时长", "小时", (r) => r.sleepHours, "high");
+  findExtreme("HRV", "ms", (r) => r.hrv, "high");
+  findExtreme("静息心率", "bpm", (r) => r.restingHR, "low");
+  findExtreme("锻炼时长", "分钟", (r) => {
+    const e = r.exerciseMinutes ?? 0;
+    const w = r.workoutMinutes ?? 0;
+    return e + w > 0 ? e + w : null;
+  }, "high");
+
+  return days;
+}
+
 // ── Main Entry ─────────────────────────────────────────────────────
 
 export function analyzeCrossMetrics(
@@ -678,6 +739,7 @@ export function analyzeCrossMetrics(
 
   return {
     dailyRows,
+    notableDays: findNotableDays(dailyRows),
     sleepRecoveryLink,
     sleepConsistency,
     activityRecoveryBalance,

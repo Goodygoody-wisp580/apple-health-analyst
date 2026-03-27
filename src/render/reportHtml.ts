@@ -238,14 +238,14 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
     <title>Apple Health 健康报告</title>
     <style>
       :root {
-        --bg: #F8FAFC;
+        --bg: #F2F2F7;
         --surface: #FFFFFF;
-        --ink: #0F172A;
-        --ink-secondary: #334155;
-        --muted: #64748B;
-        --faint: #94A3B8;
-        --border: #E2E8F0;
-        --border-light: #F1F5F9;
+        --ink: #1C1C1E;
+        --ink-secondary: #3A3A3C;
+        --muted: #8E8E93;
+        --faint: #AEAEB2;
+        --border: #E5E5EA;
+        --border-light: #F2F2F7;
         --sleep: #6366F1;
         --sleep-bg: #EEF2FF;
         --recovery: #10B981;
@@ -258,10 +258,10 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         --risk-bg: #FEF2F2;
         --positive: #22C55E;
         --positive-bg: #F0FDF4;
-        --radius: 12px;
-        --radius-sm: 8px;
-        --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-        --shadow-md: 0 4px 12px rgba(0,0,0,0.07);
+        --radius: 10px;
+        --radius-sm: 6px;
+        --shadow: none;
+        --shadow-md: none;
       }
       * { box-sizing: border-box; margin: 0; }
       html {
@@ -371,7 +371,6 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         background: var(--surface);
         border-radius: var(--radius);
         padding: 28px;
-        box-shadow: var(--shadow);
         margin-bottom: 28px;
       }
       .overview__text {
@@ -429,7 +428,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         background: var(--surface);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
-        margin-bottom: 24px;
+        margin-bottom: 36px;
         overflow: hidden;
       }
       .module__header {
@@ -485,14 +484,16 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         gap: 18px;
       }
       .module--sleep { border-left: 4px solid var(--sleep); }
+      .module--sleep .module__index { color: var(--sleep); }
       .module--recovery { border-left: 4px solid var(--recovery); }
+      .module--recovery .module__index { color: var(--recovery); }
       .module--activity { border-left: 4px solid var(--activity); }
+      .module--activity .module__index { color: var(--activity); }
       .module--body { border-left: 4px solid var(--body); }
+      .module--body .module__index { color: var(--body); }
 
       .chart-wrap {
-        background: var(--bg);
-        border-radius: var(--radius-sm);
-        padding: 14px 12px 8px;
+        padding: 8px 0 4px;
       }
       .chart-wrap svg {
         width: 100%;
@@ -880,8 +881,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         background: var(--surface);
         border-radius: var(--radius);
         padding: 28px;
-        box-shadow: var(--shadow);
-        margin-bottom: 24px;
+        margin-bottom: 28px;
       }
       .insights-section h2 {
         font-size: 18px;
@@ -894,13 +894,13 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         gap: 24px;
       }
       .insight-card {
-        border-left: 3px solid var(--sleep);
-        padding: 14px 18px;
+        padding: 14px 16px;
         background: var(--border-light);
-        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        border-radius: var(--radius-sm);
+        margin-bottom: 10px;
       }
-      .insight-card--pattern {
-        border-left-color: var(--activity);
+      .insight-card:last-child {
+        margin-bottom: 0;
       }
       .insight-card p {
         font-size: 14px;
@@ -912,6 +912,43 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         font-weight: 600;
         margin-bottom: 6px;
         color: var(--ink);
+      }
+
+      /* ─── Utility ─── */
+      .section-intro {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--ink-secondary);
+        margin-bottom: 14px;
+      }
+      .insight-grid__title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .actions--single {
+        grid-template-columns: 1fr;
+      }
+      .appendix__title {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .appendix__list {
+        padding-left: 18px;
+        display: grid;
+        gap: 6px;
+      }
+      .appendix__list li {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--ink-secondary);
+      }
+      .footer-link {
+        margin-top: 12px;
+        font-size: 12px;
+      }
+      .footer-link a {
+        color: var(--muted);
       }
 
       /* ─── Print ─── */
@@ -988,11 +1025,11 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         <h2>关联分析</h2>
         <div class="insight-grid">
           <div>
-            <h3 style="font-size:15px;font-weight:600;margin-bottom:12px">跨指标发现</h3>
+            <h3 class="insight-grid__title">跨指标发现</h3>
             ${narrative.cross_metric_insights.map((item) => `<div class="insight-card"><p>${escapeHtml(item)}</p></div>`).join("")}
           </div>
           <div>
-            <h3 style="font-size:15px;font-weight:600;margin-bottom:12px">行为模式</h3>
+            <h3 class="insight-grid__title">行为模式</h3>
             ${narrative.behavioral_patterns.map((item) => `<div class="insight-card insight-card--pattern"><p>${escapeHtml(item)}</p></div>`).join("")}
           </div>
         </div>
@@ -1029,7 +1066,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         </div>
         <div class="module__body">
           <div class="module__chart">
-            <p class="note-block" style="border-top:none;padding-top:0;margin-bottom:14px;font-size:13px;color:var(--ink-secondary)">${escapeHtml(sleepCallout)}</p>
+            <p class="section-intro">${escapeHtml(sleepCallout)}</p>
             <div class="chart-wrap">
               ${sleepSvg}
               ${renderLegend([
@@ -1071,7 +1108,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         </div>
         <div class="module__body">
           <div class="module__chart">
-            <p class="note-block" style="border-top:none;padding-top:0;margin-bottom:14px;font-size:13px;color:var(--ink-secondary)">${escapeHtml(recoveryCallout)}</p>
+            <p class="section-intro">${escapeHtml(recoveryCallout)}</p>
             <table class="ledger">
               <thead>
                 <tr>
@@ -1113,7 +1150,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         </div>
         <div class="module__body">
           <div class="module__chart">
-            <p class="note-block" style="border-top:none;padding-top:0;margin-bottom:14px;font-size:13px;color:var(--ink-secondary)">${escapeHtml(activityCallout)}</p>
+            <p class="section-intro">${escapeHtml(activityCallout)}</p>
             <div class="chart-wrap">
               ${activitySvg}
               ${renderLegend([
@@ -1157,7 +1194,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
           <h2 class="module__title">${escapeHtml(bodyChart?.title ?? "身体成分")}</h2>
           ${bodyConf ? `<span class="badge ${confidenceClass(bodyConf.level)}">数据${confidenceLabel(bodyConf.level)}</span>` : ""}
         </div>
-        <p class="note-block" style="border-top:none;padding:0 24px 0;margin:14px 0 0;font-size:13px;color:var(--ink-secondary)">${escapeHtml(bodyCallout)}</p>
+        <p class="section-intro" style="padding:0 24px">${escapeHtml(bodyCallout)}</p>
         <div class="body-grid">
           ${bodyChart?.series
             .map((series, index) =>
@@ -1183,14 +1220,24 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         </div>
       </div>
 
+      <!-- Doctor Questions -->
+      <div class="actions actions--single">
+        <div class="actions__card">
+          <h3>下次看诊可以问医生的问题</h3>
+          <ol>
+            ${narrative.questions_for_doctor.map((q) => `<li>${escapeHtml(q)}</li>`).join("")}
+          </ol>
+        </div>
+      </div>
+
       <!-- Appendix -->
       <section id="appendix" class="appendix">
-        <h2 style="font-size:18px;font-weight:700">数据边界与补充提示</h2>
+        <h2 class="appendix__title">数据边界与补充提示</h2>
         <div class="appendix__grid">
           <div>
             <h3>数据局限</h3>
-            <ul style="padding-left:18px;display:grid;gap:6px">
-              ${[...narrative.data_limitations].map((d) => `<li style="font-size:13px;line-height:1.65;color:var(--ink-secondary)">${escapeHtml(d)}</li>`).join("")}
+            <ul class="appendix__list">
+              ${[...narrative.data_limitations].map((d) => `<li>${escapeHtml(d)}</li>`).join("")}
             </ul>
           </div>
           <div>
@@ -1211,7 +1258,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
           </div>
         </div>
         <div class="disclaimer">${escapeHtml(narrative.disclaimer)}</div>
-        <div class="disclaimer" style="margin-top:12px;font-size:12px">Generated by <a href="https://github.com/RuochenLyu/apple-health-analyst" style="color:var(--muted)">apple-health-analyst</a></div>
+        <div class="disclaimer footer-link">Generated by <a href="https://github.com/RuochenLyu/apple-health-analyst">apple-health-analyst</a></div>
       </section>
     </main>
   </body>
