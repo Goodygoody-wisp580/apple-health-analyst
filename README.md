@@ -24,13 +24,15 @@
 
 ## 快速开始
 
-```bash
-npm install
-npm run build
-node dist/cli.js analyze /path/to/导出.zip --out ./output
+在 Codex 中打开本项目目录，对话即可：
+
+```text
+使用 $apple-health-analyst 分析 /path/to/导出.zip
 ```
 
-打开 `output/report.html` 查看报告。
+Codex 会自动完成 **prepare → LLM 写 narrative → render** 全流程，生成健康顾问级报告。
+
+Skill 配置在 [`.agents/skills/apple-health-analyst/`](.agents/skills/apple-health-analyst/SKILL.md)，包含角色定义、分析框架和 narrative schema。
 
 ## 覆盖指标
 
@@ -43,42 +45,22 @@ node dist/cli.js analyze /path/to/导出.zip --out ./output
 
 ## CLI
 
-### `analyze`（推荐）
-
-一步完成：解析 ZIP → 分析 → 生成报告。
+Codex Skill 底层调用的命令。一般不需要手动执行，了解即可。
 
 ```bash
-apple-health-analyst analyze <export.zip> \
-  --from YYYY-MM-DD \
-  --to YYYY-MM-DD \
-  --format markdown,json,html \
-  --out <dir>
-```
+# 1. prepare：解析 ZIP，生成结构化数据
+node dist/cli.js prepare /path/to/导出.zip --out ./output
+# 产出 summary.json + insights.json
 
-### `prepare` + `render`（配合 LLM）
+# 2. (Codex 读取 insights.json，生成 report.llm.json)
 
-分两步：先生成结构化数据，让 LLM 写 narrative，再渲染报告。
-
-```bash
-# 1. 生成 summary.json + insights.json
-apple-health-analyst prepare <export.zip> --out ./output
-
-# 2. (LLM 读取 insights.json，生成 report.llm.json)
-
-# 3. 渲染最终报告
-apple-health-analyst render \
+# 3. render：渲染最终报告
+node dist/cli.js render \
   --insights ./output/insights.json \
   --narrative ./output/report.llm.json \
   --out ./output
+# 产出 report.html + report.md + report.llm.json
 ```
-
-## 作为 Codex Skill 使用
-
-```text
-使用 $apple-health-analyst 分析 /path/to/export.zip
-```
-
-Skill 配置在 [`.agents/skills/apple-health-analyst/`](.agents/skills/apple-health-analyst/SKILL.md)，包含健康顾问角色定义、分析框架和 narrative schema。
 
 ## 限制
 
@@ -89,7 +71,7 @@ Skill 配置在 [`.agents/skills/apple-health-analyst/`](.agents/skills/apple-he
 ## 开发
 
 ```bash
-npm run dev -- analyze /path/to/export.zip --out ./output  # 开发模式
+npm run dev -- prepare /path/to/导出.zip --out ./output  # 开发模式（tsx 直接跑，不用 build）
 npm run build   # 编译
 npm test        # 测试
 ```

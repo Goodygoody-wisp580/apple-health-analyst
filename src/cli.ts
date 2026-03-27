@@ -5,31 +5,13 @@ import path from "node:path";
 
 import { Command } from "commander";
 
-import { createFallbackNarrative } from "./narrative/createFallbackNarrative.js";
 import { validateNarrativeReport } from "./narrative/validateNarrativeReport.js";
 import { prepareAnalysis } from "./pipeline/prepareAnalysis.js";
 import {
-  formatsToSelection,
   writePrepareOutputs,
   writeRenderedOutputs,
 } from "./pipeline/writeOutputs.js";
-import { PACKAGE_NAME, type InsightBundle, type OutputFormat } from "./types.js";
-
-function parseFormats(input: string): OutputFormat[] {
-  const values = input
-    .split(",")
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean);
-
-  const supported: OutputFormat[] = ["markdown", "json", "html"];
-  for (const value of values) {
-    if (!supported.includes(value as OutputFormat)) {
-      throw new Error(`不支持的输出格式：${value}。请使用 markdown,json,html。`);
-    }
-  }
-
-  return [...new Set(values)] as OutputFormat[];
-}
+import { PACKAGE_NAME, type InsightBundle } from "./types.js";
 
 async function readJsonFile(filePath: string): Promise<unknown> {
   const contents = await readFile(path.resolve(filePath), "utf8");
@@ -84,34 +66,6 @@ async function runRender(
   return { insights, narrative };
 }
 
-async function runAnalyze(
-  exportZip: string,
-  options: {
-    from?: string;
-    to?: string;
-    format: string;
-    out: string;
-  },
-) {
-  const outputDir = path.resolve(options.out);
-  const prepared = await prepareAnalysis(exportZip, options);
-  const narrative = validateNarrativeReport(
-    createFallbackNarrative(prepared.insights),
-    prepared.insights.charts.map((chart) => chart.id),
-  );
-  const selection = formatsToSelection(parseFormats(options.format));
-
-  if (selection.json) {
-    await writePrepareOutputs(prepared.summary, prepared.insights, outputDir);
-  }
-  await writeRenderedOutputs(prepared.insights, narrative, outputDir, selection);
-
-  return {
-    ...prepared,
-    narrative,
-  };
-}
-
 export async function runCli(argv: string[]) {
   const program = new Command();
   program.name(PACKAGE_NAME).description("分析 Apple Health 导出 ZIP 文件。");
@@ -133,17 +87,6 @@ export async function runCli(argv: string[]) {
     .option("--out <dir>", "输出目录", "./output")
     .action(async (options) => {
       await runRender(options);
-    });
-
-  program
-    .command("analyze")
-    .argument("<exportZip>", "Apple Health 导出 ZIP 文件路径")
-    .option("--from <date>", "只分析 YYYY-MM-DD 及之后的数据")
-    .option("--to <date>", "只分析 YYYY-MM-DD 及之前的数据")
-    .option("--format <formats>", "逗号分隔的输出格式", "markdown,json,html")
-    .option("--out <dir>", "输出目录", "./output")
-    .action(async (exportZip, options) => {
-      await runAnalyze(exportZip, options);
     });
 
   await program.parseAsync(argv, { from: "user" });

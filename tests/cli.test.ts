@@ -11,14 +11,12 @@ function fixturePath(name: string): string {
 }
 
 describe("cli", () => {
-  it("writes selected output formats to the output directory", async () => {
+  it("prepare writes summary.json and insights.json", async () => {
     const outDir = await mkdtemp(path.join(os.tmpdir(), "apple-health-analyst-"));
 
     await runCli([
-      "analyze",
+      "prepare",
       fixturePath("multi-source-export"),
-      "--format",
-      "json,markdown",
       "--out",
       outDir,
     ]);
@@ -26,23 +24,18 @@ describe("cli", () => {
     const files = await readdir(outDir);
     expect(files).toContain("summary.json");
     expect(files).toContain("insights.json");
-    expect(files).toContain("report.llm.json");
-    expect(files).toContain("report.md");
-    expect(files).not.toContain("report.html");
   });
 
-  it("applies --from and --to filters and preserves them in the summary", async () => {
+  it("prepare applies --from and --to filters", async () => {
     const outDir = await mkdtemp(path.join(os.tmpdir(), "apple-health-analyst-"));
 
     await runCli([
-      "analyze",
+      "prepare",
       fixturePath("multi-source-export"),
       "--from",
       "2026-03-01",
       "--to",
       "2026-03-26",
-      "--format",
-      "json",
       "--out",
       outDir,
     ]);
@@ -50,20 +43,5 @@ describe("cli", () => {
     const summary = JSON.parse(await readFile(path.join(outDir, "summary.json"), "utf8"));
     expect(summary.input.from).toBe("2026-03-01");
     expect(summary.input.to).toBe("2026-03-26");
-  });
-
-  it("rejects unsupported output formats", async () => {
-    const outDir = await mkdtemp(path.join(os.tmpdir(), "apple-health-analyst-"));
-
-    await expect(
-      runCli([
-        "analyze",
-        fixturePath("multi-source-export"),
-        "--format",
-        "pdf",
-        "--out",
-        outDir,
-      ]),
-    ).rejects.toThrow("不支持的输出格式");
   });
 });

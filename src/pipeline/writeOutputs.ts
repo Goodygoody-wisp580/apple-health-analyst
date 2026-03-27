@@ -6,21 +6,7 @@ import { renderNarrativeJson } from "../render/narrativeJson.js";
 import { renderReportHtml } from "../render/reportHtml.js";
 import { renderReportMarkdown } from "../render/reportMarkdown.js";
 import { renderSummaryJson } from "../render/summaryJson.js";
-import type { AnalysisSummary, InsightBundle, NarrativeReport, OutputFormat } from "../types.js";
-
-export interface OutputSelection {
-  json: boolean;
-  markdown: boolean;
-  html: boolean;
-}
-
-export function formatsToSelection(formats: OutputFormat[]): OutputSelection {
-  return {
-    json: formats.includes("json"),
-    markdown: formats.includes("markdown"),
-    html: formats.includes("html"),
-  };
-}
+import type { AnalysisSummary, InsightBundle, NarrativeReport } from "../types.js";
 
 export async function writePrepareOutputs(
   summary: AnalysisSummary,
@@ -36,17 +22,10 @@ export async function writeRenderedOutputs(
   insights: InsightBundle,
   narrative: NarrativeReport,
   outputDir: string,
-  selection: OutputSelection = { json: true, markdown: true, html: true },
 ): Promise<void> {
   await mkdir(outputDir, { recursive: true });
 
-  if (selection.json) {
-    await writeFile(path.join(outputDir, "report.llm.json"), renderNarrativeJson(narrative), "utf8");
-  }
-  if (selection.markdown) {
-    await writeFile(path.join(outputDir, "report.md"), renderReportMarkdown(insights, narrative), "utf8");
-  }
-  if (selection.html) {
-    await writeFile(path.join(outputDir, "report.html"), renderReportHtml(insights, narrative), "utf8");
-  }
+  await writeFile(path.join(outputDir, "report.llm.json"), renderNarrativeJson(narrative), "utf8");
+  await writeFile(path.join(outputDir, "report.md"), renderReportMarkdown(insights, narrative), "utf8");
+  await writeFile(path.join(outputDir, "report.html"), renderReportHtml(insights, narrative), "utf8");
 }

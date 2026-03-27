@@ -22,8 +22,6 @@ export type RecoveryMetricKey =
 
 export type BodyMetricKey = "bodyMass" | "bodyFatPercentage";
 
-export type OutputFormat = "markdown" | "json" | "html";
-
 export type ModuleStatus = "ok" | "insufficient_data";
 
 export interface BaseSample {
