@@ -7,6 +7,8 @@ import type {
   TimeWindow,
 } from "../types.js";
 
+import type { RecoveryT } from "../i18n/zh/recovery.js";
+
 import { round, average } from "./mathUtils.js";
 
 const EMPTY_HEALTH_INSIGHTS: RecoveryHealthInsights = {
@@ -69,6 +71,7 @@ export function analyzeRecovery(
   recordsByMetric: Partial<Record<RecoveryMetricKey, QuantitySample[]>>,
   sourceNames: Partial<Record<RecoveryMetricKey, string>>,
   window: TimeWindow,
+  t: RecoveryT,
 ): RecoveryAnalysis {
   const metricUnits: Record<RecoveryMetricKey, string> = {
     restingHeartRate: "bpm",
@@ -99,7 +102,7 @@ export function analyzeRecovery(
     Object.entries(sourceNames).filter(([, value]) => Boolean(value)),
   ) as RecoveryAnalysis["sources"];
 
-  const healthInsights = buildRecoveryHealthInsights(metrics);
+  const healthInsights = buildRecoveryHealthInsights(metrics, t);
 
   return {
     status: Object.keys(metrics).length > 0 ? "ok" : "insufficient_data",
@@ -108,8 +111,8 @@ export function analyzeRecovery(
     healthInsights,
     notes:
       Object.keys(metrics).length > 0
-        ? ["恢复指标按各自的主数据源汇报，不会跨设备合并。"]
-        : ["所选时间窗口内没有可用的恢复指标。"],
+        ? [t.activeNote]
+        : [t.noDataNote],
   };
 }
 
@@ -117,6 +120,7 @@ export function analyzeRecovery(
 
 function buildRecoveryHealthInsights(
   metrics: RecoveryAnalysis["metrics"],
+  t: RecoveryT,
 ): RecoveryHealthInsights {
   if (Object.keys(metrics).length === 0) return EMPTY_HEALTH_INSIGHTS;
 
@@ -127,11 +131,11 @@ function buildRecoveryHealthInsights(
   return {
     rhrTrend: buildRhrTrend(rhr),
     hrvTrend: buildHrvTrend(hrv),
-    spo2Assessment: buildSpo2Assessment(spo2),
-    normalRangeAssessment: buildNormalRangeAssessment(metrics),
-    interpretation: buildInterpretation(metrics),
-    actionableAdvice: buildActionableAdvice(metrics),
-    doctorTalkingPoints: buildDoctorTalkingPoints(metrics),
+    spo2Assessment: buildSpo2Assessment(spo2, t),
+    normalRangeAssessment: buildNormalRangeAssessment(metrics, t),
+    interpretation: buildInterpretation(metrics, t),
+    actionableAdvice: buildActionableAdvice(metrics, t),
+    doctorTalkingPoints: buildDoctorTalkingPoints(metrics, t),
   };
 }
 
@@ -151,19 +155,19 @@ function buildHrvTrend(hrv: NumericComparison | undefined): RecoveryHealthInsigh
   return "stable";
 }
 
-function buildSpo2Assessment(spo2: NumericComparison | undefined): string {
-  if (!spo2?.recent30d.average) return "无血氧数据。";
+function buildSpo2Assessment(spo2: NumericComparison | undefined, t: RecoveryT): string {
+  if (!spo2?.recent30d.average) return t.spo2NoData;
   const avg = spo2.recent30d.average;
   if (avg >= 95) {
-    return `近期平均血氧 ${avg}%，处于正常范围（≥95%）。这表明肺部气体交换功能正常。`;
+    return t.spo2Normal(avg);
   }
   if (avg >= 93) {
-    return `近期平均血氧 ${avg}%，处于偏低水平（正常 ≥95%）。间歇性低血氧可能与睡眠呼吸暂停、高海拔环境或呼吸系统问题有关，建议持续监测并关注是否伴随白天嗜睡或晨起头痛。`;
+    return t.spo2Low(avg);
   }
-  return `近期平均血氧 ${avg}%，低于临床关注阈值（93%）。持续偏低的血氧可能提示呼吸系统问题、心肺功能异常或睡眠呼吸暂停，建议尽快咨询医生。`;
+  return t.spo2Critical(avg);
 }
 
-function buildNormalRangeAssessment(metrics: RecoveryAnalysis["metrics"]): string {
+function buildNormalRangeAssessment(metrics: RecoveryAnalysis["metrics"], t: RecoveryT): string {
   const parts: string[] = [];
   const rhr = metrics.restingHeartRate;
   const hrv = metrics.hrv;
@@ -174,55 +178,57 @@ function buildNormalRangeAssessment(metrics: RecoveryAnalysis["metrics"]): strin
   if (rhr?.recent30d.average) {
     const avg = rhr.recent30d.average;
     if (avg >= 40 && avg <= 60) {
-      parts.push(`静息心率 ${avg} bpm，处于运动人群的优秀范围（40-60 bpm）`);
+      parts.push(t.rhrExcellent(avg));
     } else if (avg > 60 && avg <= 100) {
-      parts.push(`静息心率 ${avg} bpm，处于正常范围（60-100 bpm）`);
+      parts.push(t.rhrNormal(avg));
     } else if (avg > 100) {
-      parts.push(`静息心率 ${avg} bpm，高于正常上限（100 bpm），可能与压力、脱水、咖啡因或甲状腺问题有关`);
+      parts.push(t.rhrHigh(avg));
     } else {
-      parts.push(`静息心率 ${avg} bpm，偏低，如果没有长期运动习惯，建议排查心脏传导系统`);
+      parts.push(t.rhrLow(avg));
     }
   }
 
   if (hrv?.recent30d.average) {
     const avg = hrv.recent30d.average;
-    parts.push(`HRV 均值 ${avg} ms——HRV 个体差异大，绝对值的参考意义有限，更重要的是观察趋势变化`);
+    parts.push(t.hrvNote(avg));
   }
 
   if (spo2?.recent30d.average) {
     const avg = spo2.recent30d.average;
     if (avg >= 95) {
-      parts.push(`血氧 ${avg}%，正常`);
+      parts.push(t.spo2InRangeNormal(avg));
     } else {
-      parts.push(`血氧 ${avg}%，偏低（正常 ≥95%），需关注`);
+      parts.push(t.spo2InRangeLow(avg));
     }
   }
 
   if (rr?.recent30d.average) {
     const avg = rr.recent30d.average;
     if (avg >= 12 && avg <= 20) {
-      parts.push(`呼吸频率 ${avg} 次/分，正常`);
+      parts.push(t.rrNormal(avg));
+    } else if (avg < 12) {
+      parts.push(t.rrLow(avg));
     } else {
-      parts.push(`呼吸频率 ${avg} 次/分，偏${avg < 12 ? "低" : "高"}（正常 12-20）`);
+      parts.push(t.rrHigh(avg));
     }
   }
 
   if (vo2?.recent30d.average) {
     const avg = vo2.recent30d.average;
     if (avg >= 40) {
-      parts.push(`VO2 Max ${avg} mL/min·kg，心肺耐力良好`);
+      parts.push(t.vo2Good(avg));
     } else if (avg >= 30) {
-      parts.push(`VO2 Max ${avg} mL/min·kg，心肺耐力中等，有提升空间`);
+      parts.push(t.vo2Moderate(avg));
     } else {
-      parts.push(`VO2 Max ${avg} mL/min·kg，心肺耐力偏低，建议逐步增加有氧运动`);
+      parts.push(t.vo2Low(avg));
     }
   }
 
-  return parts.length > 0 ? parts.join("；") + "。" : "恢复指标数据不足，无法评估。";
+  return parts.length > 0 ? parts.join(t.partSep) + t.partEnd : t.normalRangeInsufficientData;
 }
 
-function buildInterpretation(metrics: RecoveryAnalysis["metrics"]): string {
-  if (Object.keys(metrics).length === 0) return "记录不足，暂时无法给出综合解读。";
+function buildInterpretation(metrics: RecoveryAnalysis["metrics"], t: RecoveryT): string {
+  if (Object.keys(metrics).length === 0) return t.interpretationInsufficientData;
 
   const rhr = metrics.restingHeartRate;
   const hrv = metrics.hrv;
@@ -234,31 +240,31 @@ function buildInterpretation(metrics: RecoveryAnalysis["metrics"]): string {
   const hrvTrend = buildHrvTrend(hrv);
 
   if (rhrTrend === "improving" && hrvTrend === "improving") {
-    parts.push("恢复指标呈现积极趋势：静息心率下降 + HRV 上升，这是自主神经系统恢复良好、身体适应性增强的典型信号");
+    parts.push(t.coherencePositive);
   } else if (rhrTrend === "worsening" && hrvTrend === "worsening") {
-    parts.push("恢复指标同步走弱：静息心率上升 + HRV 下降，这是身体承受较大压力的信号，可能与过度训练、睡眠不足、精神压力或正在对抗感染有关");
+    parts.push(t.coherenceNegative);
   } else if (rhrTrend === "worsening" || hrvTrend === "worsening") {
-    parts.push("恢复指标出现部分退化信号，建议结合近期的睡眠质量和训练强度综合判断");
+    parts.push(t.coherencePartialDecline);
   } else if (rhrTrend === "stable" && hrvTrend === "stable") {
-    parts.push("恢复指标保持稳定，没有明显的趋势性变化");
+    parts.push(t.coherenceStable);
   } else if (rhr?.recent30d.average != null || hrv?.recent30d.average != null) {
-    parts.push("恢复指标可用，基线数据正在积累中，后续趋势判断会更可靠");
+    parts.push(t.coherenceAccumulating);
   }
 
   // SpO2 context
   if (spo2?.recent30d.average && spo2.recent30d.average < 95) {
-    parts.push(`血氧偏低（${spo2.recent30d.average}%）值得关注，特别是如果伴随白天嗜睡或晨起头痛，应排查睡眠呼吸暂停`);
+    parts.push(t.spo2LowContext(spo2.recent30d.average));
   }
 
   // RHR absolute value context
   if (rhr?.recent30d.average && rhr.recent30d.average > 100) {
-    parts.push("静息心率偏高，如果排除近期运动或咖啡因影响，建议检查是否存在甲状腺功能亢进或贫血");
+    parts.push(t.rhrHighContext);
   }
 
-  return parts.length > 0 ? parts.join("。") + "。" : "";
+  return parts.length > 0 ? parts.join(t.sentSep) + t.partEnd : "";
 }
 
-function buildActionableAdvice(metrics: RecoveryAnalysis["metrics"]): string[] {
+function buildActionableAdvice(metrics: RecoveryAnalysis["metrics"], t: RecoveryT): string[] {
   const advice: string[] = [];
   const rhr = metrics.restingHeartRate;
   const hrv = metrics.hrv;
@@ -268,35 +274,35 @@ function buildActionableAdvice(metrics: RecoveryAnalysis["metrics"]): string[] {
   const hrvTrend = buildHrvTrend(hrv);
 
   if (rhrTrend === "worsening" && hrvTrend === "worsening") {
-    advice.push("恢复指标同步走弱，建议在接下来 1-2 周降低训练强度，优先保证睡眠和压力管理。");
+    advice.push(t.adviceBothWorsening);
   } else if (rhrTrend === "worsening") {
-    advice.push("静息心率呈上升趋势，关注近期是否有压力增加、睡眠变差或过度训练，确保充分的恢复时间。");
+    advice.push(t.adviceRhrWorsening);
   } else if (hrvTrend === "worsening") {
-    advice.push("HRV 呈下降趋势，这是身体恢复能力下降的早期信号。增加恢复日安排，尝试冥想或深呼吸练习（每天 5-10 分钟）。");
+    advice.push(t.adviceHrvWorsening);
   }
 
   if (spo2?.recent30d.average && spo2.recent30d.average < 95) {
-    advice.push("血氧偏低，建议留意是否有打鼾、夜间憋醒等睡眠呼吸暂停的症状，必要时做多导睡眠监测。");
+    advice.push(t.adviceSpo2Low);
   }
 
   if (rhr?.recent30d.average && rhr.recent30d.average > 80) {
-    advice.push("静息心率偏高，规律的有氧运动（如快走、游泳，每周 3-5 次，每次 30 分钟）可以有效降低静息心率。");
+    advice.push(t.adviceRhrHigh);
   }
 
   const vo2 = metrics.vo2Max;
   if (vo2?.recent30d.average && vo2.recent30d.average < 30) {
-    advice.push("VO2 Max 偏低，建议从低强度有氧开始，逐步增加运动量以提升心肺耐力。");
+    advice.push(t.adviceVo2Low);
   }
 
   if (advice.length === 0) {
-    advice.push("你的恢复指标整体良好，继续保持当前的运动和生活节奏。");
+    advice.push(t.adviceGood);
   }
-  advice.push("保持测量时间的一致性（如每天早起后测量），这能让趋势对比更可靠。");
+  advice.push(t.adviceConsistentMeasurement);
 
   return advice;
 }
 
-function buildDoctorTalkingPoints(metrics: RecoveryAnalysis["metrics"]): string[] {
+function buildDoctorTalkingPoints(metrics: RecoveryAnalysis["metrics"], t: RecoveryT): string[] {
   const points: string[] = [];
   const rhr = metrics.restingHeartRate;
   const hrv = metrics.hrv;
@@ -304,27 +310,28 @@ function buildDoctorTalkingPoints(metrics: RecoveryAnalysis["metrics"]): string[
   const rr = metrics.respiratoryRate;
 
   if (rhr?.recent30d.average && rhr.recent30d.average > 100) {
-    points.push(`"我的静息心率最近平均 ${rhr.recent30d.average} bpm，偏高，需要检查甲状腺或做心电图吗？"`);
+    points.push(t.doctorRhrHigh(rhr.recent30d.average));
   }
 
   if (rhr?.delta && rhr.delta >= 5) {
-    points.push(`"我的静息心率近期上升了 ${rhr.delta} bpm，这种变化是否需要关注？"`);
+    points.push(t.doctorRhrRising(rhr.delta));
   }
 
   if (spo2?.recent30d.average && spo2.recent30d.average < 95) {
-    points.push(`"我的血氧平均 ${spo2.recent30d.average}%，偏低，是否需要做睡眠呼吸暂停筛查或肺功能检查？"`);
+    points.push(t.doctorSpo2Low(spo2.recent30d.average));
   }
 
   if (hrv?.delta && hrv.delta <= -10) {
-    points.push(`"我的 HRV 近期下降了 ${Math.abs(hrv.delta)} ms，这是否反映自主神经功能的变化？"`);
+    points.push(t.doctorHrvDrop(Math.abs(hrv.delta)));
   }
 
   if (rr?.recent30d.average && (rr.recent30d.average < 12 || rr.recent30d.average > 20)) {
-    points.push(`"我的呼吸频率平均 ${rr.recent30d.average} 次/分，偏${rr.recent30d.average < 12 ? "低" : "高"}，需要进一步检查吗？"`);
+    const direction = rr.recent30d.average < 12 ? t.directionLow : t.directionHigh;
+    points.push(t.doctorRrAbnormal(rr.recent30d.average, direction));
   }
 
   if (points.length === 0) {
-    points.push(`"我的恢复指标数据整体看起来正常，有没有什么预防性的心血管检查建议？"`);
+    points.push(t.doctorNormal);
   }
 
   return points;

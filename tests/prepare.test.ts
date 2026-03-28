@@ -5,6 +5,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { runCli } from "../src/cli.js";
+import { zhTranslations } from "../src/i18n/zh/index.js";
 import { prepareAnalysis } from "../src/pipeline/prepareAnalysis.js";
 
 function fixturePath(name: string): string {
@@ -13,7 +14,7 @@ function fixturePath(name: string): string {
 
 describe("prepare pipeline", () => {
   it("builds summary and insights with v2 schema", async () => {
-    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {});
+    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {}, zhTranslations);
 
     expect(prepared.summary.sources.primary.sleep).toBe("Withings");
     expect(prepared.insights.metadata.schemaVersion).toBe("2.1.0");

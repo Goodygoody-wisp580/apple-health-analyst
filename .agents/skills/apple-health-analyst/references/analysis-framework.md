@@ -1,91 +1,91 @@
-# 健康数据解读参考框架
+# Health Data Interpretation Framework
 
-本文档为 LLM 提供跨指标健康解读的背景知识。所有内容仅用于生成健康管理建议，不用于医学诊断。
+This document provides background knowledge for cross-metric health interpretation. All content is intended solely for generating health management advice, not for medical diagnosis.
 
-## 1. 睡眠与 HRV 的关联
+## 1. Sleep and HRV Correlation
 
-HRV（心率变异性）是自主神经系统活动的关键指标。研究表明：
+HRV (Heart Rate Variability) is a key indicator of autonomic nervous system activity. Research shows:
 
-- **睡眠不足会降低 HRV**：睡眠 < 6 小时后，副交感神经张力下降，HRV 通常降低 10-20%。
-- **深睡比例影响恢复**：深度睡眠（N3 阶段）是 HRV 最高的阶段，深睡比例不足 15% 提示恢复质量可能受限。
-- **滞后效应**：一夜短睡的 HRV 影响通常在次日最明显，如果连续 2-3 天短睡，HRV 可能持续走低。
+- **Insufficient sleep lowers HRV**: After < 6 hours of sleep, parasympathetic tone decreases, and HRV typically drops 10-20%.
+- **Deep sleep proportion affects recovery**: Deep sleep (N3 stage) is when HRV is highest. Deep sleep below 15% suggests recovery quality may be limited.
+- **Lag effect**: The HRV impact of one short night is most evident the following day. If short sleep persists for 2-3 consecutive days, HRV may remain depressed.
 
-**解读指引**：如果 `crossMetric.sleepRecoveryLink.hrvDropOnPoorSleep` 超过 -10%，说明这个人的自主神经系统对睡眠不足比较敏感，应该优先保障睡眠时长。
+**Interpretation guide**: If `crossMetric.sleepRecoveryLink.hrvDropOnPoorSleep` exceeds -10%, this person's autonomic nervous system is relatively sensitive to sleep deprivation — prioritize ensuring adequate sleep duration.
 
-## 2. 静息心率与 HRV 的一致性
+## 2. Resting Heart Rate and HRV Coherence
 
-RHR 和 HRV 反映交感/副交感平衡的两个侧面：
+RHR and HRV reflect two sides of the sympathetic/parasympathetic balance:
 
-- **RHR 下降 + HRV 上升** = 恢复状态改善，自主神经平衡趋于副交感主导。
-- **RHR 上升 + HRV 下降** = 双重压力信号，可能来自：过度训练、睡眠不足、心理压力、疾病前兆。
-- **RHR 下降 + HRV 下降** = 混合信号，可能是药物影响或测量噪声。
-- **RHR 稳定 + HRV 稳定** = 生理状态平稳，没有明显的外部干扰。
+- **RHR down + HRV up** = Recovery improving, autonomic balance shifting toward parasympathetic dominance.
+- **RHR up + HRV down** = Dual stress signal, potentially from: overtraining, insufficient sleep, psychological stress, or pre-illness.
+- **RHR down + HRV down** = Mixed signal, possibly medication effects or measurement noise.
+- **RHR stable + HRV stable** = Physiological state is steady with no significant external disruption.
 
-**解读指引**：关注 `crossMetric.recoveryCoherence.aligned`。如果不一致，尝试在 narrative 中推理可能的原因。
+**Interpretation guide**: Check `crossMetric.recoveryCoherence.aligned`. If misaligned, reason about possible causes in the narrative.
 
-## 3. 训练负荷与恢复平衡
+## 3. Training Load and Recovery Balance
 
-参考 WHOOP 和 Oura 的方法论：
+Referenced from WHOOP and Oura methodology:
 
-- **适当负荷**：高运动日后 1-2 天内 HRV 回到基线水平，说明恢复能力充足。
-- **过度负荷**：高运动日后 HRV 持续低于基线 2 天以上，或连续 4+ 天高运动无恢复日。
-- **WHO 推荐量**：每周 150 分钟中等强度有氧运动，或 75 分钟高强度运动。
-- **周末战士风险**：将一周的运动量集中在周末 1-2 天，心血管事件风险高于均匀分布。
+- **Appropriate load**: HRV returns to baseline within 1-2 days after a high-exercise day, indicating sufficient recovery capacity.
+- **Overload**: HRV remains below baseline for 2+ days after high exercise, or 4+ consecutive high-exercise days without rest.
+- **WHO recommendation**: 150 minutes/week of moderate-intensity aerobic exercise, or 75 minutes of vigorous exercise.
+- **Weekend warrior risk**: Concentrating a week's exercise into 1-2 weekend days carries higher cardiovascular event risk than even distribution.
 
-**解读指引**：`crossMetric.activityRecoveryBalance.recoveryAdequate` 为 false 时，建议减少连续高强度天数，增加恢复日。
+**Interpretation guide**: When `crossMetric.activityRecoveryBalance.recoveryAdequate` is false, recommend reducing consecutive high-intensity days and adding recovery days.
 
-## 4. 作息规律性
+## 4. Schedule Regularity
 
-研究发现，作息规律性对健康的影响可能比总睡眠时长更大：
+Research suggests that sleep schedule regularity may have a greater health impact than total sleep duration:
 
-- **规律的入睡/起床时间**能强化昼夜节律，改善深睡比例和激素分泌节奏。
-- **入睡时间标准差 > 60 分钟**被认为是"社交时差"（social jet lag），等同于频繁跨时区旅行。
-- **固定起床时间**是建立规律作息的最有效锚点，因为光照暴露直接调控褪黑素分泌。
+- **Regular bedtime/wake times** strengthen circadian rhythm, improving deep sleep proportion and hormone secretion patterns.
+- **Bedtime standard deviation > 60 minutes** is considered "social jet lag," equivalent to frequent time zone travel.
+- **Fixed wake time** is the most effective anchor for establishing a regular schedule, as light exposure directly regulates melatonin secretion.
 
-**解读指引**：`crossMetric.sleepConsistency.regularity` 为 "low" 时，优先建议固定起床时间，而不是更早入睡。
+**Interpretation guide**: When `crossMetric.sleepConsistency.regularity` is "low," prioritize recommending a fixed wake time rather than an earlier bedtime.
 
-## 5. 常见行为模式及健康影响
+## 5. Common Behavioral Patterns and Health Impact
 
-### 周末战士
-- **特征**：工作日运动极少，周末集中大量运动
-- **风险**：肌骨骼损伤风险高，心血管保护效果弱于均匀分布
-- **建议**：工作日增加 15-20 分钟步行或轻量运动
+### Weekend Warrior
+- **Characteristics**: Minimal exercise on weekdays, concentrated heavy exercise on weekends
+- **Risk**: Higher musculoskeletal injury risk; weaker cardiovascular protection than evenly distributed exercise
+- **Recommendation**: Add 15-20 minutes of walking or light exercise on weekdays
 
-### 夜猫子漂移
-- **特征**：入睡时间逐渐后移（每周后移 15-30 分钟）
-- **影响**：深睡比例下降，HRV 降低，白天嗜睡增加
-- **建议**：早晨增加户外光照暴露（至少 10 分钟），晚间减少蓝光
+### Night Owl Drift
+- **Characteristics**: Bedtime gradually shifting later (15-30 minutes later per week)
+- **Impact**: Decreased deep sleep proportion, lower HRV, increased daytime sleepiness
+- **Recommendation**: Increase morning outdoor light exposure (at least 10 minutes), reduce evening blue light
 
-### 睡眠补偿（周末补觉）
-- **特征**：工作日 < 6.5 小时，周末 > 8 小时
-- **问题**：研究表明周末补觉只能部分恢复认知功能，无法完全偿还代谢和免疫损失
-- **建议**：工作日至少保证 7 小时，减少对周末补偿的依赖
+### Sleep Compensation (Weekend Catch-up)
+- **Characteristics**: Weekdays < 6.5 hours, weekends > 8 hours
+- **Issue**: Research shows weekend catch-up sleep only partially restores cognitive function and cannot fully repay metabolic and immune deficits
+- **Recommendation**: Ensure at least 7 hours on weekdays; reduce reliance on weekend compensation
 
-### 恢复不足
-- **特征**：连续 4+ 天高运动量，无轻量恢复日
-- **风险**：过度训练综合征、HRV 持续走低、运动表现下降
-- **建议**：每 2-3 天安排一个轻量日（步行、拉伸、瑜伽）
+### Recovery Deficit
+- **Characteristics**: 4+ consecutive days of high exercise volume with no light recovery days
+- **Risk**: Overtraining syndrome, sustained low HRV, declining athletic performance
+- **Recommendation**: Schedule a light day (walking, stretching, yoga) every 2-3 days
 
-## 6. 综合评分解读
+## 6. Composite Score Interpretation
 
-评分算法透明、可解释：
+The scoring algorithm is transparent and explainable:
 
-- **睡眠评分** = 时长 (40%) + 规律性 (30%) + 深睡比例 (30%)
-- **恢复评分** = HRV 趋势 (40%) + RHR 趋势 (30%) + 睡眠充足性 (30%)
-- **活动评分** = 运动量 (50%) + 一致性 (50%)
+- **Sleep Score** = Duration (40%) + Regularity (30%) + Deep Sleep % (30%)
+- **Recovery Score** = HRV Trend (40%) + RHR Trend (30%) + Sleep Adequacy (30%)
+- **Activity Score** = Exercise Volume (50%) + Consistency (50%)
 
-评分的价值不在于精确数字，而在于维度间的**相对差异**。例如：
-- 睡眠 45 / 恢复 80 / 活动 70 → 睡眠是短板，优先改善
-- 睡眠 80 / 恢复 40 / 活动 85 → 训练积极但恢复不足，需要加入恢复日
+The value of scores lies not in precise numbers but in the **relative differences between dimensions**. For example:
+- Sleep 45 / Recovery 80 / Activity 70 → Sleep is the bottleneck; prioritize improvement
+- Sleep 80 / Recovery 40 / Activity 85 → Training is strong but recovery is insufficient; add recovery days
 
-## 7. 安全边界提醒
+## 7. Safety Boundary Reminders
 
-以下情况应建议就医（保守表述）：
+The following situations warrant a medical consultation recommendation (conservative phrasing):
 
-- 静息心率持续 > 100 bpm 或持续上升 > 10 bpm
-- HRV 在无明显生活方式变化的情况下持续大幅下降
-- 血氧持续 ≤ 93%
-- 运动耐受突然明显下降
-- 体重在 2 周内无减脂意图地下降 > 3 kg
+- Resting heart rate persistently > 100 bpm or sustained increase > 10 bpm
+- HRV declining significantly and persistently without obvious lifestyle changes
+- Blood oxygen persistently ≤ 93%
+- Sudden noticeable decline in exercise tolerance
+- Weight loss > 3 kg within 2 weeks without intentional fat loss
 
-这些不构成诊断，但建议用"如果持续存在，建议咨询医生"的措辞。
+These do not constitute diagnoses. Use phrasing like "if this persists, consider consulting a doctor."

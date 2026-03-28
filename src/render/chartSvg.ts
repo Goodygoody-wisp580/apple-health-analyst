@@ -1,3 +1,4 @@
+import type { RenderT } from "../i18n/zh/render.js";
 import type { ChartSeries } from "../types.js";
 
 interface ChartSize {
@@ -89,6 +90,7 @@ export function renderLineSparkline(
   series: ChartSeries,
   color: string,
   size: ChartSize = { width: 180, height: 56 },
+  t?: RenderT,
 ): string {
   const values = numericPoints(series);
   const { min, max } = extent(values);
@@ -110,9 +112,11 @@ export function renderLineSparkline(
 
   const polyline = points.length > 0 ? points.join(" ") : `${pad},${size.height / 2}`;
 
+  const ariaLabel = t ? t.sparklineAriaLabel(series.label) : `${series.label} sparkline`;
+
   return `<svg viewBox="0 0 ${size.width} ${size.height}" role="img" aria-label="${escapeAttribute(
-    series.label,
-  )} 迷你趋势图" xmlns="http://www.w3.org/2000/svg">
+    ariaLabel,
+  )}" xmlns="http://www.w3.org/2000/svg">
   <polyline fill="none" stroke="${escapeAttribute(color)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${polyline}" />
 </svg>`;
 }
@@ -123,6 +127,7 @@ export function renderBarChart(
   series: ChartSeries,
   color: string,
   size: ChartSize = { width: 640, height: 180 },
+  t?: RenderT,
 ): string {
   const values = numericPoints(series);
   const { max } = extent(values);
@@ -159,9 +164,11 @@ export function renderBarChart(
     })
     .join("");
 
+  const ariaLabel = t ? t.barChartAriaLabel(series.label) : `${series.label} bar chart`;
+
   return `<svg viewBox="0 0 ${size.width} ${size.height}" role="img" aria-label="${escapeAttribute(
-    series.label,
-  )} 柱状图" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+    ariaLabel,
+  )}" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
   ${bars}
   ${xLabels}
 </svg>`;
@@ -173,6 +180,7 @@ export function renderMultiSeriesLineChart(
   seriesList: ChartSeries[],
   colors: string[],
   size: ChartSize = { width: 720, height: 220 },
+  t?: RenderT,
 ): string {
   const values = seriesList.flatMap((series) => numericPoints(series));
   const { min, max } = extent(values);
@@ -254,7 +262,9 @@ export function renderMultiSeriesLineChart(
     })
     .join("");
 
-  return `<svg viewBox="0 0 ${size.width} ${size.height}" role="img" aria-label="趋势图" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  const ariaLabel = t ? t.lineChartAriaLabel : "Trend chart";
+
+  return `<svg viewBox="0 0 ${size.width} ${size.height}" role="img" aria-label="${escapeAttribute(ariaLabel)}" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
   ${gridLines}
   ${xLabels}
   ${paths}

@@ -5,6 +5,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { runCli } from "../src/cli.js";
+import { zhTranslations } from "../src/i18n/zh/index.js";
 import { prepareAnalysis } from "../src/pipeline/prepareAnalysis.js";
 import type { NarrativeReport } from "../src/types.js";
 
@@ -37,7 +38,7 @@ function buildMinimalNarrative(chartIds: string[]): NarrativeReport {
 
 describe("render pipeline", () => {
   it("renders markdown and offline html from narrative json", async () => {
-    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {});
+    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {}, zhTranslations);
     const chartIds = prepared.insights.charts.map((chart) => chart.id);
     const narrative = buildMinimalNarrative(chartIds);
     const inputDir = await mkdtemp(path.join(os.tmpdir(), "apple-health-input-"));

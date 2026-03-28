@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { analyzeRecovery } from "../src/analyzers/recovery.js";
 import { analyzeSleep } from "../src/analyzers/sleep.js";
+import { recoveryZh } from "../src/i18n/zh/recovery.js";
+import { sleepZh } from "../src/i18n/zh/sleep.js";
 import { findMainXml } from "../src/io/findMainXml.js";
 import { readZip } from "../src/io/readZip.js";
 import { parseHealthExport } from "../src/io/streamHealthXml.js";
@@ -23,7 +25,7 @@ describe("analyzers", () => {
     const sleepRecords = parsed.records.sleep.filter(
       (record) => record.canonicalSource === selected.sleep?.canonicalName,
     );
-    const sleep = analyzeSleep(sleepRecords, selected.sleep?.displayName ?? null, window);
+    const sleep = analyzeSleep(sleepRecords, selected.sleep?.displayName ?? null, window, sleepZh);
 
     expect(sleep.result.recent30d.nights).toBe(1);
     expect(sleep.result.partialNights).toHaveLength(1);
@@ -40,7 +42,7 @@ describe("analyzers", () => {
     const sleepRecords = parsed.records.sleep.filter(
       (record) => record.canonicalSource === selected.sleep?.canonicalName,
     );
-    const sleep = analyzeSleep(sleepRecords, selected.sleep?.displayName ?? null, window);
+    const sleep = analyzeSleep(sleepRecords, selected.sleep?.displayName ?? null, window, sleepZh);
 
     expect(sleep.result.status).toBe("ok");
     expect(sleep.result.delta.sleepHours).toBeGreaterThan(0);
@@ -51,7 +53,7 @@ describe("analyzers", () => {
 
   it("returns insufficient_data when no recovery metrics are present", () => {
     const window = buildTimeWindow(undefined, undefined, new Date("2026-03-26T00:00:00Z"));
-    const recovery = analyzeRecovery({}, {}, window);
+    const recovery = analyzeRecovery({}, {}, window, recoveryZh);
 
     expect(recovery.status).toBe("insufficient_data");
   });

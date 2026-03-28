@@ -5,6 +5,7 @@ import path from "node:path";
 
 import { Command } from "commander";
 
+import { getTranslations, type Locale } from "./i18n/index.js";
 import { validateNarrativeReport } from "./narrative/validateNarrativeReport.js";
 import { prepareAnalysis } from "./pipeline/prepareAnalysis.js";
 import {
@@ -20,15 +21,15 @@ async function readJsonFile(filePath: string): Promise<unknown> {
 
 function asInsightBundle(value: unknown): InsightBundle {
   if (!value || typeof value !== "object") {
-    throw new Error("insights.json 必须是对象。");
+    throw new Error("insights.json must be an object.");
   }
 
   const candidate = value as Partial<InsightBundle>;
   if (!Array.isArray(candidate.charts)) {
-    throw new Error("insights.json 缺少 charts。");
+    throw new Error("insights.json is missing the charts array.");
   }
   if (!candidate.analysis || !candidate.coverage || !candidate.input) {
-    throw new Error("insights.json 结构不完整。");
+    throw new Error("insights.json structure is incomplete.");
   }
 
   return candidate as InsightBundle;
@@ -40,10 +41,13 @@ async function runPrepare(
     from?: string;
     to?: string;
     out: string;
+    lang: string;
   },
 ) {
+  const locale = (options.lang === "zh" ? "zh" : "en") as Locale;
+  const t = await getTranslations(locale);
   const outputDir = path.resolve(options.out);
-  const prepared = await prepareAnalysis(exportZip, options);
+  const prepared = await prepareAnalysis(exportZip, { ...options, locale }, t);
   await writePrepareOutputs(prepared.summary, prepared.insights, outputDir);
   return prepared;
 }
@@ -57,34 +61,37 @@ async function runRender(
 ) {
   const outputDir = path.resolve(options.out);
   const insights = asInsightBundle(await readJsonFile(options.insights));
+  const locale: Locale = insights.metadata.language === "zh" || insights.metadata.language === "zh-CN" ? "zh" : "en";
+  const t = await getTranslations(locale);
   const narrative = validateNarrativeReport(
     await readJsonFile(options.narrative),
     insights.charts.map((chart) => chart.id),
   );
 
-  await writeRenderedOutputs(insights, narrative, outputDir);
+  await writeRenderedOutputs(insights, narrative, outputDir, t);
   return { insights, narrative };
 }
 
 export async function runCli(argv: string[]) {
   const program = new Command();
-  program.name(PACKAGE_NAME).description("分析 Apple Health 导出 ZIP 文件。");
+  program.name(PACKAGE_NAME).description("Analyze Apple Health export ZIP files.");
 
   program
     .command("prepare")
-    .argument("<exportZip>", "Apple Health 导出 ZIP 文件路径")
-    .option("--from <date>", "只分析 YYYY-MM-DD 及之后的数据")
-    .option("--to <date>", "只分析 YYYY-MM-DD 及之前的数据")
-    .option("--out <dir>", "输出目录", "./output")
+    .argument("<exportZip>", "Apple Health export ZIP path")
+    .option("--from <date>", "Only analyze data on or after YYYY-MM-DD")
+    .option("--to <date>", "Only analyze data on or before YYYY-MM-DD")
+    .option("--out <dir>", "Output directory", "./output")
+    .option("--lang <locale>", "Report language (zh|en)", "en")
     .action(async (exportZip, options) => {
       await runPrepare(exportZip, options);
     });
 
   program
     .command("render")
-    .requiredOption("--insights <file>", "prepare 生成的 insights.json 路径")
-    .requiredOption("--narrative <file>", "LLM 生成的 report.llm.json 路径")
-    .option("--out <dir>", "输出目录", "./output")
+    .requiredOption("--insights <file>", "Path to insights.json from prepare")
+    .requiredOption("--narrative <file>", "Path to report.llm.json from LLM")
+    .option("--out <dir>", "Output directory", "./output")
     .action(async (options) => {
       await runRender(options);
     });

@@ -6,6 +6,8 @@ import type {
   TimeWindow,
 } from "../types.js";
 
+import type { CrossMetricT } from "../i18n/zh/crossMetric.js";
+
 import { buildNightSummaries, roundNumber, averageNumbers } from "./sleepShared.js";
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -260,7 +262,7 @@ function buildDailyRows(
 
 // ── Sleep-Recovery Link ────────────────────────────────────────────
 
-function analyzeSleepRecoveryLink(rows: DailyMetricRow[]): SleepRecoveryLink {
+function analyzeSleepRecoveryLink(rows: DailyMetricRow[], t: CrossMetricT): SleepRecoveryLink {
   const shortSleepNextHRV: number[] = [];
   const normalSleepNextHRV: number[] = [];
   const shortSleepNextRHR: number[] = [];
@@ -300,13 +302,13 @@ function analyzeSleepRecoveryLink(rows: DailyMetricRow[]): SleepRecoveryLink {
 
   let summary: string;
   if (shortDays === 0) {
-    summary = "近期没有睡眠不足 6 小时的夜晚，睡眠时长保障较好。";
+    summary = t.sleepRecoveryNoShortNights;
   } else if (hrvDrop !== null && hrvDrop < -5) {
-    summary = `睡眠不足 6 小时的 ${shortDays} 个夜晚，次日 HRV 平均下降 ${Math.abs(hrvDrop)}%（${shortHRV} vs ${normalHRV} ms），说明短睡对自主神经恢复有明确影响。`;
+    summary = t.sleepRecoveryHrvDrop(shortDays, hrvDrop, shortHRV!, normalHRV!);
   } else if (shortDays >= 3 && hrvDrop === null) {
-    summary = `有 ${shortDays} 个夜晚睡眠不足 6 小时，但缺少足够的次日 HRV 数据来判断恢复影响。`;
+    summary = t.sleepRecoveryNoHrvData(shortDays);
   } else {
-    summary = `有 ${shortDays} 个夜晚睡眠不足 6 小时，次日 HRV 未出现显著下降，身体对短睡的耐受尚可。`;
+    summary = t.sleepRecoveryTolerable(shortDays);
   }
 
   return {
@@ -323,7 +325,7 @@ function analyzeSleepRecoveryLink(rows: DailyMetricRow[]): SleepRecoveryLink {
 
 // ── Sleep Consistency ──────────────────────────────────────────────
 
-function analyzeSleepConsistency(rows: DailyMetricRow[]): SleepConsistency {
+function analyzeSleepConsistency(rows: DailyMetricRow[], t: CrossMetricT): SleepConsistency {
   const bedtimeMinutes: number[] = [];
   const wakeMinutes: number[] = [];
   const durations: number[] = [];
@@ -357,13 +359,13 @@ function analyzeSleepConsistency(rows: DailyMetricRow[]): SleepConsistency {
 
   let summary: string;
   if (regularity === null) {
-    summary = "作息规律性数据不足，无法评估。";
+    summary = t.sleepConsistencyInsufficient;
   } else if (regularity === "high") {
-    summary = `入睡时间标准差约 ${bedStd} 分钟，起床标准差约 ${wakeStd} 分钟，作息节律非常稳定。研究表明规律作息比延长睡眠时间对健康的贡献更大。`;
+    summary = t.sleepConsistencyHigh(bedStd!, wakeStd!);
   } else if (regularity === "moderate") {
-    summary = `入睡时间标准差约 ${bedStd} 分钟，起床标准差约 ${wakeStd} 分钟，作息有一定波动。建议优先固定起床时间，入睡时间会自然趋于稳定。`;
+    summary = t.sleepConsistencyModerate(bedStd!, wakeStd!);
   } else {
-    summary = `入睡时间标准差约 ${bedStd} 分钟，起床标准差约 ${wakeStd} 分钟，作息波动较大。不规律的作息会削弱昼夜节律，影响深睡质量和激素分泌。`;
+    summary = t.sleepConsistencyLow(bedStd!, wakeStd!);
   }
 
   return {
@@ -377,7 +379,7 @@ function analyzeSleepConsistency(rows: DailyMetricRow[]): SleepConsistency {
 
 // ── Activity-Recovery Balance ──────────────────────────────────────
 
-function analyzeActivityRecoveryBalance(rows: DailyMetricRow[]): ActivityRecoveryBalance {
+function analyzeActivityRecoveryBalance(rows: DailyMetricRow[], t: CrossMetricT): ActivityRecoveryBalance {
   const rowMap = new Map(rows.map((r) => [r.date, r]));
 
   const highStrainNextHRV: number[] = [];
@@ -408,13 +410,13 @@ function analyzeActivityRecoveryBalance(rows: DailyMetricRow[]): ActivityRecover
 
   let summary: string;
   if (highStrainDays === 0) {
-    summary = "近期没有高运动量天（≥60 分钟），无法评估训练-恢复平衡。";
+    summary = t.activityRecoveryNoHighStrain;
   } else if (adequate === null) {
-    summary = `有 ${highStrainDays} 天运动量较高，但 HRV 数据不足以判断恢复充分性。`;
+    summary = t.activityRecoveryInsufficientHrv(highStrainDays);
   } else if (adequate) {
-    summary = `有 ${highStrainDays} 天高运动量，次日 HRV 均值 ${highHRV} ms 接近休息日的 ${restHRV} ms，说明身体对当前训练负荷恢复良好。`;
+    summary = t.activityRecoveryAdequate(highStrainDays, highHRV!, restHRV!);
   } else {
-    summary = `有 ${highStrainDays} 天高运动量，次日 HRV 均值 ${highHRV} ms 明显低于休息日的 ${restHRV} ms，提示训练负荷可能超出恢复能力，建议适当降低强度或增加恢复日。`;
+    summary = t.activityRecoveryInadequate(highStrainDays, highHRV!, restHRV!);
   }
 
   return {
@@ -428,7 +430,7 @@ function analyzeActivityRecoveryBalance(rows: DailyMetricRow[]): ActivityRecover
 
 // ── Recovery Coherence ─────────────────────────────────────────────
 
-function analyzeRecoveryCoherence(rows: DailyMetricRow[]): RecoveryCoherence {
+function analyzeRecoveryCoherence(rows: DailyMetricRow[], t: CrossMetricT): RecoveryCoherence {
   const rhrValues = rows.filter((r) => r.restingHR !== null).map((r) => r.restingHR!);
   const hrvValues = rows.filter((r) => r.hrv !== null).map((r) => r.hrv!);
 
@@ -468,13 +470,13 @@ function analyzeRecoveryCoherence(rows: DailyMetricRow[]): RecoveryCoherence {
 
   let summary: string;
   if (rhrT === null || hrvT === null) {
-    summary = "恢复指标数据不足，无法判断趋势一致性。";
+    summary = t.recoveryCoherenceInsufficient;
   } else if (aligned) {
-    summary = `静息心率${rhrT === "improving" ? "下降" : "稳定"}，HRV ${hrvT === "improving" ? "上升" : "稳定"}，两项恢复指标方向一致，交感/副交感平衡状态良好。`;
+    summary = t.recoveryCoherenceAligned(rhrT, hrvT);
   } else if (rhrT === "worsening" && hrvT === "worsening") {
-    summary = "静息心率上升且 HRV 下降，双重信号提示自主神经恢复能力下降，需要关注压力、睡眠和训练负荷。";
+    summary = t.recoveryCoherenceBothWorsening;
   } else {
-    summary = `静息心率趋势为"${rhrT}"，HRV 趋势为"${hrvT}"，两项指标方向不完全一致，建议观察是否存在混合压力源（如训练增加但睡眠改善）。`;
+    summary = t.recoveryCoherenceMixed(rhrT, hrvT);
   }
 
   return { rhrTrend: rhrT, hrvTrend: hrvT, aligned, summary };
@@ -486,6 +488,7 @@ function computeCompositeAssessment(
   rows: DailyMetricRow[],
   sleepConsistency: SleepConsistency,
   recoveryCoherence: RecoveryCoherence,
+  t: CrossMetricT,
 ): CompositeAssessment {
   // Sleep Score (0-100)
   const sleepHours = rows.filter((r) => r.sleepHours !== null).map((r) => r.sleepHours!);
@@ -559,35 +562,35 @@ function computeCompositeAssessment(
 
   const readinessLabel =
     overallReadiness === "good"
-      ? "良好"
+      ? t.readinessGood
       : overallReadiness === "moderate"
-        ? "中等"
+        ? t.readinessModerate
         : overallReadiness === "low"
-          ? "偏低"
-          : "数据不足";
+          ? t.readinessLow
+          : t.readinessInsufficientData;
 
   const parts: string[] = [];
-  if (sleepScore !== null) parts.push(`睡眠 ${sleepScore}/100`);
-  if (recoveryScore !== null) parts.push(`恢复 ${recoveryScore}/100`);
-  if (activityScore !== null) parts.push(`活动 ${activityScore}/100`);
+  if (sleepScore !== null) parts.push(t.compositeSleep(sleepScore));
+  if (recoveryScore !== null) parts.push(t.compositeRecovery(recoveryScore));
+  if (activityScore !== null) parts.push(t.compositeActivity(activityScore));
 
   const summary =
     parts.length > 0
-      ? `综合评分：${parts.join("、")}。整体状态${readinessLabel}。${
+      ? `${t.compositeSummary(parts.join(t.compositeScoreSeparator), readinessLabel)}${
           overallReadiness === "low"
-            ? "建议优先改善睡眠和恢复，暂缓增加训练强度。"
+            ? t.compositeLowAdvice
             : overallReadiness === "moderate"
-              ? "有改善空间，重点关注评分最低的维度。"
-              : "各维度状态较好，可以维持或适当推进训练目标。"
+              ? t.compositeModerateAdvice
+              : t.compositeGoodAdvice
         }`
-      : "数据维度不足，无法生成综合评分。";
+      : t.compositeInsufficientDimensions;
 
   return { sleepScore, recoveryScore, activityScore, overallReadiness, summary };
 }
 
 // ── Pattern Detection ──────────────────────────────────────────────
 
-function detectPatterns(rows: DailyMetricRow[]): string[] {
+function detectPatterns(rows: DailyMetricRow[], t: CrossMetricT): string[] {
   const patterns: string[] = [];
 
   // Weekend warrior: weekday vs weekend exercise difference
@@ -603,7 +606,7 @@ function detectPatterns(rows: DailyMetricRow[]): string[] {
     const weAvg = averageNumbers(weekendExercise) ?? 0;
     if (weAvg > wdAvg * 2 && weAvg > 30) {
       patterns.push(
-        `周末战士模式：周末平均运动 ${Math.round(weAvg)} 分钟，是工作日 ${Math.round(wdAvg)} 分钟的 ${Math.round(weAvg / Math.max(wdAvg, 1))} 倍。集中运动的受伤风险高于均匀分布，建议在工作日增加轻量活动。`,
+        t.patternWeekendWarrior(Math.round(weAvg), Math.round(wdAvg), Math.round(weAvg / Math.max(wdAvg, 1))),
       );
     }
   }
@@ -621,9 +624,7 @@ function detectPatterns(rows: DailyMetricRow[]): string[] {
     const secondHalf = averageNumbers(bedtimes.slice(Math.floor(bedtimes.length / 2))) ?? 0;
     if (secondHalf - firstHalf > 30) {
       const driftMin = Math.round(secondHalf - firstHalf);
-      patterns.push(
-        `夜猫子漂移：入睡时间在分析期内平均后移了约 ${driftMin} 分钟。昼夜节律后移会降低深睡比例和 HRV，建议在早晨增加光照暴露来锚定节律。`,
-      );
+      patterns.push(t.patternNightOwlDrift(driftMin));
     }
   }
 
@@ -639,9 +640,7 @@ function detectPatterns(rows: DailyMetricRow[]): string[] {
     const wdAvg = averageNumbers(weekdaySleep) ?? 0;
     const weAvg = averageNumbers(weekendSleep) ?? 0;
     if (weAvg - wdAvg > 1.5 && wdAvg < 6.5) {
-      patterns.push(
-        `睡眠补偿模式：工作日平均睡 ${wdAvg.toFixed(1)} 小时，周末 ${weAvg.toFixed(1)} 小时。周末补觉只能部分偿还睡眠债，无法完全恢复认知功能和代谢损失。建议工作日至少保证 7 小时。`,
-      );
+      patterns.push(t.patternSleepDebtCompensation(wdAvg.toFixed(1), weAvg.toFixed(1)));
     }
   }
 
@@ -658,9 +657,7 @@ function detectPatterns(rows: DailyMetricRow[]): string[] {
     }
   }
   if (maxConsecutive >= 4) {
-    patterns.push(
-      `恢复不足风险：出现连续 ${maxConsecutive} 天高运动量（≥45 分钟），缺少恢复日。连续高负荷会累积微损伤并压制 HRV，建议每 2-3 天安排一个轻量恢复日。`,
-    );
+    patterns.push(t.patternRecoveryDeficit(maxConsecutive));
   }
 
   return patterns;
@@ -668,7 +665,7 @@ function detectPatterns(rows: DailyMetricRow[]): string[] {
 
 // ── Notable Days ───────────────────────────────────────────────────
 
-function findNotableDays(rows: DailyMetricRow[]): NotableDay[] {
+function findNotableDays(rows: DailyMetricRow[], t: CrossMetricT): NotableDay[] {
   const days: NotableDay[] = [];
 
   function findExtreme(
@@ -690,7 +687,7 @@ function findNotableDays(rows: DailyMetricRow[]): NotableDay[] {
         value: getValue(best)!,
         unit,
         type: "best",
-        context: `均值 ${roundNumber(avg)} ${unit}`,
+        context: t.notableDayContext(roundNumber(avg)!, unit),
       });
     }
     if (worst && avg !== null && worst.date !== best?.date) {
@@ -700,15 +697,15 @@ function findNotableDays(rows: DailyMetricRow[]): NotableDay[] {
         value: getValue(worst)!,
         unit,
         type: "worst",
-        context: `均值 ${roundNumber(avg)} ${unit}`,
+        context: t.notableDayContext(roundNumber(avg)!, unit),
       });
     }
   }
 
-  findExtreme("睡眠时长", "小时", (r) => r.sleepHours, "high");
-  findExtreme("HRV", "ms", (r) => r.hrv, "high");
-  findExtreme("静息心率", "bpm", (r) => r.restingHR, "low");
-  findExtreme("锻炼时长", "分钟", (r) => {
+  findExtreme(t.notableSleepDuration, t.notableUnitHours, (r) => r.sleepHours, "high");
+  findExtreme(t.notableHRV, t.notableUnitMs, (r) => r.hrv, "high");
+  findExtreme(t.notableRHR, t.notableUnitBpm, (r) => r.restingHR, "low");
+  findExtreme(t.notableExercise, t.notableUnitMinutes, (r) => {
     const e = r.exerciseMinutes ?? 0;
     const w = r.workoutMinutes ?? 0;
     return e + w > 0 ? e + w : null;
@@ -723,23 +720,25 @@ export function analyzeCrossMetrics(
   parsed: ParsedHealthExport,
   primarySources: PrimarySources,
   window: TimeWindow,
+  t: CrossMetricT,
 ): CrossMetricAnalysis {
   const dailyRows = buildDailyRows(parsed, primarySources, window);
 
-  const sleepRecoveryLink = analyzeSleepRecoveryLink(dailyRows);
-  const sleepConsistency = analyzeSleepConsistency(dailyRows);
-  const activityRecoveryBalance = analyzeActivityRecoveryBalance(dailyRows);
-  const recoveryCoherence = analyzeRecoveryCoherence(dailyRows);
+  const sleepRecoveryLink = analyzeSleepRecoveryLink(dailyRows, t);
+  const sleepConsistency = analyzeSleepConsistency(dailyRows, t);
+  const activityRecoveryBalance = analyzeActivityRecoveryBalance(dailyRows, t);
+  const recoveryCoherence = analyzeRecoveryCoherence(dailyRows, t);
   const compositeAssessment = computeCompositeAssessment(
     dailyRows,
     sleepConsistency,
     recoveryCoherence,
+    t,
   );
-  const patterns = detectPatterns(dailyRows);
+  const patterns = detectPatterns(dailyRows, t);
 
   return {
     dailyRows,
-    notableDays: findNotableDays(dailyRows),
+    notableDays: findNotableDays(dailyRows, t),
     sleepRecoveryLink,
     sleepConsistency,
     activityRecoveryBalance,

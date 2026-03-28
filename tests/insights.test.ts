@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { zhTranslations } from "../src/i18n/zh/index.js";
+import { insightsZh } from "../src/i18n/zh/insights.js";
 import {
   buildDataGaps,
   buildRiskFlags,
@@ -30,7 +32,7 @@ describe("insights helpers", () => {
   });
 
   it("emits recovery stress and sleep decline risk flags when signals worsen together", async () => {
-    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {});
+    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {}, zhTranslations);
     const stressed = structuredClone(prepared.summary);
 
     stressed.sleep.delta.sleepHours = -1.2;
@@ -38,7 +40,7 @@ describe("insights helpers", () => {
     stressed.recovery.metrics.restingHeartRate!.delta = 4;
     stressed.recovery.metrics.hrv!.delta = -7;
 
-    const flags = buildRiskFlags(stressed);
+    const flags = buildRiskFlags(stressed, insightsZh);
 
     expect(flags.map((flag) => flag.id)).toContain("sleep_decline");
     expect(flags.map((flag) => flag.id)).toContain("recovery_stress");
@@ -46,7 +48,7 @@ describe("insights helpers", () => {
   });
 
   it("marks missing samples as data gaps and downgrades source confidence", async () => {
-    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {});
+    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {}, zhTranslations);
     const sparse = structuredClone(prepared.summary);
 
     sparse.sleep.coverageDays = 2;
@@ -57,8 +59,8 @@ describe("insights helpers", () => {
     sparse.bodyComposition.metrics.bodyMass = undefined;
     sparse.bodyComposition.metrics.bodyFatPercentage = undefined;
 
-    const dataGaps = buildDataGaps(sparse);
-    const confidence = buildSourceConfidence(sparse);
+    const dataGaps = buildDataGaps(sparse, insightsZh);
+    const confidence = buildSourceConfidence(sparse, insightsZh);
 
     expect(dataGaps.some((gap) => gap.id === "sleep_insufficient")).toBe(true);
     expect(dataGaps.some((gap) => gap.id === "activity_sparse")).toBe(true);
@@ -67,7 +69,7 @@ describe("insights helpers", () => {
   });
 
   it("includes long-term historical context for narrative reasoning", async () => {
-    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {});
+    const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {}, zhTranslations);
 
     expect(prepared.insights.historicalContext.scope.totalSpanDays).toBeGreaterThan(0);
     expect(prepared.insights.historicalContext.sleep.trailing180d.nights).toBeGreaterThan(0);

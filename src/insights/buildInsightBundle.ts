@@ -1,5 +1,8 @@
 import { analyzeCrossMetrics } from "../analyzers/crossMetric.js";
+import type { CrossMetricT } from "../i18n/zh/crossMetric.js";
 import { detectPeriods, calculateCycleLengths } from "../analyzers/menstrualCycle.js";
+import type { InsightsT } from "../i18n/zh/insights.js";
+import type { Locale } from "../i18n/index.js";
 import { isWithinWindow } from "../normalize/buildTimeWindow.js";
 import {
   INSIGHT_SCHEMA_VERSION,
@@ -39,18 +42,35 @@ type TimedMetric = {
   unit: string;
 };
 
-const RECOVERY_META: Record<RecoveryMetricKey, TimedMetric> = {
-  restingHeartRate: { label: "静息心率", unit: "bpm" },
-  hrv: { label: "HRV", unit: "ms" },
-  oxygenSaturation: { label: "血氧", unit: "%" },
-  respiratoryRate: { label: "呼吸频率", unit: "breaths/min" },
-  vo2Max: { label: "最大摄氧量", unit: "mL/min·kg" },
+const RECOVERY_UNITS: Record<RecoveryMetricKey, string> = {
+  restingHeartRate: "bpm",
+  hrv: "ms",
+  oxygenSaturation: "%",
+  respiratoryRate: "breaths/min",
+  vo2Max: "mL/min·kg",
 };
 
-const BODY_META: Record<BodyMetricKey, TimedMetric> = {
-  bodyMass: { label: "体重", unit: "kg" },
-  bodyFatPercentage: { label: "体脂率", unit: "%" },
+const BODY_UNITS: Record<BodyMetricKey, string> = {
+  bodyMass: "kg",
+  bodyFatPercentage: "%",
 };
+
+function buildRecoveryMeta(t: InsightsT): Record<RecoveryMetricKey, TimedMetric> {
+  return {
+    restingHeartRate: { label: t.restingHeartRateLabel, unit: "bpm" },
+    hrv: { label: t.hrvLabel, unit: "ms" },
+    oxygenSaturation: { label: t.oxygenSaturationLabel, unit: "%" },
+    respiratoryRate: { label: t.respiratoryRateLabel, unit: "breaths/min" },
+    vo2Max: { label: t.vo2MaxLabel, unit: "mL/min·kg" },
+  };
+}
+
+function buildBodyMeta(t: InsightsT): Record<BodyMetricKey, TimedMetric> {
+  return {
+    bodyMass: { label: t.bodyMassLabel, unit: "kg" },
+    bodyFatPercentage: { label: t.bodyFatPercentageLabel, unit: "%" },
+  };
+}
 
 function unique<T>(values: T[]): T[] {
   return [...new Set(values)];
@@ -293,6 +313,7 @@ function buildActivityHistoricalContext(
 function buildInterpretationHints(
   summary: AnalysisSummary,
   historicalContext: InsightHistoricalContext,
+  t: InsightsT,
 ): string[] {
   const hints: string[] = [];
   const sleep = historicalContext.sleep;
@@ -304,11 +325,11 @@ function buildInterpretationHints(
   if (sleep.recent30d.avgSleepHours !== null && sleep.allTime.avgSleepHours !== null) {
     if (sleep.recentVsAllTime.sleepHours !== null && sleep.recentVsAllTime.sleepHours <= -0.5) {
       hints.push(
-        `近期睡眠时长低于长期平均 ${Math.abs(sleep.recentVsAllTime.sleepHours)} 小时，优先级应高于继续加训练量。`,
+        t.hintSleepBelowLongTerm(Math.abs(sleep.recentVsAllTime.sleepHours)),
       );
     } else if (sleep.recentVsAllTime.sleepHours !== null && sleep.recentVsAllTime.sleepHours >= 0.5) {
       hints.push(
-        `近期睡眠时长高于长期平均 ${sleep.recentVsAllTime.sleepHours} 小时，说明最近的恢复窗口比长期状态更充足。`,
+        t.hintSleepAboveLongTerm(sleep.recentVsAllTime.sleepHours),
       );
     }
   }
@@ -321,7 +342,7 @@ function buildInterpretationHints(
     hrv?.recentVsAllTime !== undefined &&
     hrv.recentVsAllTime <= -5
   ) {
-    hints.push("静息心率高于长期平均且 HRV 低于长期平均，常见于恢复负荷偏高、压力上升或近期节奏失衡。");
+    hints.push(t.hintRecoveryStress);
   } else if (
     resting?.recentVsAllTime !== null &&
     resting?.recentVsAllTime !== undefined &&
@@ -330,7 +351,7 @@ function buildInterpretationHints(
     hrv?.recentVsAllTime !== undefined &&
     hrv.recentVsAllTime >= 5
   ) {
-    hints.push("恢复指标比长期平均更从容，通常意味着最近的睡眠、压力和训练安排更可持续。");
+    hints.push(t.hintRecoveryRelaxed);
   }
 
   if (
@@ -343,7 +364,7 @@ function buildInterpretationHints(
     hrv?.recentVsAllTime !== undefined &&
     Math.abs(hrv.recentVsAllTime) < 5
   ) {
-    hints.push("睡眠改善已经先出现，但恢复指标还没有形成同方向共振，更适合继续稳住节奏而不是立刻加量。");
+    hints.push(t.hintSleepImprovedRecoveryLagging);
   }
 
   if (
@@ -353,7 +374,7 @@ function buildInterpretationHints(
     bodyMass?.recentVsAllTime !== undefined &&
     bodyMass.recentVsAllTime <= -1
   ) {
-    hints.push("活动量高于长期平均且体重低于长期平均，如果这是主动目标，当前方向较一致；若并非预期，则要留意摄入和恢复。");
+    hints.push(t.hintActivityUpWeightDown);
   }
 
   if (
@@ -363,7 +384,7 @@ function buildInterpretationHints(
     bodyMass?.recentVsAllTime !== undefined &&
     bodyMass.recentVsAllTime >= 1
   ) {
-    hints.push("近期活动量低于长期平均而体重高于长期平均，更适合先恢复稳定活动与作息，再谈强度提升。");
+    hints.push(t.hintActivityDownWeightUp);
   }
 
   if (
@@ -378,7 +399,7 @@ function buildInterpretationHints(
       hrv.recentVsAllTime <= -5
     )
   ) {
-    hints.push("近期活动量高于长期平均且没有看到明确的恢复恶化信号，当前负荷大致仍在可承受范围。");
+    hints.push(t.hintActivityUpRecoveryOk);
   }
 
   if (
@@ -387,7 +408,7 @@ function buildInterpretationHints(
     bodyMass.recentVsAllTime <= -1 &&
     (activity.recentVsAllTime.exerciseMinutes === null || activity.recentVsAllTime.exerciseMinutes < 10)
   ) {
-    hints.push("体重低于长期平均，但活动提升并不明显；如果这不是主动减脂目标，建议回看饮食、睡眠和恢复是否一起在变化。");
+    hints.push(t.hintWeightDownActivityFlat);
   }
 
   if (
@@ -395,15 +416,15 @@ function buildInterpretationHints(
     summary.activity.recent30d.dayCount < 7 &&
     summary.sleep.coverageDays >= 14
   ) {
-    hints.push("历史跨度已经足够长，但最近部分模块记录偏稀疏，近期判断应优先依赖记录更连续的模块。");
+    hints.push(t.hintSparseModules);
   }
 
   if (summary.menstrualCycle && summary.menstrualCycle.totalPeriods >= 3) {
     const mc = summary.menstrualCycle;
     if (mc.regularity === "regular") {
-      hints.push(`生理周期规律（平均 ${mc.avgCycleLengthDays} 天，标准差 ${mc.cycleLengthStdDays} 天），这对整体激素平衡是积极信号。`);
+      hints.push(t.hintMenstrualRegular(mc.avgCycleLengthDays!, mc.cycleLengthStdDays!));
     } else if (mc.regularity === "irregular") {
-      hints.push(`生理周期不规律（标准差 ${mc.cycleLengthStdDays} 天），建议结合睡眠和压力数据综合判断，必要时咨询妇科医生。`);
+      hints.push(t.hintMenstrualIrregular(mc.cycleLengthStdDays!));
     }
   }
 
@@ -418,6 +439,7 @@ function buildSleepCharts(
   parsed: ParsedHealthExport,
   primarySources: PrimarySources,
   window: TimeWindow,
+  t: InsightsT,
 ): ChartGroup {
   const source = primarySources.sleep?.canonicalName;
   const records = source
@@ -434,19 +456,19 @@ function buildSleepCharts(
 
   return {
     id: "sleep",
-    title: "睡眠时长与阶段趋势",
-    subtitle: "近 30 天按日保留，较早历史自动压缩为周/月，便于 LLM 聚焦趋势而不是原始样本。",
+    title: t.sleepChartTitle,
+    subtitle: t.sleepChartSubtitle,
     series: [
       {
         id: "sleep_hours",
-        label: "睡眠时长",
-        unit: "小时",
+        label: t.sleepHoursLabel,
+        unit: t.sleepHoursUnit,
         visual: "line",
         points: compressTimeSeries(toTimedValues((night) => night.totalSleepHours), window.effectiveEnd, "average"),
       },
       {
         id: "sleep_deep_pct",
-        label: "深睡占比",
+        label: t.deepSleepPctLabel,
         unit: "%",
         visual: "line",
         points: compressTimeSeries(
@@ -459,7 +481,7 @@ function buildSleepCharts(
       },
       {
         id: "sleep_rem_pct",
-        label: "REM 占比",
+        label: t.remSleepPctLabel,
         unit: "%",
         visual: "line",
         points: compressTimeSeries(
@@ -503,8 +525,10 @@ function buildRecoveryCharts(
   parsed: ParsedHealthExport,
   primarySources: PrimarySources,
   window: TimeWindow,
+  t: InsightsT,
 ): ChartGroup {
-  const series = (Object.keys(RECOVERY_META) as RecoveryMetricKey[])
+  const recoveryMeta = buildRecoveryMeta(t);
+  const series = (Object.keys(recoveryMeta) as RecoveryMetricKey[])
     .map((metric) => {
       const canonicalName = primarySources.recovery[metric]?.canonicalName;
       if (!canonicalName) {
@@ -514,24 +538,24 @@ function buildRecoveryCharts(
       if (records.length === 0) {
         return null;
       }
-      const meta = RECOVERY_META[metric];
+      const meta = recoveryMeta[metric];
       return buildQuantitySeries(metric, meta.label, records, window, meta.unit);
     })
     .filter((entry): entry is ChartSeries => Boolean(entry));
 
   return {
     id: "recovery",
-    title: "恢复指标对比",
-    subtitle: "每项恢复指标保持原始单位，便于在网页中分别展示近期曲线和最新值。",
+    title: t.recoveryChartTitle,
+    subtitle: t.recoveryChartSubtitle,
     series,
   };
 }
 
-function buildActivityWorkoutsSeries(workouts: WorkoutSample[], window: TimeWindow): ChartSeries {
+function buildActivityWorkoutsSeries(workouts: WorkoutSample[], window: TimeWindow, t: InsightsT): ChartSeries {
   return {
     id: "activity_workouts",
-    label: "训练次数",
-    unit: "次",
+    label: t.workoutCountLabel,
+    unit: t.workoutCountUnit,
     visual: "bar",
     points: compressTimeSeries(
       workouts
@@ -550,16 +574,17 @@ function buildActivityCharts(
   activitySummaries: ActivitySummarySample[],
   workouts: WorkoutSample[],
   window: TimeWindow,
+  t: InsightsT,
 ): ChartGroup {
   const filteredSummaries = activitySummaries.filter((summary) => isWithinWindow(summary.date, window));
   return {
     id: "activity",
-    title: "活动趋势",
-    subtitle: "活动摘要负责日常活动量，训练记录单独统计，避免把不同来源强行混成一个分数。",
+    title: t.activityChartTitle,
+    subtitle: t.activityChartSubtitle,
     series: [
       {
         id: "activity_energy",
-        label: "活动能量",
+        label: t.activityEnergyLabel,
         unit: "kcal",
         visual: "line",
         points: compressTimeSeries(
@@ -573,8 +598,8 @@ function buildActivityCharts(
       },
       {
         id: "activity_exercise",
-        label: "锻炼分钟",
-        unit: "分钟",
+        label: t.exerciseMinutesLabel,
+        unit: t.exerciseMinutesUnit,
         visual: "line",
         points: compressTimeSeries(
           filteredSummaries.map((summary) => ({
@@ -587,8 +612,8 @@ function buildActivityCharts(
       },
       {
         id: "activity_stand",
-        label: "站立小时",
-        unit: "小时",
+        label: t.standHoursLabel,
+        unit: t.standHoursUnit,
         visual: "line",
         points: compressTimeSeries(
           filteredSummaries.map((summary) => ({
@@ -599,7 +624,7 @@ function buildActivityCharts(
           "average",
         ),
       },
-      buildActivityWorkoutsSeries(workouts, window),
+      buildActivityWorkoutsSeries(workouts, window, t),
     ],
   };
 }
@@ -608,8 +633,10 @@ function buildBodyCharts(
   parsed: ParsedHealthExport,
   primarySources: PrimarySources,
   window: TimeWindow,
+  t: InsightsT,
 ): ChartGroup {
-  const series = (Object.keys(BODY_META) as BodyMetricKey[])
+  const bodyMeta = buildBodyMeta(t);
+  const series = (Object.keys(bodyMeta) as BodyMetricKey[])
     .map((metric) => {
       const canonicalName = primarySources.bodyComposition[metric]?.canonicalName;
       if (!canonicalName) {
@@ -619,15 +646,15 @@ function buildBodyCharts(
       if (records.length === 0) {
         return null;
       }
-      const meta = BODY_META[metric];
+      const meta = bodyMeta[metric];
       return buildQuantitySeries(metric, meta.label, records, window, meta.unit);
     })
     .filter((entry): entry is ChartSeries => Boolean(entry));
 
   return {
     id: "bodyComposition",
-    title: "身体成分趋势",
-    subtitle: "优先使用最稳定的体重秤来源，近期变化可以直接对应到体重和体脂两条曲线。",
+    title: t.bodyChartTitle,
+    subtitle: t.bodyChartSubtitle,
     series,
   };
 }
@@ -635,6 +662,7 @@ function buildBodyCharts(
 function buildMenstrualCycleCharts(
   parsed: ParsedHealthExport,
   window: TimeWindow,
+  t: InsightsT,
 ): ChartGroup | null {
   if (parsed.menstrualFlow.length === 0) return null;
 
@@ -670,23 +698,23 @@ function buildMenstrualCycleCharts(
 
   return {
     id: "menstrualCycle",
-    title: "生理周期趋势",
+    title: t.menstrualChartTitle,
     subtitle:
       cycleLengths.length > 0
-        ? `共追踪 ${periods.length} 个周期，平均周期 ${round(cycleLengths.reduce((s, v) => s + v, 0) / cycleLengths.length)} 天。`
-        : `共追踪 ${periods.length} 个经期。`,
+        ? t.menstrualChartSubtitleWithAvg(periods.length, round(cycleLengths.reduce((s, v) => s + v, 0) / cycleLengths.length)!)
+        : t.menstrualChartSubtitleNoAvg(periods.length),
     series: [
       {
         id: "cycle_length",
-        label: "周期长度",
-        unit: "天",
+        label: t.cycleLengthLabel,
+        unit: t.cycleLengthUnit,
         visual: "line",
         points: cycleLengthPoints,
       },
       {
         id: "period_duration",
-        label: "经期天数",
-        unit: "天",
+        label: t.periodDurationLabel,
+        unit: t.periodDurationUnit,
         visual: "bar",
         points: periodDurationPoints,
       },
@@ -694,7 +722,7 @@ function buildMenstrualCycleCharts(
   };
 }
 
-export function buildSourceConfidence(summary: AnalysisSummary): SourceConfidence[] {
+export function buildSourceConfidence(summary: AnalysisSummary, t: InsightsT): SourceConfidence[] {
   const recoveryMetrics = Object.values(summary.recovery.metrics).filter(
     (metric): metric is NonNullable<(typeof summary.recovery.metrics)[RecoveryMetricKey]> => Boolean(metric),
   );
@@ -718,8 +746,8 @@ export function buildSourceConfidence(summary: AnalysisSummary): SourceConfidenc
             : "low",
       summary:
         summary.sleep.source && summary.sleep.coverageDays > 0
-          ? `睡眠主数据源为 ${summary.sleep.source}，覆盖 ${summary.sleep.coverageDays} 个夜晚${summary.sleep.staged ? "，包含分阶段睡眠" : ""}。`
-          : "睡眠数据不足，趋势解读可信度较低。",
+          ? t.sleepConfidenceSummary(summary.sleep.source, summary.sleep.coverageDays, summary.sleep.staged)
+          : t.sleepConfidenceInsufficient,
     },
     {
       module: "recovery",
@@ -731,8 +759,8 @@ export function buildSourceConfidence(summary: AnalysisSummary): SourceConfidenc
             : "low",
       summary:
         recoveryMetrics.length > 0
-          ? `恢复指标共覆盖 ${recoveryMetrics.length} 项，主要来自 ${recoverySources.join(" / ")}。`
-          : "恢复指标覆盖不足，无法把握恢复趋势。",
+          ? t.recoveryConfidenceSummary(recoveryMetrics.length, recoverySources.join(" / "))
+          : t.recoveryConfidenceInsufficient,
     },
     {
       module: "activity",
@@ -744,8 +772,8 @@ export function buildSourceConfidence(summary: AnalysisSummary): SourceConfidenc
             : "low",
       summary:
         summary.activity.status === "ok"
-          ? `活动摘要覆盖 ${summary.activity.coverageDays} 天，近 30 天训练 ${summary.activity.recent30d.workouts} 次。`
-          : "活动摘要或训练记录不足，活动趋势只能谨慎参考。",
+          ? t.activityConfidenceSummary(summary.activity.coverageDays, summary.activity.recent30d.workouts)
+          : t.activityConfidenceInsufficient,
     },
     {
       module: "bodyComposition",
@@ -758,8 +786,8 @@ export function buildSourceConfidence(summary: AnalysisSummary): SourceConfidenc
             : "low",
       summary:
         bodyMetrics.length > 0
-          ? `身体成分来自 ${bodySources.join(" / ") || "已选主数据源"}。`
-          : "身体成分样本不足，体重和体脂建议只看方向，不看细小波动。",
+          ? t.bodyConfidenceSummary(bodySources.join(" / ") || t.bodyConfidenceDefaultSource)
+          : t.bodyConfidenceInsufficient,
     },
     ...(summary.menstrualCycle
       ? [
@@ -770,22 +798,24 @@ export function buildSourceConfidence(summary: AnalysisSummary): SourceConfidenc
               : summary.menstrualCycle.totalPeriods >= 3
                 ? "medium"
                 : "low") as SourceConfidence["level"],
-            summary: `生理周期数据覆盖 ${summary.menstrualCycle.totalPeriods} 个周期，${summary.menstrualCycle.coverageDays} 天记录。`,
+            summary: t.menstrualConfidenceSummary(summary.menstrualCycle.totalPeriods, summary.menstrualCycle.coverageDays),
           },
         ]
       : []),
   ];
 }
 
-export function buildDataGaps(summary: AnalysisSummary): DataGap[] {
+export function buildDataGaps(summary: AnalysisSummary, t: InsightsT): DataGap[] {
   const dataGaps: DataGap[] = [];
+  const recoveryMeta = buildRecoveryMeta(t);
+  const bodyMeta = buildBodyMeta(t);
 
   if (summary.sleep.status === "insufficient_data" || summary.sleep.coverageDays < 5) {
     dataGaps.push({
       id: "sleep_insufficient",
       module: "sleep",
       severity: "warning",
-      summary: "睡眠夜数偏少，近期与基线的比较稳定性有限。",
+      summary: t.sleepInsufficientGap,
     });
   }
   if (summary.sleep.partialNights.length > 0) {
@@ -793,18 +823,18 @@ export function buildDataGaps(summary: AnalysisSummary): DataGap[] {
       id: "sleep_partial_nights",
       module: "sleep",
       severity: "info",
-      summary: `已有 ${summary.sleep.partialNights.length} 个睡眠夜晚因记录不完整被排除。`,
+      summary: t.sleepPartialNightsGap(summary.sleep.partialNights.length),
     });
   }
 
-  for (const metric of Object.keys(RECOVERY_META) as RecoveryMetricKey[]) {
+  for (const metric of Object.keys(recoveryMeta) as RecoveryMetricKey[]) {
     const record = summary.recovery.metrics[metric];
     if (!record || record.recent30d.sampleCount < 1) {
       dataGaps.push({
         id: `recovery_${metric}_missing`,
         module: "recovery",
         severity: "warning",
-        summary: `${RECOVERY_META[metric].label} 缺少足够近期样本。`,
+        summary: t.recoveryMetricMissingGap(recoveryMeta[metric].label),
       });
     }
   }
@@ -814,18 +844,18 @@ export function buildDataGaps(summary: AnalysisSummary): DataGap[] {
       id: "activity_sparse",
       module: "activity",
       severity: "warning",
-      summary: "近期活动摘要覆盖天数偏少，活动趋势更适合看大方向。",
+      summary: t.activitySparseGap,
     });
   }
 
-  for (const metric of Object.keys(BODY_META) as BodyMetricKey[]) {
+  for (const metric of Object.keys(bodyMeta) as BodyMetricKey[]) {
     const record = summary.bodyComposition.metrics[metric];
     if (!record || record.recent30d.sampleCount < 1) {
       dataGaps.push({
         id: `body_${metric}_missing`,
         module: "bodyComposition",
         severity: "warning",
-        summary: `${BODY_META[metric].label} 缺少足够近期样本。`,
+        summary: t.bodyMetricMissingGap(bodyMeta[metric].label),
       });
     }
   }
@@ -835,14 +865,14 @@ export function buildDataGaps(summary: AnalysisSummary): DataGap[] {
       id: "menstrual_sparse",
       module: "menstrualCycle",
       severity: "warning",
-      summary: "生理周期记录较少，周期规律性评估可信度有限。",
+      summary: t.menstrualSparseGap,
     });
   }
 
   return dataGaps;
 }
 
-export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
+export function buildRiskFlags(summary: AnalysisSummary, t: InsightsT): RiskFlag[] {
   const flags: RiskFlag[] = [];
   const resting = summary.recovery.metrics.restingHeartRate;
   const hrv = summary.recovery.metrics.hrv;
@@ -859,13 +889,13 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
       id: "sleep_decline",
       module: "sleep",
       severity: summary.sleep.recent30d.avgSleepHours !== null && summary.sleep.recent30d.avgSleepHours < 6 ? "high" : "medium",
-      title: "近期睡眠时长下降",
-      summary: "近 30 天平均睡眠时长明显低于个人基线，优先检查作息、入睡时间和恢复安排。",
-      evidence: [
-        `近 30 天平均 ${summary.sleep.recent30d.avgSleepHours ?? "数据不足"} 小时`,
-        `基线 90 天平均 ${summary.sleep.baseline90d.avgSleepHours ?? "数据不足"} 小时`,
-      ],
-      recommendationFocus: "先稳住睡眠窗口和起床时间，再考虑提高训练负荷。",
+      title: t.sleepDeclineTitle,
+      summary: t.sleepDeclineSummary,
+      evidence: t.sleepDeclineEvidence(
+        String(summary.sleep.recent30d.avgSleepHours ?? "—"),
+        String(summary.sleep.baseline90d.avgSleepHours ?? "—"),
+      ),
+      recommendationFocus: t.sleepDeclineRecommendation,
       seekCare:
         summary.sleep.recent30d.avgSleepHours !== null && summary.sleep.recent30d.avgSleepHours < 5.5,
     });
@@ -883,13 +913,13 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
       id: "recovery_stress",
       module: "recovery",
       severity: "medium",
-      title: "恢复信号偏紧",
-      summary: "静息心率上升且 HRV 下滑，常见于恢复不足、压力偏高或近期训练刺激偏大。",
-      evidence: [
-        `静息心率变化 ${resting.delta} ${resting.unit}`,
-        `HRV 变化 ${hrv.delta} ${hrv.unit}`,
-      ],
-      recommendationFocus: "减少高强度训练，优先保证睡眠和补水，观察一到两周是否回稳。",
+      title: t.recoveryStressTitle,
+      summary: t.recoveryStressSummary,
+      evidence: t.recoveryStressEvidence(
+        `${resting.delta} ${resting.unit}`,
+        `${hrv.delta} ${hrv.unit}`,
+      ),
+      recommendationFocus: t.recoveryStressRecommendation,
       seekCare: false,
     });
   }
@@ -899,10 +929,10 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
       id: "oxygen_low",
       module: "recovery",
       severity: "high",
-      title: "血氧读数偏低",
-      summary: "近期血氧读数已经落到偏低区间，应优先确认佩戴质量并留意是否伴随明显不适。",
-      evidence: [`最新血氧 ${oxygen.latest.value}${oxygen.unit}`],
-      recommendationFocus: "先复测并核对设备佩戴情况，若持续偏低或伴随症状，应尽快咨询专业医生。",
+      title: t.oxygenLowTitle,
+      summary: t.oxygenLowSummary,
+      evidence: t.oxygenLowEvidence(`${oxygen.latest.value}${oxygen.unit}`),
+      recommendationFocus: t.oxygenLowRecommendation,
       seekCare: true,
     });
   }
@@ -916,13 +946,13 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
       id: "activity_drop",
       module: "activity",
       severity: "medium",
-      title: "近期活动量下降",
-      summary: "锻炼分钟数较基线明显回落，身体状态与训练习惯都可能受到影响。",
-      evidence: [
-        `近 30 天平均锻炼 ${summary.activity.recent30d.exerciseMinutes} 分钟`,
-        `基线 90 天平均锻炼 ${summary.activity.baseline90d.exerciseMinutes ?? "数据不足"} 分钟`,
-      ],
-      recommendationFocus: "优先恢复固定活动节奏，而不是一次性补量。",
+      title: t.activityDropTitle,
+      summary: t.activityDropSummary,
+      evidence: t.activityDropEvidence(
+        String(summary.activity.recent30d.exerciseMinutes),
+        String(summary.activity.baseline90d.exerciseMinutes ?? "—"),
+      ),
+      recommendationFocus: t.activityDropRecommendation,
       seekCare: false,
     });
   }
@@ -936,10 +966,10 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
       id: "body_mass_shift",
       module: "bodyComposition",
       severity: "medium",
-      title: "体重变化较快",
-      summary: "近 30 天体重相对个人基线变化较快，建议结合饮食、训练负荷和主观状态一起判断。",
-      evidence: [`体重变化 ${bodyMass.delta} ${bodyMass.unit}`],
-      recommendationFocus: "优先确认变化是否符合预期，再结合体脂、活动量和恢复信号判断。",
+      title: t.bodyMassShiftTitle,
+      summary: t.bodyMassShiftSummary,
+      evidence: t.bodyMassShiftEvidence(`${bodyMass.delta} ${bodyMass.unit}`),
+      recommendationFocus: t.bodyMassShiftRecommendation,
       seekCare: false,
     });
   }
@@ -953,10 +983,10 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
       id: "body_fat_shift",
       module: "bodyComposition",
       severity: "low",
-      title: "体脂率变化值得复核",
-      summary: "体脂率变化幅度已经值得单独关注，尤其需要结合测量时段和设备一致性。",
-      evidence: [`体脂率变化 ${bodyFat.delta} ${bodyFat.unit}`],
-      recommendationFocus: "尽量在固定条件下复测，避免把短期波动误判为稳定趋势。",
+      title: t.bodyFatShiftTitle,
+      summary: t.bodyFatShiftSummary,
+      evidence: t.bodyFatShiftEvidence(`${bodyFat.delta} ${bodyFat.unit}`),
+      recommendationFocus: t.bodyFatShiftRecommendation,
       seekCare: false,
     });
   }
@@ -968,10 +998,10 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
         id: "menstrual_irregular",
         module: "menstrualCycle",
         severity: "medium",
-        title: "生理周期不规律",
-        summary: "近期生理周期波动较大，建议关注生活节奏、压力和营养状况。",
-        evidence: [`周期标准差 ${mc.cycleLengthStdDays} 天`, `平均周期 ${mc.avgCycleLengthDays} 天`],
-        recommendationFocus: "保持规律作息和均衡饮食，如持续不规律建议妇科检查。",
+        title: t.menstrualIrregularTitle,
+        summary: t.menstrualIrregularSummary,
+        evidence: t.menstrualIrregularEvidence(String(mc.cycleLengthStdDays), String(mc.avgCycleLengthDays)),
+        recommendationFocus: t.menstrualIrregularRecommendation,
         seekCare: mc.cycleLengthStdDays > 10,
       });
     }
@@ -980,10 +1010,10 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
         id: "menstrual_cycle_length_abnormal",
         module: "menstrualCycle",
         severity: "medium",
-        title: "生理周期偏离正常范围",
-        summary: `平均周期 ${mc.avgCycleLengthDays} 天，正常范围为 21-38 天。`,
-        evidence: [`平均周期 ${mc.avgCycleLengthDays} 天`],
-        recommendationFocus: "建议咨询妇科医生，排查激素水平或其他潜在原因。",
+        title: t.menstrualCycleLengthAbnormalTitle,
+        summary: t.menstrualCycleLengthAbnormalSummary(mc.avgCycleLengthDays!),
+        evidence: t.menstrualCycleLengthAbnormalEvidence(mc.avgCycleLengthDays!),
+        recommendationFocus: t.menstrualCycleLengthAbnormalRecommendation,
         seekCare: true,
       });
     }
@@ -992,10 +1022,10 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
         id: "menstrual_intermenstrual_bleeding",
         module: "menstrualCycle",
         severity: "low",
-        title: "经间期出血较频繁",
-        summary: "检测到较频繁的经间期出血记录，建议留意是否伴随其他症状。",
-        evidence: [`经间期出血 ${mc.intermenstrualBleedingCount} 次`, `平均每周期 ${mc.intermenstrualBleedingFrequencyPerCycle} 次`],
-        recommendationFocus: "如果经间期出血持续或量增多，建议妇科检查。",
+        title: t.intermenstrualBleedingTitle,
+        summary: t.intermenstrualBleedingSummary,
+        evidence: t.intermenstrualBleedingEvidence(mc.intermenstrualBleedingCount!, mc.intermenstrualBleedingFrequencyPerCycle!),
+        recommendationFocus: t.intermenstrualBleedingRecommendation,
         seekCare: false,
       });
     }
@@ -1004,7 +1034,7 @@ export function buildRiskFlags(summary: AnalysisSummary): RiskFlag[] {
   return flags;
 }
 
-export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup[]): NotableChange[] {
+export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup[], t: InsightsT): NotableChange[] {
   const changes: NotableChange[] = [];
   const sleepSeries = charts.find((chart) => chart.id === "sleep")?.series[0];
   const bodyMassSeries = charts
@@ -1021,12 +1051,12 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
       id: "sleep_improved",
       module: "sleep",
       direction: "improving",
-      title: "睡眠时长较基线回升",
-      summary: "近 30 天平均睡眠时长高于基线，睡眠恢复空间在变好。",
-      evidence: [
-        `睡眠变化 ${summary.sleep.delta.sleepHours} 小时`,
-        `最新睡眠曲线末端约 ${latestPointValue(sleepSeries) ?? "数据不足"} 小时`,
-      ],
+      title: t.sleepImprovedTitle,
+      summary: t.sleepImprovedSummary,
+      evidence: t.sleepImprovedEvidence(
+        String(summary.sleep.delta.sleepHours),
+        String(latestPointValue(sleepSeries) ?? "—"),
+      ),
     });
   }
 
@@ -1037,9 +1067,9 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
       id: "resting_hr_improved",
       module: "recovery",
       direction: "improving",
-      title: "静息心率较基线更低",
-      summary: "静息心率相对个人基线更低，通常意味着恢复状态更从容。",
-      evidence: [`静息心率变化 ${resting.delta} ${resting.unit}`],
+      title: t.restingHrImprovedTitle,
+      summary: t.restingHrImprovedSummary,
+      evidence: t.restingHrImprovedEvidence(`${resting.delta} ${resting.unit}`),
     });
   }
   if (hrv && hrv.delta !== null && hrv.delta >= 5) {
@@ -1047,18 +1077,18 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
       id: "hrv_improved",
       module: "recovery",
       direction: "improving",
-      title: "HRV 高于基线",
-      summary: "HRV 相对基线回升，通常说明恢复弹性在改善。",
-      evidence: [`HRV 变化 ${hrv.delta} ${hrv.unit}`],
+      title: t.hrvImprovedTitle,
+      summary: t.hrvImprovedSummary,
+      evidence: t.hrvImprovedEvidence(`${hrv.delta} ${hrv.unit}`),
     });
   } else if (hrv && hrv.delta !== null && hrv.delta <= -5) {
     changes.push({
       id: "hrv_declined",
       module: "recovery",
       direction: "worsening",
-      title: "HRV 低于基线",
-      summary: "HRV 已低于近期个人基线，恢复负担值得重点留意。",
-      evidence: [`HRV 变化 ${hrv.delta} ${hrv.unit}`],
+      title: t.hrvDeclinedTitle,
+      summary: t.hrvDeclinedSummary,
+      evidence: t.hrvDeclinedEvidence(`${hrv.delta} ${hrv.unit}`),
     });
   }
 
@@ -1070,9 +1100,9 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
       id: "activity_up",
       module: "activity",
       direction: "improving",
-      title: "近期训练量回升",
-      summary: "锻炼分钟数比基线更高，近期训练执行度更强。",
-      evidence: [`锻炼分钟变化 ${summary.activity.delta.exerciseMinutes} 分钟`],
+      title: t.activityUpTitle,
+      summary: t.activityUpSummary,
+      evidence: t.activityUpEvidence(String(summary.activity.delta.exerciseMinutes)),
     });
   }
 
@@ -1081,12 +1111,12 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
       id: "body_mass_down",
       module: "bodyComposition",
       direction: "improving",
-      title: "体重呈下降趋势",
-      summary: "近 30 天体重低于基线，适合结合活动量和主观状态判断是否符合预期。",
-      evidence: [
-        `体重变化 ${bodyMass.delta} ${bodyMass.unit}`,
-        `最新体重约 ${latestPointValue(bodyMassSeries) ?? "数据不足"} ${bodyMass.unit}`.trim(),
-      ],
+      title: t.bodyMassDownTitle,
+      summary: t.bodyMassDownSummary,
+      evidence: t.bodyMassDownEvidence(
+        `${bodyMass.delta} ${bodyMass.unit}`,
+        `${latestPointValue(bodyMassSeries) ?? "—"} ${bodyMass.unit}`.trim(),
+      ),
     });
   }
 
@@ -1097,9 +1127,9 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
         id: "menstrual_regular",
         module: "menstrualCycle",
         direction: "stable",
-        title: "生理周期规律",
-        summary: `平均周期 ${mc.avgCycleLengthDays} 天，标准差 ${mc.cycleLengthStdDays} 天，周期稳定。`,
-        evidence: [`共 ${mc.totalPeriods} 个周期`, `标准差 ${mc.cycleLengthStdDays} 天`],
+        title: t.menstrualRegularTitle,
+        summary: t.menstrualRegularSummary(mc.avgCycleLengthDays!, mc.cycleLengthStdDays!),
+        evidence: t.menstrualRegularEvidence(mc.totalPeriods, mc.cycleLengthStdDays!),
       });
     }
     if (
@@ -1113,12 +1143,16 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
           id: "menstrual_cycle_shift",
           module: "menstrualCycle",
           direction: "mixed",
-          title: "生理周期长度变化",
-          summary: `近 90 天平均周期 ${mc.recent90d.avgCycleLengthDays} 天，历史平均 ${mc.historical.avgCycleLengthDays} 天，变化 ${delta > 0 ? "+" : ""}${round(delta)} 天。`,
-          evidence: [
-            `近 90 天均值 ${mc.recent90d.avgCycleLengthDays} 天`,
-            `历史均值 ${mc.historical.avgCycleLengthDays} 天`,
-          ],
+          title: t.menstrualCycleShiftTitle,
+          summary: t.menstrualCycleShiftSummary(
+            mc.recent90d.avgCycleLengthDays!,
+            mc.historical.avgCycleLengthDays!,
+            `${delta > 0 ? "+" : ""}${round(delta)}`,
+          ),
+          evidence: t.menstrualCycleShiftEvidence(
+            mc.recent90d.avgCycleLengthDays!,
+            mc.historical.avgCycleLengthDays!,
+          ),
         });
       }
     }
@@ -1132,13 +1166,16 @@ export function buildInsightBundle(
   primarySources: PrimarySources,
   window: TimeWindow,
   summary: AnalysisSummary,
+  t: InsightsT,
+  locale: Locale,
+  crossMetricT?: CrossMetricT,
 ): InsightBundle {
-  const menstrualChart = buildMenstrualCycleCharts(parsed, window);
+  const menstrualChart = buildMenstrualCycleCharts(parsed, window, t);
   const charts = [
-    buildSleepCharts(parsed, primarySources, window),
-    buildRecoveryCharts(parsed, primarySources, window),
-    buildActivityCharts(parsed.activitySummaries, parsed.workouts, window),
-    buildBodyCharts(parsed, primarySources, window),
+    buildSleepCharts(parsed, primarySources, window, t),
+    buildRecoveryCharts(parsed, primarySources, window, t),
+    buildActivityCharts(parsed.activitySummaries, parsed.workouts, window, t),
+    buildBodyCharts(parsed, primarySources, window, t),
     ...(menstrualChart ? [menstrualChart] : []),
   ];
   const historicalContext: InsightHistoricalContext = {
@@ -1152,7 +1189,7 @@ export function buildInsightBundle(
     },
     sleep: buildSleepHistoricalContext(parsed, primarySources, window, summary),
     recovery: Object.fromEntries(
-      (Object.keys(RECOVERY_META) as RecoveryMetricKey[])
+      (Object.keys(RECOVERY_UNITS) as RecoveryMetricKey[])
         .map((metric) => {
           const canonicalName = primarySources.recovery[metric]?.canonicalName;
           if (!canonicalName) {
@@ -1162,7 +1199,7 @@ export function buildInsightBundle(
             metric,
             buildNumericHistoricalContext(
               parsed.records[metric].filter((record) => record.canonicalSource === canonicalName),
-              RECOVERY_META[metric].unit,
+              RECOVERY_UNITS[metric],
               window,
             ),
           ];
@@ -1171,7 +1208,7 @@ export function buildInsightBundle(
     ) as InsightHistoricalContext["recovery"],
     activity: buildActivityHistoricalContext(parsed.activitySummaries, parsed.workouts, window, summary),
     bodyComposition: Object.fromEntries(
-      (Object.keys(BODY_META) as BodyMetricKey[])
+      (Object.keys(BODY_UNITS) as BodyMetricKey[])
         .map((metric) => {
           const canonicalName = primarySources.bodyComposition[metric]?.canonicalName;
           if (!canonicalName) {
@@ -1181,7 +1218,7 @@ export function buildInsightBundle(
             metric,
             buildNumericHistoricalContext(
               parsed.records[metric].filter((record) => record.canonicalSource === canonicalName),
-              BODY_META[metric].unit,
+              BODY_UNITS[metric],
               window,
             ),
           ];
@@ -1190,7 +1227,7 @@ export function buildInsightBundle(
     ) as InsightHistoricalContext["bodyComposition"],
     interpretationHints: [],
   };
-  historicalContext.interpretationHints = buildInterpretationHints(summary, historicalContext);
+  historicalContext.interpretationHints = buildInterpretationHints(summary, historicalContext, t);
 
   return {
     metadata: {
@@ -1198,7 +1235,7 @@ export function buildInsightBundle(
       version: PACKAGE_VERSION,
       generatedAt: new Date().toISOString(),
       schemaVersion: INSIGHT_SCHEMA_VERSION,
-      language: "zh-CN",
+      language: t.metadataLanguage,
     },
     input: summary.input,
     coverage: summary.coverage,
@@ -1213,24 +1250,18 @@ export function buildInsightBundle(
       attachments: summary.attachments,
     },
     charts,
-    riskFlags: buildRiskFlags(summary),
-    notableChanges: buildNotableChanges(summary, charts),
-    dataGaps: buildDataGaps(summary),
-    sourceConfidence: buildSourceConfidence(summary),
+    riskFlags: buildRiskFlags(summary, t),
+    notableChanges: buildNotableChanges(summary, charts, t),
+    dataGaps: buildDataGaps(summary, t),
+    sourceConfidence: buildSourceConfidence(summary, t),
     historicalContext,
-    crossMetric: analyzeCrossMetrics(parsed, primarySources, window),
+    crossMetric: analyzeCrossMetrics(parsed, primarySources, window, crossMetricT!),
     narrativeContext: {
-      audience: "普通用户",
-      goal: "结合最近 30 天、过去 180 天和整个可用历史，生成中文健康管理报告，不做诊断。",
-      language: "zh-CN",
+      audience: t.narrativeAudience,
+      goal: t.narrativeGoal,
+      language: t.metadataLanguage,
       outputSchemaVersion: NARRATIVE_REPORT_SCHEMA_VERSION,
-      boundaries: [
-        "只能引用 summary.json 和 insights.json 中的事实",
-        "可以给出睡眠、恢复、活动、身体成分的健康管理建议",
-        "优先结合 historicalContext 中的近 30 天、过去 180 天和全时段背景，不要只看单一窗口",
-        "不要生成医学诊断、疾病判断或治疗方案",
-        "遇到明显异常时可以给出保守的复查或就医提醒",
-      ],
+      boundaries: t.narrativeBoundaries,
     },
   };
 }

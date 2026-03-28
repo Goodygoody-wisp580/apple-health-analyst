@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { Translations } from "../i18n/index.js";
 import { renderInsightsJson } from "../render/insightsJson.js";
 import { renderNarrativeJson } from "../render/narrativeJson.js";
 import { renderReportHtml } from "../render/reportHtml.js";
@@ -22,10 +23,11 @@ export async function writeRenderedOutputs(
   insights: InsightBundle,
   narrative: NarrativeReport,
   outputDir: string,
+  t: Translations,
 ): Promise<void> {
   await mkdir(outputDir, { recursive: true });
 
   await writeFile(path.join(outputDir, "report.llm.json"), renderNarrativeJson(narrative), "utf8");
-  await writeFile(path.join(outputDir, "report.md"), renderReportMarkdown(insights, narrative), "utf8");
-  await writeFile(path.join(outputDir, "report.html"), renderReportHtml(insights, narrative), "utf8");
+  await writeFile(path.join(outputDir, "report.md"), renderReportMarkdown(insights, narrative, t.render), "utf8");
+  await writeFile(path.join(outputDir, "report.html"), renderReportHtml(insights, narrative, t.render), "utf8");
 }

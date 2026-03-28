@@ -1,0 +1,78 @@
+# apple-health-analyst
+
+本地分析 Apple Health 导出数据，生成带有跨指标关联分析、行为模式识别和综合评分的健康报告。
+
+不是数据仪表盘——手机就能看数据。这个工具的价值是**像健康顾问一样解读你的数据**：睡眠和恢复之间有什么关联？作息规律性如何影响 HRV？训练负荷和恢复能力是否匹配？
+
+**[查看中文示例报告](https://ruochenlyu.github.io/apple-health-analyst/zh.html)** | **[English Sample Report](https://ruochenlyu.github.io/apple-health-analyst/)**
+
+## 特性
+
+- **跨指标关联分析** — 睡眠-HRV 联动、训练-恢复平衡、作息规律性评估
+- **行为模式识别** — 周末战士、夜猫子漂移、睡眠补偿、恢复不足
+- **综合评分** — 睡眠/恢复/活动三维度 0-100 分，算法透明可解释
+- **中英双语** — 根据用户语言自动生成中文或英文报告
+- **隐私优先** — 完全本地运行，不调用外部 API，不上传任何数据
+- **离线 HTML 报告** — 单文件，内联 CSS + SVG 图表，双击即开
+
+## 导出 Apple Health 数据
+
+1. 打开 iPhone 上的**健康** App
+2. 点击右上角头像
+3. 滑到底部，点击**导出所有健康数据**
+4. 等待导出完成（数据量大时可能需要几分钟），选择 **保存到"文件"** 或通过 AirDrop 传到电脑
+5. 得到的 `导出.zip` 就是本工具的输入文件
+
+## 快速开始
+
+在 Codex 中打开本项目目录，对话即可：
+
+```text
+使用 $apple-health-analyst 分析 /path/to/导出.zip
+```
+
+Codex 会自动完成 **prepare → LLM 写 narrative → render** 全流程，生成健康顾问级报告。
+
+Skill 配置在 [`.agents/skills/apple-health-analyst/`](.agents/skills/apple-health-analyst/SKILL.md)，包含角色定义、分析框架和 narrative schema。
+
+## 覆盖指标
+
+| 模块 | 指标 |
+|------|------|
+| 睡眠 | 时长、深睡/REM/核心占比、入睡/起床时间、规律性 |
+| 恢复 | 静息心率、HRV、血氧、呼吸频率、最大摄氧量 |
+| 活动 | 活动能量、锻炼分钟、站立小时、训练记录 |
+| 身体成分 | 体重、体脂率 |
+
+## CLI
+
+Codex Skill 底层调用的命令。一般不需要手动执行，了解即可。
+
+```bash
+# 1. prepare：解析 ZIP，生成结构化数据（--lang zh 生成中文，--lang en 生成英文）
+node dist/cli.js prepare /path/to/导出.zip --lang zh --out ./output
+# 产出 summary.json + insights.json
+
+# 2. (Codex 读取 insights.json，生成 report.llm.json)
+
+# 3. render：渲染最终报告（语言从 insights.json 自动检测）
+node dist/cli.js render \
+  --insights ./output/insights.json \
+  --narrative ./output/report.llm.json \
+  --out ./output
+# 产出 report.html + report.md + report.llm.json
+```
+
+## 限制
+
+- 不提供医学诊断或治疗建议
+- 不分析 ECG 波形或 GPS 路线（仅计数）
+- 步数和距离不跨设备合并
+
+## 开发
+
+```bash
+npm run dev -- prepare /path/to/导出.zip --lang zh --out ./output  # 开发模式
+npm run build   # 编译
+npm test        # 测试
+```

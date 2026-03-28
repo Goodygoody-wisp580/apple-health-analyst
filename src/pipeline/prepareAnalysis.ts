@@ -6,6 +6,7 @@ import { analyzeMenstrualCycle } from "../analyzers/menstrualCycle.js";
 import { analyzeOverview } from "../analyzers/overview.js";
 import { analyzeRecovery } from "../analyzers/recovery.js";
 import { analyzeSleep } from "../analyzers/sleep.js";
+import type { Locale, Translations } from "../i18n/index.js";
 import { buildInsightBundle } from "../insights/buildInsightBundle.js";
 import { findMainXml } from "../io/findMainXml.js";
 import { readZip } from "../io/readZip.js";
@@ -22,6 +23,7 @@ import {
 export interface PrepareOptions {
   from?: string;
   to?: string;
+  locale?: Locale;
 }
 
 export interface PreparedAnalysis {
@@ -42,6 +44,7 @@ function formatLocalDate(date: Date | null): string | null {
 export async function prepareAnalysis(
   zipPath: string,
   options: PrepareOptions,
+  t: Translations,
 ): Promise<PreparedAnalysis> {
   const resolvedZipPath = path.resolve(zipPath);
 
@@ -59,7 +62,7 @@ export async function prepareAnalysis(
   const sleepRecords = sleepSource
     ? parsed.records.sleep.filter((record) => record.canonicalSource === sleepSource)
     : [];
-  const sleep = analyzeSleep(sleepRecords, primarySources.sleep?.displayName ?? null, timeWindow);
+  const sleep = analyzeSleep(sleepRecords, primarySources.sleep?.displayName ?? null, timeWindow, t.sleep);
 
   const recovery = analyzeRecovery(
     {
@@ -95,9 +98,10 @@ export async function prepareAnalysis(
       vo2Max: primarySources.recovery.vo2Max?.displayName,
     },
     timeWindow,
+    t.recovery,
   );
 
-  const activity = analyzeActivity(parsed.activitySummaries, parsed.workouts, timeWindow);
+  const activity = analyzeActivity(parsed.activitySummaries, parsed.workouts, timeWindow, t.activity);
   const bodyComposition = analyzeBodyComposition(
     {
       bodyMass: primarySources.bodyComposition.bodyMass
@@ -117,6 +121,7 @@ export async function prepareAnalysis(
       bodyFatPercentage: primarySources.bodyComposition.bodyFatPercentage?.displayName,
     },
     timeWindow,
+    t.bodyComposition,
   );
 
   const skipMenstrual = parsed.biologicalSex === "male";
@@ -127,6 +132,7 @@ export async function prepareAnalysis(
         parsed.intermenstrualBleeding,
         parsed.contraceptive,
         timeWindow,
+        t.menstrualCycle,
       );
 
   const overview = analyzeOverview(parsed, primarySources, timeWindow);
@@ -163,6 +169,6 @@ export async function prepareAnalysis(
 
   return {
     summary,
-    insights: buildInsightBundle(parsed, primarySources, timeWindow, summary),
+    insights: buildInsightBundle(parsed, primarySources, timeWindow, summary, t.insights, options.locale ?? "en", t.crossMetric),
   };
 }

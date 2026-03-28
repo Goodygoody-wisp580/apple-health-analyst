@@ -7,14 +7,14 @@ import {
 
 function ensureString(value: unknown, field: string): string {
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw new Error(`report.llm.json 字段 ${field} 必须是非空字符串。`);
+    throw new Error(`report.llm.json field ${field} must be a non-empty string.`);
   }
   return value.trim();
 }
 
 function ensureStringArray(value: unknown, field: string): string[] {
   if (!Array.isArray(value)) {
-    throw new Error(`report.llm.json 字段 ${field} 必须是字符串数组。`);
+    throw new Error(`report.llm.json field ${field} must be a string array.`);
   }
   return value.map((entry, index) => ensureString(entry, `${field}[${index}]`));
 }
@@ -24,18 +24,18 @@ function ensureChartCallouts(
   availableChartIds: Array<InsightBundle["charts"][number]["id"]>,
 ): NarrativeChartCallout[] {
   if (!Array.isArray(value)) {
-    throw new Error("report.llm.json 字段 chart_callouts 必须是数组。");
+    throw new Error("report.llm.json field chart_callouts must be an array.");
   }
 
   return value.map((entry, index) => {
     if (!entry || typeof entry !== "object") {
-      throw new Error(`report.llm.json 字段 chart_callouts[${index}] 必须是对象。`);
+      throw new Error(`report.llm.json field chart_callouts[${index}] must be an object.`);
     }
 
     const candidate = entry as Record<string, unknown>;
     const chartId = ensureString(candidate.chart_id, `chart_callouts[${index}].chart_id`);
     if (!availableChartIds.includes(chartId as InsightBundle["charts"][number]["id"])) {
-      throw new Error(`report.llm.json 中引用了未知图表 ${chartId}。`);
+      throw new Error(`report.llm.json references unknown chart ${chartId}.`);
     }
 
     return {
@@ -51,14 +51,14 @@ export function validateNarrativeReport(
   availableChartIds: Array<InsightBundle["charts"][number]["id"]>,
 ): NarrativeReport {
   if (!value || typeof value !== "object") {
-    throw new Error("report.llm.json 必须是对象。");
+    throw new Error("report.llm.json must be an object.");
   }
 
   const candidate = value as Record<string, unknown>;
   const schemaVersion = ensureString(candidate.schema_version, "schema_version");
   if (schemaVersion !== NARRATIVE_REPORT_SCHEMA_VERSION) {
     throw new Error(
-      `report.llm.json schema_version 必须为 ${NARRATIVE_REPORT_SCHEMA_VERSION}，收到 ${schemaVersion}。`,
+      `report.llm.json schema_version must be ${NARRATIVE_REPORT_SCHEMA_VERSION}, got ${schemaVersion}.`,
     );
   }
 

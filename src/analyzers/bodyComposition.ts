@@ -6,6 +6,8 @@ import type {
   TimeWindow,
 } from "../types.js";
 
+import type { BodyCompositionT } from "../i18n/zh/bodyComposition.js";
+
 import { round, average } from "./mathUtils.js";
 
 function uniqueDays(records: QuantitySample[]): number {
@@ -58,6 +60,7 @@ export function analyzeBodyComposition(
   recordsByMetric: Partial<Record<BodyMetricKey, QuantitySample[]>>,
   sourceNames: Partial<Record<BodyMetricKey, string>>,
   window: TimeWindow,
+  t: BodyCompositionT,
 ): BodyCompositionAnalysis {
   const units: Record<BodyMetricKey, string> = {
     bodyMass: "kg",
@@ -89,7 +92,7 @@ export function analyzeBodyComposition(
     metrics,
     notes:
       Object.keys(metrics).length > 0
-        ? ["身体成分趋势基于近期最稳定的体重秤数据源汇报。"]
-        : ["所选时间窗口内没有可用的体重或体脂样本。"],
+        ? [t.activeNote]
+        : [t.noDataNote],
   };
 }

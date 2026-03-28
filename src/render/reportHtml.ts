@@ -1,3 +1,4 @@
+import type { RenderT } from "../i18n/zh/render.js";
 import type {
   ChartSeries,
   InsightBundle,
@@ -20,20 +21,26 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function fmt(value: number | null, suffix = ""): string {
-  return value === null ? "数据不足" : `${value}${suffix}`;
+function makeFmt(insufficientLabel: string) {
+  return function fmt(value: number | null, suffix = ""): string {
+    return value === null ? insufficientLabel : `${value}${suffix}`;
+  };
 }
 
-function fmtCount(value: number): string {
-  return value.toLocaleString("zh-CN");
+function makeFmtCount(locale: string) {
+  return function fmtCount(value: number): string {
+    return value.toLocaleString(locale);
+  };
 }
 
-function fmtDelta(value: number | null, unit: string): string {
-  if (value === null) {
-    return "—";
-  }
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value} ${unit}`.trim();
+function makeFmtDelta(dash: string) {
+  return function fmtDelta(value: number | null, unit: string): string {
+    if (value === null) {
+      return dash;
+    }
+    const sign = value > 0 ? "+" : "";
+    return `${sign}${value} ${unit}`.trim();
+  };
 }
 
 function sectionCallout(
@@ -45,10 +52,12 @@ function sectionCallout(
   return callout?.summary ?? fallback;
 }
 
-function confidenceLabel(level: SourceConfidence["level"]): string {
-  if (level === "high") return "充足";
-  if (level === "medium") return "中等";
-  return "不足";
+function makeConfidenceLabel(t: RenderT) {
+  return function confidenceLabel(level: SourceConfidence["level"]): string {
+    if (level === "high") return t.confidenceHigh;
+    if (level === "medium") return t.confidenceMedium;
+    return t.confidenceLow;
+  };
 }
 
 function confidenceClass(level: SourceConfidence["level"]): string {
@@ -85,11 +94,14 @@ function renderRecoveryRow(
   label: string,
   metric: NumericComparison | undefined,
   color: string,
+  t: RenderT,
+  fmt: (value: number | null, suffix?: string) => string,
+  fmtDelta: (value: number | null, unit: string) => string,
 ): string {
   if (!metric) {
     return `<tr class="ledger__row ledger__row--empty">
       <td class="ledger__name">${escapeHtml(label)}</td>
-      <td colspan="4" class="ledger__empty">近期样本不足</td>
+      <td colspan="4" class="ledger__empty">${escapeHtml(t.recentSamplesInsufficient)}</td>
       <td></td>
     </tr>`;
   }
@@ -104,7 +116,7 @@ function renderRecoveryRow(
         start: metric.latest?.timestamp ?? new Date().toISOString(),
         end: metric.latest?.timestamp ?? new Date().toISOString(),
         granularity: "day",
-        label: "基线",
+        label: t.sparkBaseline,
         value: metric.baseline90d.average,
         sampleCount: metric.baseline90d.sampleCount,
       },
@@ -112,7 +124,7 @@ function renderRecoveryRow(
         start: metric.latest?.timestamp ?? new Date().toISOString(),
         end: metric.latest?.timestamp ?? new Date().toISOString(),
         granularity: "day",
-        label: "近期",
+        label: t.sparkRecent,
         value: metric.recent30d.average,
         sampleCount: metric.recent30d.sampleCount,
       },
@@ -120,7 +132,7 @@ function renderRecoveryRow(
         start: metric.latest?.timestamp ?? new Date().toISOString(),
         end: metric.latest?.timestamp ?? new Date().toISOString(),
         granularity: "day",
-        label: "最新",
+        label: t.sparkLatest,
         value: metric.latest?.value ?? null,
         sampleCount: metric.latest ? 1 : 0,
       },
@@ -137,17 +149,22 @@ function renderRecoveryRow(
   return `<tr class="ledger__row">
     <td class="ledger__name">
       <strong>${escapeHtml(label)}</strong>
-      <small>覆盖 ${metric.coverageDays} 天</small>
+      <small>${escapeHtml(t.coverageDays(metric.coverageDays))}</small>
     </td>
     <td class="ledger__val">${escapeHtml(fmt(metric.latest?.value ?? null, ` ${metric.unit}`))}</td>
     <td class="ledger__val">${escapeHtml(fmt(metric.recent30d.average, ` ${metric.unit}`))}</td>
     <td class="ledger__val">${escapeHtml(fmt(metric.baseline90d.average, ` ${metric.unit}`))}</td>
     <td class="ledger__val ${deltaClass}">${escapeHtml(fmtDelta(metric.delta, metric.unit))}</td>
-    <td class="ledger__spark">${renderLineSparkline(sparkSeries, color, { width: 120, height: 36 })}</td>
+    <td class="ledger__spark">${renderLineSparkline(sparkSeries, color, { width: 120, height: 36 }, t)}</td>
   </tr>`;
 }
 
-function renderBodyDetail(series: ChartSeries, color: string): string {
+function renderBodyDetail(
+  series: ChartSeries,
+  color: string,
+  fmt: (value: number | null, suffix?: string) => string,
+  t?: RenderT,
+): string {
   const latest = series.points.at(-1)?.value ?? null;
   return `<div class="body-card">
     <div class="body-card__head">
@@ -157,11 +174,15 @@ function renderBodyDetail(series: ChartSeries, color: string): string {
     <div class="body-card__chart">${renderMultiSeriesLineChart([series], [color], {
       width: 400,
       height: 140,
-    })}</div>
+    }, t)}</div>
   </div>`;
 }
 
-export function renderReportHtml(insights: InsightBundle, narrative: NarrativeReport): string {
+export function renderReportHtml(insights: InsightBundle, narrative: NarrativeReport, t: RenderT): string {
+  const fmt = makeFmt(t.insufficientData);
+  const fmtCount = makeFmtCount(t.locale);
+  const fmtDelta = makeFmtDelta(t.dash);
+  const confidenceLabel = makeConfidenceLabel(t);
   const sleepChart = insights.charts.find((chart) => chart.id === "sleep");
   const recoveryChart = insights.charts.find((chart) => chart.id === "recovery");
   const activityChart = insights.charts.find((chart) => chart.id === "activity");
@@ -179,7 +200,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
     ? renderMultiSeriesLineChart(sleepChart.series, ["#6366F1", "#818CF8", "#A78BFA"], {
         width: 700,
         height: 220,
-      })
+      }, t)
     : "";
 
   const activityPrimarySeries =
@@ -189,7 +210,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       ? renderMultiSeriesLineChart(activityPrimarySeries, ["#F97316", "#FB923C", "#10B981"], {
           width: 700,
           height: 220,
-        })
+        }, t)
       : "";
   const workoutBars =
     activityChart?.series.find((s) => s.id === "activity_workouts")
@@ -197,6 +218,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
           activityChart.series.find((s) => s.id === "activity_workouts")!,
           "#F97316",
           { width: 700, height: 120 },
+          t,
         )
       : "";
 
@@ -204,22 +226,22 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
   const sleepCallout = sectionCallout(
     narrative,
     "sleep",
-    sleepChart?.subtitle ?? "睡眠模块更适合看趋势方向和连续性。",
+    sleepChart?.subtitle ?? t.sleepCalloutFallback,
   );
   const recoveryCallout = sectionCallout(
     narrative,
     "recovery",
-    recoveryChart?.subtitle ?? "恢复指标更适合成组观察。",
+    recoveryChart?.subtitle ?? t.recoveryCalloutFallback,
   );
   const activityCallout = sectionCallout(
     narrative,
     "activity",
-    activityChart?.subtitle ?? "活动模块同时呈现日常活动和训练节奏。",
+    activityChart?.subtitle ?? t.activityCalloutFallback,
   );
   const bodyCallout = sectionCallout(
     narrative,
     "bodyComposition",
-    bodyChart?.subtitle ?? "身体成分更适合看月度方向。",
+    bodyChart?.subtitle ?? t.bodyCalloutFallback,
   );
   const menstrualCallout = menstrualChart
     ? sectionCallout(narrative, "menstrualCycle", menstrualChart.subtitle)
@@ -228,10 +250,10 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
   const menstrualCycleLengthSeries = menstrualChart?.series.find((s) => s.id === "cycle_length");
   const menstrualPeriodDurationSeries = menstrualChart?.series.find((s) => s.id === "period_duration");
   const menstrualCycleSvg = menstrualCycleLengthSeries
-    ? renderMultiSeriesLineChart([menstrualCycleLengthSeries], ["#EC4899"], { width: 700, height: 180 })
+    ? renderMultiSeriesLineChart([menstrualCycleLengthSeries], ["#EC4899"], { width: 700, height: 180 }, t)
     : "";
   const menstrualPeriodBars = menstrualPeriodDurationSeries
-    ? renderBarChart(menstrualPeriodDurationSeries, "#F472B6", { width: 700, height: 120 })
+    ? renderBarChart(menstrualPeriodDurationSeries, "#F472B6", { width: 700, height: 120 }, t)
     : "";
 
   // Cross-metric data
@@ -245,11 +267,11 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
   const gapCount = insights.dataGaps.length;
 
   return `<!doctype html>
-<html lang="zh-CN">
+<html lang="${t.htmlLang}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Apple Health 健康报告</title>
+    <title>${escapeHtml(t.reportTitle)}</title>
     <style>
       :root {
         --bg: #F2F2F7;
@@ -502,6 +524,8 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       }
       .module__chart {
         padding: 20px 24px;
+        overflow: hidden;
+        min-width: 0;
       }
       .module__aside {
         padding: 20px 24px;
@@ -614,6 +638,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       /* ─── Ledger (Recovery Table) ─── */
       .ledger {
         width: 100%;
+        table-layout: fixed;
         border-collapse: collapse;
         font-size: var(--fs-sm);
       }
@@ -652,6 +677,8 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
         font-variant-numeric: tabular-nums;
         font-weight: 500;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .ledger__empty {
         color: var(--faint);
@@ -661,9 +688,13 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       .delta--down { color: var(--recovery); }
       .ledger__spark {
         width: 120px;
+        max-width: 120px;
+        overflow: hidden;
       }
       .ledger__spark svg {
         display: block;
+        width: 100%;
+        height: auto;
       }
 
       /* ─── Activity Summary ─── */
@@ -1079,43 +1110,43 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
   </head>
   <body>
     <nav class="topbar">
-      <span class="topbar__title">Apple Health 健康报告</span>
-      <span class="topbar__date">${escapeHtml(insights.coverage.windowStart ?? "起始")} ~ ${escapeHtml(insights.coverage.windowEnd.slice(0, 10))}</span>
+      <span class="topbar__title">${escapeHtml(t.reportTitle)}</span>
+      <span class="topbar__date">${escapeHtml(insights.coverage.windowStart ?? t.windowStart)} ~ ${escapeHtml(insights.coverage.windowEnd.slice(0, 10))}</span>
       <div class="topbar__nav">
-        <a href="#assessment">评估</a>
-        <a href="#insights">分析</a>
-        <a href="#sleep">睡眠</a>
-        <a href="#recovery">恢复</a>
-        <a href="#activity">活动</a>
-        <a href="#body">身体</a>
-        ${menstrualChart ? '<a href="#menstrual">生理期</a>' : ""}
-        <a href="#appendix">附录</a>
+        <a href="#assessment">${escapeHtml(t.navAssessment)}</a>
+        <a href="#insights">${escapeHtml(t.navInsights)}</a>
+        <a href="#sleep">${escapeHtml(t.navSleep)}</a>
+        <a href="#recovery">${escapeHtml(t.navRecovery)}</a>
+        <a href="#activity">${escapeHtml(t.navActivity)}</a>
+        <a href="#body">${escapeHtml(t.navBody)}</a>
+        ${menstrualChart ? `<a href="#menstrual">${escapeHtml(t.navMenstrual)}</a>` : ""}
+        <a href="#appendix">${escapeHtml(t.navAppendix)}</a>
       </div>
     </nav>
 
     <main>
       <!-- Summary Cards -->
       <section class="summary-cards">
-        ${renderMetricCard("睡眠均值", sleepVal, "var(--sleep)", "近 30 天")}
-        ${renderMetricCard("静息心率", hrVal, "var(--recovery)", "近 30 天")}
+        ${renderMetricCard(t.cardSleepAvg, sleepVal, "var(--sleep)", t.cardRecent30d)}
+        ${renderMetricCard(t.cardRestingHr, hrVal, "var(--recovery)", t.cardRecent30d)}
         ${renderMetricCard(
-          "风险信号",
+          t.cardRiskSignals,
           `${riskCount}`,
           riskCount > 0 ? "var(--risk)" : "var(--positive)",
-          riskCount > 0 ? "需要关注" : "当前无异常",
+          riskCount > 0 ? t.cardRiskNeedsAttention : t.cardRiskNoAbnormal,
         )}
         ${renderMetricCard(
-          "数据缺口",
+          t.cardDataGaps,
           `${gapCount}`,
           gapCount > 0 ? "#D97706" : "var(--positive)",
-          gapCount > 0 ? "影响置信度" : "覆盖良好",
+          gapCount > 0 ? t.cardDataGapsAffectsConfidence : t.cardDataGapsCoverageGood,
         )}
       </section>
 
       <!-- Assessment -->
       <section id="assessment" class="assessment">
         <div class="assessment__main">
-          <h1>综合健康评估</h1>
+          <h1>${escapeHtml(t.assessmentTitle)}</h1>
           <p class="assessment__text">${escapeHtml(narrative.health_assessment)}</p>
           ${
             insights.riskFlags.length > 0
@@ -1129,25 +1160,25 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
           }
         </div>
         <aside class="assessment__aside">
-          ${cm.compositeAssessment.overallReadiness ? `<span class="readiness-badge readiness--${cm.compositeAssessment.overallReadiness}">整体状态：${cm.compositeAssessment.overallReadiness === "good" ? "良好" : cm.compositeAssessment.overallReadiness === "moderate" ? "中等" : "偏低"}</span>` : ""}
+          ${cm.compositeAssessment.overallReadiness ? `<span class="readiness-badge readiness--${cm.compositeAssessment.overallReadiness}">${escapeHtml(t.overallStatusLabel)}${cm.compositeAssessment.overallReadiness === "good" ? escapeHtml(t.readinessGood) : cm.compositeAssessment.overallReadiness === "moderate" ? escapeHtml(t.readinessModerate) : escapeHtml(t.readinessLow)}</span>` : ""}
           <div class="scores">
-            ${cm.compositeAssessment.sleepScore !== null ? `<div class="score-ring"><span class="score-ring__value" style="color:var(--sleep)">${cm.compositeAssessment.sleepScore}</span><span class="score-ring__label">睡眠</span></div>` : ""}
-            ${cm.compositeAssessment.recoveryScore !== null ? `<div class="score-ring"><span class="score-ring__value" style="color:var(--recovery)">${cm.compositeAssessment.recoveryScore}</span><span class="score-ring__label">恢复</span></div>` : ""}
-            ${cm.compositeAssessment.activityScore !== null ? `<div class="score-ring"><span class="score-ring__value" style="color:var(--activity)">${cm.compositeAssessment.activityScore}</span><span class="score-ring__label">活动</span></div>` : ""}
+            ${cm.compositeAssessment.sleepScore !== null ? `<div class="score-ring"><span class="score-ring__value" style="color:var(--sleep)">${cm.compositeAssessment.sleepScore}</span><span class="score-ring__label">${escapeHtml(t.scoreSleep)}</span></div>` : ""}
+            ${cm.compositeAssessment.recoveryScore !== null ? `<div class="score-ring"><span class="score-ring__value" style="color:var(--recovery)">${cm.compositeAssessment.recoveryScore}</span><span class="score-ring__label">${escapeHtml(t.scoreRecovery)}</span></div>` : ""}
+            ${cm.compositeAssessment.activityScore !== null ? `<div class="score-ring"><span class="score-ring__value" style="color:var(--activity)">${cm.compositeAssessment.activityScore}</span><span class="score-ring__label">${escapeHtml(t.scoreActivity)}</span></div>` : ""}
           </div>
         </aside>
       </section>
 
       <!-- Cross-Metric Insights -->
       <section id="insights" class="insights-section">
-        <h2>关联分析</h2>
+        <h2>${escapeHtml(t.insightsSectionTitle)}</h2>
         <div class="insight-grid">
           <div>
-            <h3 class="insight-grid__title">跨指标发现</h3>
+            <h3 class="insight-grid__title">${escapeHtml(t.crossMetricTitle)}</h3>
             ${narrative.cross_metric_insights.map((item) => `<div class="insight-card"><p>${escapeHtml(item)}</p></div>`).join("")}
           </div>
           <div>
-            <h3 class="insight-grid__title">行为模式</h3>
+            <h3 class="insight-grid__title">${escapeHtml(t.behavioralPatternsTitle)}</h3>
             ${narrative.behavioral_patterns.map((item) => `<div class="insight-card"><p>${escapeHtml(item)}</p></div>`).join("")}
           </div>
         </div>
@@ -1155,10 +1186,10 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
 
       <!-- Findings & Actions -->
       <section class="overview">
-        <h2 class="overview__title">概览</h2>
+        <h2 class="overview__title">${escapeHtml(t.overviewTitle)}</h2>
         <p class="overview__text">${escapeHtml(narrative.overview)}</p>
         <div class="overview__findings">
-          <h3>关键发现</h3>
+          <h3>${escapeHtml(t.keyFindings)}</h3>
           <ol>
             ${narrative.key_findings.slice(0, 5).map((f) => `<li>${escapeHtml(f)}</li>`).join("")}
           </ol>
@@ -1180,8 +1211,8 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       <section id="sleep" class="module module--sleep">
         <div class="module__header">
           <span class="module__index">01</span>
-          <h2 class="module__title">${escapeHtml(sleepChart?.title ?? "睡眠")}</h2>
-          ${sleepConf ? `<span class="badge ${confidenceClass(sleepConf.level)}">数据${confidenceLabel(sleepConf.level)}</span>` : ""}
+          <h2 class="module__title">${escapeHtml(sleepChart?.title ?? t.sleepModuleTitle)}</h2>
+          ${sleepConf ? `<span class="badge ${confidenceClass(sleepConf.level)}">${escapeHtml(t.dataPrefix)}${confidenceLabel(sleepConf.level)}</span>` : ""}
         </div>
         <div class="module__body">
           <div class="module__chart">
@@ -1189,46 +1220,46 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
             <div class="chart-wrap">
               ${sleepSvg}
               ${renderLegend([
-                { label: "睡眠时长", color: "#6366F1" },
-                { label: "深睡占比", color: "#818CF8" },
-                { label: "REM 占比", color: "#A78BFA" },
+                { label: t.legendSleepDuration, color: "#6366F1" },
+                { label: t.legendDeepPct, color: "#818CF8" },
+                { label: t.legendRemPct, color: "#A78BFA" },
               ])}
             </div>
             ${insights.analysis.sleep.healthInsights.normalRangeAssessment ? `
             <div class="note-block" style="margin:14px 0;background:var(--sleep-bg);border-radius:var(--radius-sm);padding:12px 16px">
-              <h4 style="color:var(--sleep);margin-bottom:4px">正常范围评估</h4>
+              <h4 style="color:var(--sleep);margin-bottom:4px">${escapeHtml(t.normalRangeAssessment)}</h4>
               <p>${escapeHtml(insights.analysis.sleep.healthInsights.normalRangeAssessment)}</p>
             </div>` : ""}
           </div>
           <aside class="module__aside">
             <div class="metric-rail">
               <div class="metric-rail__item">
-                <div class="metric-rail__label">近 30 天睡眠</div>
-                <div class="metric-rail__value">${escapeHtml(fmt(insights.analysis.sleep.recent30d.avgSleepHours, " 小时"))}</div>
-                <div class="metric-rail__note">均值</div>
+                <div class="metric-rail__label">${escapeHtml(t.sleepRecent30dLabel)}</div>
+                <div class="metric-rail__value">${escapeHtml(fmt(insights.analysis.sleep.recent30d.avgSleepHours, t.unitHours))}</div>
+                <div class="metric-rail__note">${escapeHtml(t.meanNote)}</div>
               </div>
               <div class="metric-rail__item">
-                <div class="metric-rail__label">近 30 天清醒</div>
-                <div class="metric-rail__value">${escapeHtml(fmt(insights.analysis.sleep.recent30d.avgAwakeHours, " 小时"))}</div>
-                <div class="metric-rail__note">均值</div>
+                <div class="metric-rail__label">${escapeHtml(t.sleepRecent30dAwakeLabel)}</div>
+                <div class="metric-rail__value">${escapeHtml(fmt(insights.analysis.sleep.recent30d.avgAwakeHours, t.unitHours))}</div>
+                <div class="metric-rail__note">${escapeHtml(t.meanNote)}</div>
               </div>
               <div class="metric-rail__item">
-                <div class="metric-rail__label">中位入睡 / 起床</div>
-                <div class="metric-rail__value">${escapeHtml(`${insights.analysis.sleep.recent30d.medianBedtime ?? "—"} / ${insights.analysis.sleep.recent30d.medianWakeTime ?? "—"}`)}</div>
-                <div class="metric-rail__note">近期</div>
+                <div class="metric-rail__label">${escapeHtml(t.sleepBedtimeWakeLabel)}</div>
+                <div class="metric-rail__value">${escapeHtml(`${insights.analysis.sleep.recent30d.medianBedtime ?? t.dash} / ${insights.analysis.sleep.recent30d.medianWakeTime ?? t.dash}`)}</div>
+                <div class="metric-rail__note">${escapeHtml(t.sleepRecentNote)}</div>
               </div>
             </div>
             ${insights.analysis.sleep.healthInsights.actionableAdvice.length > 0 ? `
             <div class="note-block">
-              <h4>健康建议</h4>
+              <h4>${escapeHtml(t.healthAdvice)}</h4>
               <ul>${insights.analysis.sleep.healthInsights.actionableAdvice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
             </div>` : ""}
             ${insights.analysis.sleep.healthInsights.doctorTalkingPoints.length > 0 ? `
             <div class="note-block">
-              <h4>就诊参考问题</h4>
+              <h4>${escapeHtml(t.doctorQuestions)}</h4>
               <ul>${insights.analysis.sleep.healthInsights.doctorTalkingPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
             </div>` : ""}
-            ${sleepConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(sleepConf.summary)}</p></div>` : ""}
+            ${sleepConf ? `<div class="note-block"><h4>${escapeHtml(t.sourceCoverage)}</h4><p>${escapeHtml(sleepConf.summary)}</p></div>` : ""}
           </aside>
         </div>
       </section>
@@ -1237,8 +1268,8 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       <section id="recovery" class="module module--recovery">
         <div class="module__header">
           <span class="module__index">02</span>
-          <h2 class="module__title">${escapeHtml(recoveryChart?.title ?? "恢复")}</h2>
-          ${recoveryConf ? `<span class="badge ${confidenceClass(recoveryConf.level)}">数据${confidenceLabel(recoveryConf.level)}</span>` : ""}
+          <h2 class="module__title">${escapeHtml(recoveryChart?.title ?? t.recoveryModuleTitle)}</h2>
+          ${recoveryConf ? `<span class="badge ${confidenceClass(recoveryConf.level)}">${escapeHtml(t.dataPrefix)}${confidenceLabel(recoveryConf.level)}</span>` : ""}
         </div>
         <div class="module__body">
           <div class="module__chart">
@@ -1246,40 +1277,40 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
             <table class="ledger">
               <thead>
                 <tr>
-                  <th>指标</th>
-                  <th>最新</th>
-                  <th>近 30 天</th>
-                  <th>基线</th>
-                  <th>变化</th>
-                  <th>趋势</th>
+                  <th>${escapeHtml(t.thMetric)}</th>
+                  <th>${escapeHtml(t.thLatest)}</th>
+                  <th>${escapeHtml(t.thRecent30d)}</th>
+                  <th>${escapeHtml(t.thBaseline)}</th>
+                  <th>${escapeHtml(t.thDelta)}</th>
+                  <th>${escapeHtml(t.thTrend)}</th>
                 </tr>
               </thead>
               <tbody>
-                ${renderRecoveryRow("静息心率", insights.analysis.recovery.metrics.restingHeartRate, "#10B981")}
-                ${renderRecoveryRow("HRV", insights.analysis.recovery.metrics.hrv, "#059669")}
-                ${renderRecoveryRow("血氧", insights.analysis.recovery.metrics.oxygenSaturation, "#0D9488")}
-                ${renderRecoveryRow("呼吸频率", insights.analysis.recovery.metrics.respiratoryRate, "#14B8A6")}
-                ${renderRecoveryRow("最大摄氧量", insights.analysis.recovery.metrics.vo2Max, "#6366F1")}
+                ${renderRecoveryRow(t.rowRestingHr, insights.analysis.recovery.metrics.restingHeartRate, "#10B981", t, fmt, fmtDelta)}
+                ${renderRecoveryRow(t.rowHrv, insights.analysis.recovery.metrics.hrv, "#059669", t, fmt, fmtDelta)}
+                ${renderRecoveryRow(t.rowOxygen, insights.analysis.recovery.metrics.oxygenSaturation, "#0D9488", t, fmt, fmtDelta)}
+                ${renderRecoveryRow(t.rowRespiratoryRate, insights.analysis.recovery.metrics.respiratoryRate, "#14B8A6", t, fmt, fmtDelta)}
+                ${renderRecoveryRow(t.rowVo2Max, insights.analysis.recovery.metrics.vo2Max, "#6366F1", t, fmt, fmtDelta)}
               </tbody>
             </table>
             ${insights.analysis.recovery.healthInsights.normalRangeAssessment ? `
             <div class="note-block" style="margin:14px 0 0 0;background:var(--recovery-bg);border-radius:var(--radius-sm);padding:12px 16px">
-              <h4 style="color:var(--recovery);margin-bottom:4px">正常范围评估</h4>
+              <h4 style="color:var(--recovery);margin-bottom:4px">${escapeHtml(t.normalRangeAssessment)}</h4>
               <p>${escapeHtml(insights.analysis.recovery.healthInsights.normalRangeAssessment)}</p>
             </div>` : ""}
           </div>
           <aside class="module__aside">
             ${insights.analysis.recovery.healthInsights.actionableAdvice.length > 0 ? `
             <div class="note-block">
-              <h4>健康建议</h4>
+              <h4>${escapeHtml(t.healthAdvice)}</h4>
               <ul>${insights.analysis.recovery.healthInsights.actionableAdvice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
             </div>` : ""}
             ${insights.analysis.recovery.healthInsights.doctorTalkingPoints.length > 0 ? `
             <div class="note-block">
-              <h4>就诊参考问题</h4>
+              <h4>${escapeHtml(t.doctorQuestions)}</h4>
               <ul>${insights.analysis.recovery.healthInsights.doctorTalkingPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
             </div>` : ""}
-            ${recoveryConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(recoveryConf.summary)}</p></div>` : ""}
+            ${recoveryConf ? `<div class="note-block"><h4>${escapeHtml(t.sourceCoverage)}</h4><p>${escapeHtml(recoveryConf.summary)}</p></div>` : ""}
           </aside>
         </div>
       </section>
@@ -1288,8 +1319,8 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       <section id="activity" class="module module--activity">
         <div class="module__header">
           <span class="module__index">03</span>
-          <h2 class="module__title">${escapeHtml(activityChart?.title ?? "活动与训练")}</h2>
-          ${activityConf ? `<span class="badge ${confidenceClass(activityConf.level)}">数据${confidenceLabel(activityConf.level)}</span>` : ""}
+          <h2 class="module__title">${escapeHtml(activityChart?.title ?? t.activityModuleTitle)}</h2>
+          ${activityConf ? `<span class="badge ${confidenceClass(activityConf.level)}">${escapeHtml(t.dataPrefix)}${confidenceLabel(activityConf.level)}</span>` : ""}
         </div>
         <div class="module__body">
           <div class="module__chart">
@@ -1297,44 +1328,44 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
             <div class="chart-wrap">
               ${activitySvg}
               ${renderLegend([
-                { label: "活动能量", color: "#F97316" },
-                { label: "锻炼分钟", color: "#FB923C" },
-                { label: "站立小时", color: "#10B981" },
+                { label: t.legendActivityEnergy, color: "#F97316" },
+                { label: t.legendExerciseMin, color: "#FB923C" },
+                { label: t.legendStandHours, color: "#10B981" },
               ])}
             </div>
             <div class="activity-stats">
               <div class="activity-stats__item">
-                <span>近 30 天活动能量</span>
+                <span>${escapeHtml(t.activityEnergyRecent)}</span>
                 <strong>${escapeHtml(fmt(insights.analysis.activity.recent30d.activeEnergyBurnedKcal, " kcal"))}</strong>
               </div>
               <div class="activity-stats__item">
-                <span>近 30 天锻炼</span>
-                <strong>${escapeHtml(fmt(insights.analysis.activity.recent30d.exerciseMinutes, " 分钟"))}</strong>
+                <span>${escapeHtml(t.activityExerciseRecent)}</span>
+                <strong>${escapeHtml(fmt(insights.analysis.activity.recent30d.exerciseMinutes, t.unitMinutes))}</strong>
               </div>
               <div class="activity-stats__item">
-                <span>近 30 天站立</span>
-                <strong>${escapeHtml(fmt(insights.analysis.activity.recent30d.standHours, " 小时"))}</strong>
+                <span>${escapeHtml(t.activityStandRecent)}</span>
+                <strong>${escapeHtml(fmt(insights.analysis.activity.recent30d.standHours, t.unitHours))}</strong>
               </div>
             </div>
             ${workoutBars ? `<div class="chart-wrap" style="margin-top:14px">${workoutBars}</div>` : ""}
             ${insights.analysis.activity.healthInsights.normalRangeAssessment ? `
             <div class="note-block" style="margin:14px 0 0 0;background:var(--activity-bg);border-radius:var(--radius-sm);padding:12px 16px">
-              <h4 style="color:var(--activity);margin-bottom:4px">WHO 对标评估</h4>
+              <h4 style="color:var(--activity);margin-bottom:4px">${escapeHtml(t.whoAssessment)}</h4>
               <p>${escapeHtml(insights.analysis.activity.healthInsights.normalRangeAssessment)}</p>
             </div>` : ""}
           </div>
           <aside class="module__aside">
             ${insights.analysis.activity.healthInsights.actionableAdvice.length > 0 ? `
             <div class="note-block">
-              <h4>健康建议</h4>
+              <h4>${escapeHtml(t.healthAdvice)}</h4>
               <ul>${insights.analysis.activity.healthInsights.actionableAdvice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
             </div>` : ""}
             ${insights.analysis.activity.healthInsights.doctorTalkingPoints.length > 0 ? `
             <div class="note-block">
-              <h4>就诊参考问题</h4>
+              <h4>${escapeHtml(t.doctorQuestions)}</h4>
               <ul>${insights.analysis.activity.healthInsights.doctorTalkingPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
             </div>` : ""}
-            ${activityConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(activityConf.summary)}</p></div>` : ""}
+            ${activityConf ? `<div class="note-block"><h4>${escapeHtml(t.sourceCoverage)}</h4><p>${escapeHtml(activityConf.summary)}</p></div>` : ""}
           </aside>
         </div>
       </section>
@@ -1343,79 +1374,79 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       <section id="body" class="module module--body">
         <div class="module__header">
           <span class="module__index">04</span>
-          <h2 class="module__title">${escapeHtml(bodyChart?.title ?? "身体成分")}</h2>
-          ${bodyConf ? `<span class="badge ${confidenceClass(bodyConf.level)}">数据${confidenceLabel(bodyConf.level)}</span>` : ""}
+          <h2 class="module__title">${escapeHtml(bodyChart?.title ?? t.bodyModuleTitle)}</h2>
+          ${bodyConf ? `<span class="badge ${confidenceClass(bodyConf.level)}">${escapeHtml(t.dataPrefix)}${confidenceLabel(bodyConf.level)}</span>` : ""}
         </div>
         <p class="section-intro" style="padding:16px 24px 0">${escapeHtml(bodyCallout)}</p>
         <div class="body-grid">
           ${bodyChart?.series
             .map((series, index) =>
-              renderBodyDetail(series, index === 0 ? "#6B7280" : "#9CA3AF"),
+              renderBodyDetail(series, index === 0 ? "#6B7280" : "#9CA3AF", fmt, t),
             )
-            .join("") ?? "<p style='color:var(--faint);font-size:var(--fs-sm)'>身体成分数据不足。</p>"}
+            .join("") ?? `<p style='color:var(--faint);font-size:var(--fs-sm)'>${escapeHtml(t.bodyDataInsufficient)}</p>`}
         </div>
       </section>
 
       ${menstrualChart && insights.analysis.menstrualCycle ? (() => {
         const mc = insights.analysis.menstrualCycle;
         const hi = mc.healthInsights;
-        const trendLabel = hi.cycleTrend === "lengthening" ? "延长中" : hi.cycleTrend === "shortening" ? "缩短中" : hi.cycleTrend === "stable" ? "稳定" : "—";
+        const trendLabel = hi.cycleTrend === "lengthening" ? t.menstrualTrendLengthening : hi.cycleTrend === "shortening" ? t.menstrualTrendShortening : hi.cycleTrend === "stable" ? t.menstrualTrendStable : t.dash;
         return `
       <!-- 05 Menstrual Cycle -->
       <section id="menstrual" class="module module--menstrual">
         <div class="module__header">
           <span class="module__index">05</span>
           <h2 class="module__title">${escapeHtml(menstrualChart.title)}</h2>
-          ${menstrualConf ? `<span class="badge ${confidenceClass(menstrualConf.level)}">数据${confidenceLabel(menstrualConf.level)}</span>` : ""}
+          ${menstrualConf ? `<span class="badge ${confidenceClass(menstrualConf.level)}">${escapeHtml(t.dataPrefix)}${confidenceLabel(menstrualConf.level)}</span>` : ""}
         </div>
         <div class="module__body">
           <div class="module__chart">
             <p class="section-intro">${escapeHtml(hi.interpretation)}</p>
             <div class="chart-wrap">
               ${menstrualCycleSvg}
-              ${renderLegend([{ label: "周期长度", color: "#EC4899" }])}
+              ${renderLegend([{ label: t.legendCycleLength, color: "#EC4899" }])}
             </div>
             <div class="note-block" style="margin:14px 0;background:var(--menstrual-bg);border-radius:var(--radius-sm);padding:12px 16px">
-              <h4 style="color:var(--menstrual);margin-bottom:4px">正常范围评估</h4>
+              <h4 style="color:var(--menstrual);margin-bottom:4px">${escapeHtml(t.normalRangeAssessment)}</h4>
               <p>${escapeHtml(hi.normalRangeAssessment)}</p>
             </div>
             ${menstrualPeriodBars ? `<div class="chart-wrap" style="margin-top:14px">
               ${menstrualPeriodBars}
-              ${renderLegend([{ label: "经期天数", color: "#F472B6" }])}
+              ${renderLegend([{ label: t.legendPeriodDuration, color: "#F472B6" }])}
             </div>` : ""}
             <div class="note-block" style="margin:14px 0;background:var(--menstrual-bg);border-radius:var(--radius-sm);padding:12px 16px">
-              <h4 style="color:var(--menstrual);margin-bottom:4px">出血模式分析</h4>
+              <h4 style="color:var(--menstrual);margin-bottom:4px">${escapeHtml(t.menstrualBleedingPatternTitle)}</h4>
               <p>${escapeHtml(hi.flowPattern)}</p>
             </div>
           </div>
           <aside class="module__aside">
             <div class="metric-rail">
               <div class="metric-rail__item">
-                <div class="metric-rail__label">平均周期</div>
-                <div class="metric-rail__value">${escapeHtml(fmt(mc.avgCycleLengthDays, " 天"))}</div>
-                <div class="metric-rail__note">${mc.totalPeriods} 个周期</div>
+                <div class="metric-rail__label">${escapeHtml(t.menstrualAvgCycleLabel)}</div>
+                <div class="metric-rail__value">${escapeHtml(fmt(mc.avgCycleLengthDays, t.unitDays))}</div>
+                <div class="metric-rail__note">${escapeHtml(t.menstrualCycleCount(mc.totalPeriods))}</div>
               </div>
               <div class="metric-rail__item">
-                <div class="metric-rail__label">平均经期</div>
-                <div class="metric-rail__value">${escapeHtml(fmt(mc.avgPeriodDurationDays, " 天"))}</div>
-                <div class="metric-rail__note">均值</div>
+                <div class="metric-rail__label">${escapeHtml(t.menstrualAvgPeriodLabel)}</div>
+                <div class="metric-rail__value">${escapeHtml(fmt(mc.avgPeriodDurationDays, t.unitDays))}</div>
+                <div class="metric-rail__note">${escapeHtml(t.meanNote)}</div>
               </div>
               <div class="metric-rail__item">
-                <div class="metric-rail__label">周期趋势</div>
+                <div class="metric-rail__label">${escapeHtml(t.menstrualCycleTrendLabel)}</div>
                 <div class="metric-rail__value">${escapeHtml(trendLabel)}</div>
-                <div class="metric-rail__note">${hi.cycleTrendDelta !== null ? `${hi.cycleTrendDelta > 0 ? "+" : ""}${hi.cycleTrendDelta} 天` : "—"}</div>
+                <div class="metric-rail__note">${hi.cycleTrendDelta !== null ? `${hi.cycleTrendDelta > 0 ? "+" : ""}${hi.cycleTrendDelta}${t.unitDays}` : t.dash}</div>
               </div>
             </div>
             <div class="note-block">
-              <h4>健康建议</h4>
+              <h4>${escapeHtml(t.healthAdvice)}</h4>
               <ul>${hi.actionableAdvice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
             </div>
             ${hi.doctorTalkingPoints.length > 0 ? `
             <div class="note-block">
-              <h4>就诊参考问题</h4>
+              <h4>${escapeHtml(t.doctorQuestions)}</h4>
               <ul>${hi.doctorTalkingPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
             </div>` : ""}
-            ${menstrualConf ? `<div class="note-block"><h4>来源与覆盖</h4><p>${escapeHtml(menstrualConf.summary)}</p></div>` : ""}
+            ${menstrualConf ? `<div class="note-block"><h4>${escapeHtml(t.sourceCoverage)}</h4><p>${escapeHtml(menstrualConf.summary)}</p></div>` : ""}
           </aside>
         </div>
       </section>`;
@@ -1424,13 +1455,13 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       <!-- Actions -->
       <div class="actions">
         <div class="actions__card">
-          <h3>接下来两周建议</h3>
+          <h3>${escapeHtml(t.actionsNext2Weeks)}</h3>
           <ol>
             ${narrative.actions_next_2_weeks.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}
           </ol>
         </div>
         <div class="actions__card actions__card--warn">
-          <h3>何时建议复查或就医</h3>
+          <h3>${escapeHtml(t.actionsSeekCare)}</h3>
           <ul>
             ${narrative.when_to_seek_care.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}
           </ul>
@@ -1440,7 +1471,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
       <!-- Doctor Questions -->
       <div class="actions actions--single">
         <div class="actions__card">
-          <h3>下次看诊可以问医生的问题</h3>
+          <h3>${escapeHtml(t.actionsDoctorQuestions)}</h3>
           <ol>
             ${narrative.questions_for_doctor.map((q) => `<li>${escapeHtml(q)}</li>`).join("")}
           </ol>
@@ -1449,16 +1480,16 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
 
       <!-- Appendix -->
       <section id="appendix" class="appendix">
-        <h2 class="appendix__title">数据边界与补充提示</h2>
+        <h2 class="appendix__title">${escapeHtml(t.appendixTitle)}</h2>
         <div class="appendix__grid">
           <div>
-            <h3>数据局限</h3>
+            <h3>${escapeHtml(t.appendixDataLimitations)}</h3>
             <ul class="appendix__list">
               ${[...narrative.data_limitations].map((d) => `<li>${escapeHtml(d)}</li>`).join("")}
             </ul>
           </div>
           <div>
-            <h3>来源可信度</h3>
+            <h3>${escapeHtml(t.appendixSourceConfidence)}</h3>
             <ul class="confidence-list">
               ${insights.sourceConfidence
                 .map(
@@ -1475,7 +1506,7 @@ export function renderReportHtml(insights: InsightBundle, narrative: NarrativeRe
           </div>
         </div>
         <div class="disclaimer">${escapeHtml(narrative.disclaimer)}</div>
-        <div class="disclaimer footer-link">Generated by <a href="https://github.com/RuochenLyu/apple-health-analyst">apple-health-analyst</a></div>
+        <div class="disclaimer footer-link">${escapeHtml(t.footerGeneratedBy)} <a href="https://github.com/RuochenLyu/apple-health-analyst">apple-health-analyst</a></div>
       </section>
     </main>
   </body>
