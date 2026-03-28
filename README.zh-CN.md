@@ -25,13 +25,21 @@
 
 ## 快速开始
 
-在 Codex 中打开本项目目录，对话即可：
+一行命令安装 skill（支持 Claude Code、Codex、Cursor 等 [40+ agents](https://skills.sh)）：
+
+```bash
+npx skills add RuochenLyu/apple-health-analyst
+```
+
+然后直接和 agent 对话：
 
 ```text
 使用 $apple-health-analyst 分析 /path/to/导出.zip
 ```
 
-Codex 会自动完成 **prepare → LLM 写 narrative → render** 全流程，生成健康顾问级报告。
+Agent 会自动完成 **prepare → LLM 写 narrative → render** 全流程，生成健康顾问级报告。
+
+> **注意：** 这是一个 agent skill，不是独立 CLI 工具。`prepare` 和 `render` 在本地运行，但 narrative 步骤需要 LLM 能力——因此完整流程必须在 AI 编程 agent 中执行。
 
 Skill 配置在 [`.agents/skills/apple-health-analyst/`](https://github.com/RuochenLyu/apple-health-analyst/blob/main/.agents/skills/apple-health-analyst/SKILL.md)，包含角色定义、分析框架和 narrative schema。
 

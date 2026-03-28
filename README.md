@@ -27,13 +27,21 @@ Not a data dashboard — you can already see the data on your phone. This tool's
 
 ## Quick Start
 
-Open this project directory in Codex and just chat:
+Install the skill with one command (works with Claude Code, Codex, Cursor, and [40+ agents](https://skills.sh)):
+
+```bash
+npx skills add RuochenLyu/apple-health-analyst
+```
+
+Then just chat with your agent:
 
 ```text
 Use $apple-health-analyst to analyze /path/to/export.zip
 ```
 
-Codex automatically completes the full **prepare → LLM narrative → render** pipeline, producing a health-advisor-grade report.
+The agent automatically completes the full **prepare → LLM narrative → render** pipeline, producing a health-advisor-grade report.
+
+> **Note:** This is an agent skill, not a standalone CLI tool. The `prepare` and `render` steps run locally, but the narrative step requires an LLM — so the full workflow must run inside an AI coding agent.
 
 Skill configuration is at [`.agents/skills/apple-health-analyst/`](https://github.com/RuochenLyu/apple-health-analyst/blob/main/.agents/skills/apple-health-analyst/SKILL.md), including role definition, analysis framework, and narrative schema.
 
