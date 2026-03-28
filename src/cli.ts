@@ -99,7 +99,12 @@ export async function runCli(argv: string[]) {
   await program.parseAsync(argv, { from: "user" });
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+const self = fileURLToPath(import.meta.url);
+const entry = realpathSync(process.argv[1]);
+if (self === entry) {
   runCli(process.argv.slice(2)).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error(message);

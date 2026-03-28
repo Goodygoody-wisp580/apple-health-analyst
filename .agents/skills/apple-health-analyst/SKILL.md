@@ -29,9 +29,28 @@ You are a **health management advisor** (not a data analyst). Users can already 
 
 1. Confirm the input is an official Apple Health export ZIP.
 2. Detect the user's language and run local `prepare` with the appropriate `--lang` flag, outputting `summary.json` and `insights.json`.
-3. Read `summary.json` for stable facts, then read `insights.json` for chart series, risk signals, **cross-metric analysis (crossMetric)**, `historicalContext`, and narrative boundaries.
+3. Read `summary.json` for stable facts, then read `insights.json` for the keys listed below.
 4. Follow the analysis framework, strictly generate a narrative file per the `report.llm.json` schema v2. The narrative language MUST match `narrativeContext.language`.
 5. Run `render` to output `report.llm.json`, `report.md`, and `report.html`.
+
+### `insights.json` top-level keys
+
+| Key | What it contains |
+|-----|-----------------|
+| `metadata` | `tool`, `version`, `language`, `schemaVersion`, `generatedAt` |
+| `analysis.sleep` | Sleep duration, stages, timing, regularity analysis |
+| `analysis.recovery` | RHR, HRV, blood oxygen, respiratory rate, VO2 max |
+| `analysis.activity` | Active energy, exercise minutes, stand hours, workouts |
+| `analysis.bodyComposition` | Weight, body fat % |
+| `analysis.menstrualCycle` | Cycle analysis (if data present) |
+| `charts[]` | Chart data series (each has `id`, `title`, `series`) |
+| `crossMetric` | **Primary source for narrative** — `compositeAssessment`, `sleepRecoveryLink`, `sleepConsistency`, `activityRecoveryBalance`, `recoveryCoherence`, `patterns`, `notableDays` |
+| `historicalContext` | Multi-time-window context (recent 30d vs baseline 90d vs all-time) |
+| `riskFlags[]` | Flagged health risks with severity and evidence |
+| `notableChanges[]` | Significant metric changes (improvements or deteriorations) |
+| `dataGaps[]` | Missing or sparse data warnings |
+| `sourceConfidence[]` | Device/source reliability signals |
+| `narrativeContext` | `language`, narrative boundaries, and constraints |
 
 ## Commands
 
@@ -100,6 +119,8 @@ Don't just give conclusions — show the reasoning chain. Example: "Your bedtime
 - **ZIP format error**: If `prepare` reports "cannot find HealthData XML," confirm the user provided an official Apple Health export ZIP, not a manually compressed file.
 - **Out of memory**: Large ZIPs (>2GB) may cause memory issues. Suggest using `--from` and `--to` to limit the time range.
 - **Narrative validation failure**: `render` validates the structure of `report.llm.json`. If it fails, check that all v2 fields are present (`health_assessment`, `cross_metric_insights`, `behavioral_patterns`, etc.).
+- **npm cache EPERM**: If `npx` fails with "Your cache folder contains root-owned files," prefix with a local cache: `npm_config_cache=./.npm-cache npx apple-health-analyst ...`
+- **Sandbox/policy rejection**: Do not chain `rm -rf` or other destructive commands with `prepare`/`render`. Run `mkdir -p ./output` separately, then run the command.
 
 ## Output Files (default in `./output/`)
 
