@@ -1,6 +1,6 @@
 # apple-health-analyst
 
-[中文文档](README.zh-CN.md)
+[中文文档](https://github.com/RuochenLyu/apple-health-analyst/blob/main/README.zh-CN.md)
 
 Analyze Apple Health export data locally, generating health reports with cross-metric correlation analysis, behavioral pattern recognition, and composite scoring.
 
@@ -35,7 +35,7 @@ Use $apple-health-analyst to analyze /path/to/export.zip
 
 Codex automatically completes the full **prepare → LLM narrative → render** pipeline, producing a health-advisor-grade report.
 
-Skill configuration is at [`.agents/skills/apple-health-analyst/`](.agents/skills/apple-health-analyst/SKILL.md), including role definition, analysis framework, and narrative schema.
+Skill configuration is at [`.agents/skills/apple-health-analyst/`](https://github.com/RuochenLyu/apple-health-analyst/blob/main/.agents/skills/apple-health-analyst/SKILL.md), including role definition, analysis framework, and narrative schema.
 
 ## Metrics Covered
 
