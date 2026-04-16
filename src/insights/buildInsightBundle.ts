@@ -1,7 +1,14 @@
 import { analyzeCrossMetrics } from "../analyzers/crossMetric.js";
 import type { CrossMetricT } from "../i18n/zh/crossMetric.js";
 import { detectPeriods, calculateCycleLengths } from "../analyzers/menstrualCycle.js";
+import { buildTrainingInsights } from "../analyzers/training.js";
+import {
+  buildWorkoutRateDelta,
+  buildWorkoutTypeHistoricalContext,
+  summarizeWorkoutTypes,
+} from "../analyzers/workoutTypes.js";
 import type { InsightsT } from "../i18n/zh/insights.js";
+import type { TrainingInsightsT } from "../i18n/zh/trainingInsights.js";
 import type { Locale } from "../i18n/index.js";
 import { isWithinWindow } from "../normalize/buildTimeWindow.js";
 import {
@@ -93,12 +100,11 @@ function historicalWindow(
   };
 }
 
-function summarizeActivityWindow(activitySummaries: ActivitySummarySample[], workouts: WorkoutSample[]) {
-  const workoutCounts = new Map<string, number>();
-  for (const workout of workouts) {
-    workoutCounts.set(workout.workoutActivityType, (workoutCounts.get(workout.workoutActivityType) ?? 0) + 1);
-  }
-
+function summarizeActivityWindow(
+  activitySummaries: ActivitySummarySample[],
+  workouts: WorkoutSample[],
+  locale: Locale,
+) {
   return {
     dayCount: activitySummaries.length,
     activeEnergyBurnedKcal: round(
@@ -123,10 +129,7 @@ function summarizeActivityWindow(activitySummaries: ActivitySummarySample[], wor
       ),
     ),
     workouts: workouts.length,
-    topWorkoutTypes: [...workoutCounts.entries()]
-      .sort((left, right) => right[1] - left[1])
-      .slice(0, 5)
-      .map(([type, count]) => ({ type, count })),
+    topWorkoutTypes: summarizeWorkoutTypes(workouts, locale).slice(0, 5),
   };
 }
 
@@ -242,6 +245,7 @@ function buildActivityHistoricalContext(
   workouts: WorkoutSample[],
   window: TimeWindow,
   summary: AnalysisSummary,
+  locale: Locale,
 ): ActivityHistoricalContext {
   const filteredSummaries = activitySummaries.filter((entry) => {
     if (window.effectiveStart && entry.date < window.effectiveStart) {
@@ -256,6 +260,9 @@ function buildActivityHistoricalContext(
     return entry.startDate <= window.effectiveEnd;
   });
   const trailing180dStart = new Date(window.effectiveEnd.getTime() - 179 * 24 * 60 * 60 * 1000);
+  const baselineWindowStart =
+    window.effectiveStart && window.effectiveStart > window.baselineStart ? window.effectiveStart : window.baselineStart;
+  const baselineWindowEnd = new Date(window.recentStart.getTime() - 1);
 
   const recentSummaries = filteredSummaries.filter(
     (entry) => entry.date >= window.recentStart && entry.date <= window.effectiveEnd,
@@ -277,10 +284,10 @@ function buildActivityHistoricalContext(
     (entry) => entry.startDate >= trailing180dStart && entry.startDate <= window.effectiveEnd,
   );
 
-  const recentSummary = summarizeActivityWindow(recentSummaries, recentWorkouts);
-  const baselineSummary = summarizeActivityWindow(baselineSummaries, baselineWorkouts);
-  const trailingSummary = summarizeActivityWindow(trailingSummaries, trailingWorkouts);
-  const allTimeSummary = summarizeActivityWindow(filteredSummaries, filteredWorkouts);
+  const recentSummary = summarizeActivityWindow(recentSummaries, recentWorkouts, locale);
+  const baselineSummary = summarizeActivityWindow(baselineSummaries, baselineWorkouts, locale);
+  const trailingSummary = summarizeActivityWindow(trailingSummaries, trailingWorkouts, locale);
+  const allTimeSummary = summarizeActivityWindow(filteredSummaries, filteredWorkouts, locale);
 
   return {
     coverageDays: summary.activity.coverageDays,
@@ -293,20 +300,46 @@ function buildActivityHistoricalContext(
       activeEnergyBurnedKcal: subtract(recentSummary.activeEnergyBurnedKcal, baselineSummary.activeEnergyBurnedKcal),
       exerciseMinutes: subtract(recentSummary.exerciseMinutes, baselineSummary.exerciseMinutes),
       standHours: subtract(recentSummary.standHours, baselineSummary.standHours),
-      workouts: recentSummary.workouts - baselineSummary.workouts,
+      workouts: buildWorkoutRateDelta(
+        recentSummary.workouts,
+        window.recentStart,
+        window.effectiveEnd,
+        baselineSummary.workouts,
+        baselineWindowStart,
+        baselineWindowEnd,
+      ),
     },
     recentVsTrailing180d: {
       activeEnergyBurnedKcal: subtract(recentSummary.activeEnergyBurnedKcal, trailingSummary.activeEnergyBurnedKcal),
       exerciseMinutes: subtract(recentSummary.exerciseMinutes, trailingSummary.exerciseMinutes),
       standHours: subtract(recentSummary.standHours, trailingSummary.standHours),
-      workouts: recentSummary.workouts - trailingSummary.workouts,
+      workouts: buildWorkoutRateDelta(
+        recentSummary.workouts,
+        window.recentStart,
+        window.effectiveEnd,
+        trailingSummary.workouts,
+        trailing180dStart,
+        window.effectiveEnd,
+      ),
     },
     recentVsAllTime: {
       activeEnergyBurnedKcal: subtract(recentSummary.activeEnergyBurnedKcal, allTimeSummary.activeEnergyBurnedKcal),
       exerciseMinutes: subtract(recentSummary.exerciseMinutes, allTimeSummary.exerciseMinutes),
       standHours: subtract(recentSummary.standHours, allTimeSummary.standHours),
-      workouts: recentSummary.workouts - allTimeSummary.workouts,
+      workouts: buildWorkoutRateDelta(
+        recentSummary.workouts,
+        window.recentStart,
+        window.effectiveEnd,
+        allTimeSummary.workouts,
+        window.effectiveStart ?? filteredWorkouts[0]?.startDate ?? null,
+        window.effectiveEnd,
+      ),
     },
+    workoutTypes: buildWorkoutTypeHistoricalContext(
+      filteredWorkouts,
+      window,
+      locale === "zh" ? "zh" : "en",
+    ),
   };
 }
 
@@ -1161,14 +1194,21 @@ export function buildNotableChanges(summary: AnalysisSummary, charts: ChartGroup
   return changes;
 }
 
+export interface BuildInsightBundleOptions {
+  /** Maximum number of primary sports to include in the training report. */
+  topSportCount?: number;
+}
+
 export function buildInsightBundle(
   parsed: ParsedHealthExport,
   primarySources: PrimarySources,
   window: TimeWindow,
   summary: AnalysisSummary,
   t: InsightsT,
+  trainingT: TrainingInsightsT,
   locale: Locale,
   crossMetricT?: CrossMetricT,
+  options: BuildInsightBundleOptions = {},
 ): InsightBundle {
   const menstrualChart = buildMenstrualCycleCharts(parsed, window, t);
   const charts = [
@@ -1206,7 +1246,7 @@ export function buildInsightBundle(
         })
         .filter((entry) => Boolean(entry[1])),
     ) as InsightHistoricalContext["recovery"],
-    activity: buildActivityHistoricalContext(parsed.activitySummaries, parsed.workouts, window, summary),
+    activity: buildActivityHistoricalContext(parsed.activitySummaries, parsed.workouts, window, summary, locale),
     bodyComposition: Object.fromEntries(
       (Object.keys(BODY_UNITS) as BodyMetricKey[])
         .map((metric) => {
@@ -1228,6 +1268,16 @@ export function buildInsightBundle(
     interpretationHints: [],
   };
   historicalContext.interpretationHints = buildInterpretationHints(summary, historicalContext, t);
+  const crossMetric = analyzeCrossMetrics(parsed, primarySources, window, crossMetricT!);
+  const training = buildTrainingInsights(
+    parsed,
+    primarySources,
+    window,
+    historicalContext,
+    crossMetric.activityRecoveryBalance.recoveryAdequate,
+    trainingT,
+    { topSportCount: options.topSportCount },
+  );
 
   return {
     metadata: {
@@ -1255,7 +1305,7 @@ export function buildInsightBundle(
     dataGaps: buildDataGaps(summary, t),
     sourceConfidence: buildSourceConfidence(summary, t),
     historicalContext,
-    crossMetric: analyzeCrossMetrics(parsed, primarySources, window, crossMetricT!),
+    crossMetric,
     narrativeContext: {
       audience: t.narrativeAudience,
       goal: t.narrativeGoal,
@@ -1263,5 +1313,6 @@ export function buildInsightBundle(
       outputSchemaVersion: NARRATIVE_REPORT_SCHEMA_VERSION,
       boundaries: t.narrativeBoundaries,
     },
+    training,
   };
 }

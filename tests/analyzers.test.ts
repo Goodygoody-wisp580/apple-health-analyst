@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { analyzeRecovery } from "../src/analyzers/recovery.js";
 import { analyzeSleep } from "../src/analyzers/sleep.js";
+import { buildWorkoutRateDelta } from "../src/analyzers/workoutTypes.js";
 import { recoveryZh } from "../src/i18n/zh/recovery.js";
 import { sleepZh } from "../src/i18n/zh/sleep.js";
 import { findMainXml } from "../src/io/findMainXml.js";
@@ -56,5 +57,18 @@ describe("analyzers", () => {
     const recovery = analyzeRecovery({}, {}, window, recoveryZh);
 
     expect(recovery.status).toBe("insufficient_data");
+  });
+
+  it("normalizes workout deltas across different window lengths", () => {
+    const delta = buildWorkoutRateDelta(
+      3,
+      new Date("2026-03-01T00:00:00Z"),
+      new Date("2026-03-30T00:00:00Z"),
+      6,
+      new Date("2025-12-01T00:00:00Z"),
+      new Date("2026-02-28T00:00:00Z"),
+    );
+
+    expect(delta).toBeGreaterThan(0);
   });
 });

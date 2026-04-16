@@ -1,6 +1,7 @@
 import type { ActivityT } from "../zh/activity.js";
 
 export const activityEn: ActivityT = {
+  workoutLabelLocale: "en",
   // ── Separators ──
   partSep: "; ",
   partEnd: ".",

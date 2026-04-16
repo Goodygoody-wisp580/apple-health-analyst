@@ -10,6 +10,7 @@ import type {
 import type { ActivityT } from "../i18n/zh/activity.js";
 
 import { round, average, subtract } from "./mathUtils.js";
+import { buildWorkoutRateDelta, formatWorkoutType, summarizeWorkoutTypes } from "./workoutTypes.js";
 
 const EMPTY_HEALTH_INSIGHTS: ActivityHealthInsights = {
   activityTrend: null,
@@ -22,12 +23,11 @@ const EMPTY_HEALTH_INSIGHTS: ActivityHealthInsights = {
   doctorTalkingPoints: [],
 };
 
-function summarizeActivityWindow(activitySummaries: ActivitySummarySample[], workouts: WorkoutSample[]) {
-  const workoutCounts = new Map<string, number>();
-  for (const workout of workouts) {
-    workoutCounts.set(workout.workoutActivityType, (workoutCounts.get(workout.workoutActivityType) ?? 0) + 1);
-  }
-
+function summarizeActivityWindow(
+  activitySummaries: ActivitySummarySample[],
+  workouts: WorkoutSample[],
+  workoutLabelLocale: "zh" | "en",
+) {
   return {
     dayCount: activitySummaries.length,
     activeEnergyBurnedKcal: round(
@@ -40,10 +40,7 @@ function summarizeActivityWindow(activitySummaries: ActivitySummarySample[], wor
       average(activitySummaries.map((sample) => sample.appleStandHours).filter((value): value is number => value !== null)),
     ),
     workouts: workouts.length,
-    topWorkoutTypes: [...workoutCounts.entries()]
-      .sort((left, right) => right[1] - left[1])
-      .slice(0, 5)
-      .map(([type, count]) => ({ type, count })),
+    topWorkoutTypes: summarizeWorkoutTypes(workouts, workoutLabelLocale).slice(0, 5),
   };
 }
 
@@ -81,17 +78,24 @@ export function analyzeActivity(
     (workout) => workout.startDate >= window.baselineStart && workout.startDate < window.recentStart,
   );
 
-  const recent30d = summarizeActivityWindow(recentSummaries, recentWorkouts);
-  const baseline90d = summarizeActivityWindow(baselineSummaries, baselineWorkouts);
+  const recent30d = summarizeActivityWindow(recentSummaries, recentWorkouts, t.workoutLabelLocale);
+  const baseline90d = summarizeActivityWindow(baselineSummaries, baselineWorkouts, t.workoutLabelLocale);
+  const baselineWindowStart =
+    window.effectiveStart && window.effectiveStart > window.baselineStart ? window.effectiveStart : window.baselineStart;
+  const baselineWindowEnd = new Date(window.recentStart.getTime() - 1);
 
   const delta = {
     activeEnergyBurnedKcal: subtract(recent30d.activeEnergyBurnedKcal, baseline90d.activeEnergyBurnedKcal),
     exerciseMinutes: subtract(recent30d.exerciseMinutes, baseline90d.exerciseMinutes),
     standHours: subtract(recent30d.standHours, baseline90d.standHours),
-    workouts:
-      recent30d.workouts || baseline90d.workouts
-        ? recent30d.workouts - baseline90d.workouts
-        : null,
+    workouts: buildWorkoutRateDelta(
+      recent30d.workouts,
+      window.recentStart,
+      window.effectiveEnd,
+      baseline90d.workouts,
+      baselineWindowStart,
+      baselineWindowEnd,
+    ),
   };
 
   const healthInsights = buildActivityHealthInsights(recent30d, delta, t);
@@ -161,27 +165,25 @@ function buildWhoGuidelineAssessment(exerciseMinutes: number | null, t: Activity
 }
 
 function buildWorkoutVariety(
-  topWorkoutTypes: Array<{ type: string; count: number }>,
+  topWorkoutTypes: ActivityWindowSummary["topWorkoutTypes"],
   t: ActivityT,
 ): string {
   const count = topWorkoutTypes.length;
   if (count === 0) return t.varietyNone;
   if (count === 1) {
-    return t.varietySingle(formatWorkoutType(topWorkoutTypes[0].type));
+    return t.varietySingle(formatWorkoutType(topWorkoutTypes[0].type, t.workoutLabelLocale));
   }
   if (count <= 3) {
-    const types = topWorkoutTypes.map((w) => formatWorkoutType(w.type)).join("、");
+    const separator = t.partSep.trim() || " / ";
+    const types = topWorkoutTypes.map((w) => formatWorkoutType(w.type, t.workoutLabelLocale)).join(separator);
     return t.varietyBalanced(types);
   }
-  const types = topWorkoutTypes.slice(0, 4).map((w) => formatWorkoutType(w.type)).join("、");
+  const separator = t.partSep.trim() || " / ";
+  const types = topWorkoutTypes
+    .slice(0, 4)
+    .map((w) => formatWorkoutType(w.type, t.workoutLabelLocale))
+    .join(separator);
   return t.varietyRich(types, count);
-}
-
-function formatWorkoutType(raw: string): string {
-  return raw
-    .replace(/^HKWorkoutActivityType/, "")
-    .replace(/([A-Z])/g, " $1")
-    .trim();
 }
 
 function buildNormalRangeAssessment(recent: ActivityWindowSummary, t: ActivityT): string {

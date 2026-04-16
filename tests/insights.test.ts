@@ -70,6 +70,7 @@ describe("insights helpers", () => {
 
   it("includes long-term historical context for narrative reasoning", async () => {
     const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {}, zhTranslations);
+    const workoutType = prepared.insights.historicalContext.activity.workoutTypes[0];
 
     expect(prepared.insights.historicalContext.scope.totalSpanDays).toBeGreaterThan(0);
     expect(prepared.insights.historicalContext.sleep.trailing180d.nights).toBeGreaterThan(0);
@@ -77,5 +78,8 @@ describe("insights helpers", () => {
       prepared.insights.analysis.activity.recent30d.workouts,
     );
     expect(prepared.insights.historicalContext.interpretationHints).toBeInstanceOf(Array);
+    expect(workoutType).toBeDefined();
+    expect(workoutType?.recentMonths).toHaveLength(12);
+    expect(workoutType?.yearly.length).toBeGreaterThan(0);
   });
 });

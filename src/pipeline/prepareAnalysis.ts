@@ -24,6 +24,11 @@ export interface PrepareOptions {
   from?: string;
   to?: string;
   locale?: Locale;
+  /**
+   * Optional override for the maximum number of primary sports surfaced in
+   * the training report. Defaults to 5 when unset.
+   */
+  topSportCount?: number;
 }
 
 export interface PreparedAnalysis {
@@ -169,6 +174,16 @@ export async function prepareAnalysis(
 
   return {
     summary,
-    insights: buildInsightBundle(parsed, primarySources, timeWindow, summary, t.insights, options.locale ?? "en", t.crossMetric),
+    insights: buildInsightBundle(
+      parsed,
+      primarySources,
+      timeWindow,
+      summary,
+      t.insights,
+      t.trainingInsights,
+      options.locale ?? "en",
+      t.crossMetric,
+      { topSportCount: options.topSportCount },
+    ),
   };
 }

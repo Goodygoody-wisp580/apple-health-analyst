@@ -7,6 +7,8 @@ import type { MenstrualCycleT } from "./zh/menstrualCycle.js";
 import type { RecoveryT } from "./zh/recovery.js";
 import type { RenderT } from "./zh/render.js";
 import type { SleepT } from "./zh/sleep.js";
+import type { TrainingInsightsT } from "./zh/trainingInsights.js";
+import type { TrainingRenderT } from "./zh/trainingRender.js";
 
 export type Locale = "zh" | "en";
 
@@ -20,6 +22,8 @@ export interface Translations {
   menstrualCycle: MenstrualCycleT;
   insights: InsightsT;
   render: RenderT;
+  trainingInsights: TrainingInsightsT;
+  trainingRender: TrainingRenderT;
 }
 
 let zhCache: Translations | null = null;

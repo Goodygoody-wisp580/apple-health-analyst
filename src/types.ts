@@ -1,5 +1,5 @@
 export const PACKAGE_NAME = "apple-health-analyst";
-export const PACKAGE_VERSION = "1.0.0";
+export const PACKAGE_VERSION = "1.2.0";
 export const RECENT_DAYS = 30;
 export const BASELINE_DAYS = 90;
 
@@ -64,6 +64,14 @@ export interface WorkoutSample {
   durationMinutes: number | null;
   startDate: Date;
   endDate: Date;
+  activeEnergyBurnedKcal: number | null;
+  basalEnergyBurnedKcal: number | null;
+  distanceKm: number | null;
+  averageHeartRateBpm: number | null;
+  minHeartRateBpm: number | null;
+  maxHeartRateBpm: number | null;
+  averageMETs: number | null;
+  isIndoor: boolean | null;
 }
 
 export interface ActivitySummarySample {
@@ -239,7 +247,7 @@ export interface ActivityWindowSummary {
   exerciseMinutes: number | null;
   standHours: number | null;
   workouts: number;
-  topWorkoutTypes: Array<{ type: string; count: number }>;
+  topWorkoutTypes: WorkoutTypeAggregate[];
 }
 
 export interface ActivityHealthInsights {
@@ -377,14 +385,16 @@ export interface AnalysisSummary {
   attachments: AttachmentSummary;
 }
 
-export const INSIGHT_SCHEMA_VERSION = "2.1.0";
+export const INSIGHT_SCHEMA_VERSION = "2.3.0";
 export const NARRATIVE_REPORT_SCHEMA_VERSION = "2.0.0";
+export const TRAINING_NARRATIVE_REPORT_SCHEMA_VERSION = "1.0.0";
 
 export type ChartGranularity = "day" | "week" | "month";
-export type ChartVisual = "line" | "bar";
+export type ChartVisual = "line" | "bar" | "area";
 export type SeverityLevel = "low" | "medium" | "high";
 export type ConfidenceLevel = "low" | "medium" | "high";
 export type ChangeDirection = "improving" | "worsening" | "mixed" | "stable";
+export type ReportType = "health" | "training";
 
 export interface ChartPoint {
   start: string;
@@ -404,7 +414,7 @@ export interface ChartSeries {
 }
 
 export interface ChartGroup {
-  id: "sleep" | "recovery" | "activity" | "bodyComposition" | "menstrualCycle";
+  id: string;
   title: string;
   subtitle: string;
   series: ChartSeries[];
@@ -489,6 +499,70 @@ export interface ActivityHistoricalDelta {
   workouts: number | null;
 }
 
+export interface WorkoutTypeAggregate {
+  type: string;
+  label: string;
+  count: number;
+  totalDurationMinutes: number | null;
+  averageDurationMinutes: number | null;
+}
+
+export interface WorkoutTypeWindowSummary {
+  workouts: number;
+  daysWithWorkouts: number;
+  totalDurationMinutes: number | null;
+  averageDurationMinutes: number | null;
+  longestWorkoutMinutes: number | null;
+  totalActiveEnergyBurnedKcal: number | null;
+  averageActiveEnergyBurnedKcal: number | null;
+  averageHeartRateBpm: number | null;
+  maxHeartRateBpm: number | null;
+  totalDistanceKm: number | null;
+  averageDistanceKm: number | null;
+  averageMETs: number | null;
+  heartRateCoveragePct: number | null;
+  distanceCoveragePct: number | null;
+  activeEnergyCoveragePct: number | null;
+  metsCoveragePct: number | null;
+  firstWorkoutDate: string | null;
+  lastWorkoutDate: string | null;
+}
+
+export interface WorkoutTypeHistoricalDelta {
+  workouts: number | null;
+  totalDurationMinutes: number | null;
+  averageDurationMinutes: number | null;
+}
+
+export interface WorkoutTypeMonthlySummary {
+  month: string;
+  workouts: number;
+  totalDurationMinutes: number | null;
+  averageDurationMinutes: number | null;
+}
+
+export interface WorkoutTypeYearlySummary {
+  year: number;
+  workouts: number;
+  totalDurationMinutes: number | null;
+  averageDurationMinutes: number | null;
+}
+
+export interface WorkoutTypeHistoricalContext {
+  type: string;
+  label: string;
+  recent30d: WorkoutTypeWindowSummary;
+  baseline90d: WorkoutTypeWindowSummary;
+  trailing180d: WorkoutTypeWindowSummary;
+  trailing365d: WorkoutTypeWindowSummary;
+  allTime: WorkoutTypeWindowSummary;
+  recentVsBaseline90d: WorkoutTypeHistoricalDelta;
+  recentVsTrailing180d: WorkoutTypeHistoricalDelta;
+  recentVsAllTime: WorkoutTypeHistoricalDelta;
+  yearly: WorkoutTypeYearlySummary[];
+  recentMonths: WorkoutTypeMonthlySummary[];
+}
+
 export interface ActivityHistoricalContext {
   coverageDays: number;
   source: string;
@@ -499,6 +573,7 @@ export interface ActivityHistoricalContext {
   recentVsBaseline90d: ActivityHistoricalDelta;
   recentVsTrailing180d: ActivityHistoricalDelta;
   recentVsAllTime: ActivityHistoricalDelta;
+  workoutTypes: WorkoutTypeHistoricalContext[];
 }
 
 export interface InsightHistoricalContext {
@@ -520,6 +595,134 @@ export interface InsightNarrativeContext {
   language: string;
   outputSchemaVersion: string;
   boundaries: string[];
+}
+
+export type TrainingState =
+  | "building"
+  | "maintaining"
+  | "recovering"
+  | "strained"
+  | "detraining"
+  | "mixed"
+  | "insufficient_data";
+
+export type TrainingReadiness = "good" | "moderate" | "low" | "insufficient_data";
+export type TrainingLoadTag = "load rising" | "load stable" | "load falling";
+export type TrainingRecoveryTag = "recovery supported" | "recovery unsupported";
+export type TrainingConsistencyTag = "consistency good" | "consistency uneven";
+export type TrainingFrequencyTrend = "denser" | "stable" | "sparser" | null;
+
+export interface TrainingLoadDelta {
+  workoutsPer30d: number | null;
+  durationMinutesPer30d: number | null;
+  activeEnergyBurnedKcalPer30d: number | null;
+  distanceKmPer30d: number | null;
+}
+
+export interface TrainingConsistencySummary {
+  recentMonths: WorkoutTypeMonthlySummary[];
+  longestGapDays: number | null;
+  frequencyTrend: TrainingFrequencyTrend;
+  activeMonthsLast12: number;
+}
+
+export interface TrainingRecoveryAfterWorkout {
+  sampleCount: number;
+  nextDaySleepHoursDelta: number | null;
+  nextDayHrvDelta: number | null;
+  nextDayRestingHeartRateDelta: number | null;
+}
+
+export interface TrainingSportInsight {
+  id: string;
+  type: string;
+  label: string;
+  icon: string;
+  recent30d: WorkoutTypeWindowSummary;
+  baseline90d: WorkoutTypeWindowSummary;
+  trailing180d: WorkoutTypeWindowSummary;
+  trailing365d: WorkoutTypeWindowSummary;
+  allTime: WorkoutTypeWindowSummary;
+  normalizedDeltas: {
+    recentVsBaseline90d: TrainingLoadDelta;
+    recentVsTrailing180d: TrainingLoadDelta;
+    recentVsAllTime: TrainingLoadDelta;
+  };
+  recoveryAfterWorkout: TrainingRecoveryAfterWorkout;
+  consistency: TrainingConsistencySummary;
+  statusTags: [TrainingLoadTag, TrainingRecoveryTag, TrainingConsistencyTag];
+}
+
+export interface TrainingLoadTrend {
+  recent30dEquivWorkouts: number | null;
+  baseline90dEquivWorkouts: number | null;
+  recent30dEquivDurationMinutes: number | null;
+  baseline90dEquivDurationMinutes: number | null;
+  recent30dEquivActiveEnergyBurnedKcal: number | null;
+  baseline90dEquivActiveEnergyBurnedKcal: number | null;
+  recentVsBaseline90d: TrainingLoadDelta;
+  recentWorkoutVariety: number;
+  baselineWorkoutVariety: number;
+  recentVsBaselineVariety: number;
+}
+
+export interface TrainingRecoverySupport {
+  sleepDeltaHours: number | null;
+  hrvDeltaPct: number | null;
+  restingHeartRateDeltaBpm: number | null;
+  adequate: boolean | null;
+}
+
+export interface TrainingLoadDaily {
+  date: string;
+  load: number;
+  atl: number;
+  ctl: number;
+  tsb: number;
+}
+
+export interface TrainingLoadStatus {
+  ctl: number;
+  atl: number;
+  tsb: number;
+  ctlDelta30d: number | null;
+  ctlDelta30dPct: number | null;
+  ctlDelta90dPct: number | null;
+  asOfDate: string;
+  warmupDays: number;
+  activeDays: number;
+  atlAlpha: number;
+  ctlAlpha: number;
+}
+
+export interface TrainingSummary {
+  trainingState: TrainingState;
+  readiness: TrainingReadiness;
+  primarySportLabel: string | null;
+  recent30dWorkouts: number;
+  recent30dDurationMinutes: number | null;
+  recent30dActiveEnergyBurnedKcal: number | null;
+  loadTrend: TrainingLoadTrend;
+  recoverySupport: TrainingRecoverySupport;
+  /**
+   * ATL / CTL / TSB snapshot for the latest analysis day. `null` when the
+   * covered period is shorter than the CTL warm-up window or there are
+   * not enough logged workouts.
+   */
+  trainingLoad: TrainingLoadStatus | null;
+}
+
+export interface TrainingInsightBundle {
+  summary: TrainingSummary;
+  sports: TrainingSportInsight[];
+  charts: ChartGroup[];
+  /**
+   * Daily training-load series for the last ~365 days. Used by the calendar
+   * heatmap in the rendered report. Only the last 12 months are emitted to
+   * keep the JSON payload bounded.
+   */
+  dailyLoad: TrainingLoadDaily[];
+  narrativeContext: InsightNarrativeContext;
 }
 
 export interface InsightBundle {
@@ -545,10 +748,11 @@ export interface InsightBundle {
   historicalContext: InsightHistoricalContext;
   crossMetric: import("./analyzers/crossMetric.js").CrossMetricAnalysis;
   narrativeContext: InsightNarrativeContext;
+  training: TrainingInsightBundle;
 }
 
 export interface NarrativeChartCallout {
-  chart_id: InsightBundle["charts"][number]["id"];
+  chart_id: string;
   title: string;
   summary: string;
 }
@@ -564,6 +768,27 @@ export interface NarrativeReport {
   watchouts: string[];
   actions_next_2_weeks: string[];
   when_to_seek_care: string[];
+  questions_for_doctor: string[];
+  data_limitations: string[];
+  chart_callouts: NarrativeChartCallout[];
+  disclaimer: string;
+}
+
+export interface TrainingSportNarrativeSection {
+  sport_id: string;
+  title: string;
+  assessment: string;
+  key_signals: string[];
+  recommendations: string[];
+}
+
+export interface TrainingNarrativeReport {
+  schema_version: string;
+  training_assessment: string;
+  overall_findings: string[];
+  sport_sections: TrainingSportNarrativeSection[];
+  watchouts: string[];
+  actions_next_2_weeks: string[];
   questions_for_doctor: string[];
   data_limitations: string[];
   chart_callouts: NarrativeChartCallout[];

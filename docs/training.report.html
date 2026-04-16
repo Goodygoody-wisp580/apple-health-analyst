@@ -1,0 +1,1327 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Apple Health Training Report</title>
+    <meta property="og:title" content="Apple Health Training Report" />
+    <meta property="og:description" content="Privacy-first Apple Health training analysis" />
+    <meta property="og:type" content="article" />
+    <meta name="description" content="Privacy-first Apple Health training analysis" />
+    <style>
+:root {
+  --bg: #F2F2F7;
+  --surface: #FFFFFF;
+  --ink: #1C1C1E;
+  --ink-secondary: #3A3A3C;
+  --muted: #8E8E93;
+  --faint: #AEAEB2;
+  --border: #E5E5EA;
+  --border-light: #F2F2F7;
+  --sleep: #6366F1;
+  --sleep-bg: #EEF2FF;
+  --recovery: #10B981;
+  --recovery-bg: #ECFDF5;
+  --activity: #F97316;
+  --activity-bg: #FFF7ED;
+  --body: #6B7280;
+  --body-bg: #F3F4F6;
+  --menstrual: #EC4899;
+  --menstrual-bg: #FDF2F8;
+  --risk: #EF4444;
+  --risk-bg: #FEF2F2;
+  --positive: #22C55E;
+  --positive-bg: #F0FDF4;
+  --fs-xs: 11px;
+  --fs-sm: 13px;
+  --fs-base: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: none;
+  --shadow-md: none;
+}
+* { box-sizing: border-box; margin: 0; }
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+body {
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--fs-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Topbar ─── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 52px;
+}
+.topbar__title {
+  font-weight: 600;
+  font-size: var(--fs-base);
+  white-space: nowrap;
+}
+.topbar__date {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.topbar__nav {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.topbar__nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.topbar__nav a:hover {
+  background: var(--border-light);
+  color: var(--ink);
+}
+.topbar__github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+.topbar__github:hover {
+  background: var(--border-light);
+  color: var(--ink);
+}
+.topbar__github svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  display: block;
+}
+
+/* ─── Layout ─── */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 0;
+}
+section {
+  scroll-margin-top: 64px;
+}
+
+/* ─── Summary Cards ─── */
+.summary-cards {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.metric-card {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+.metric-card__label {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.metric-card__value {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.metric-card__sub {
+  font-size: var(--fs-sm);
+  color: var(--faint);
+  margin-top: 4px;
+}
+
+/* ─── Overview ─── */
+.overview {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 28px;
+}
+.overview__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.overview__text {
+  font-size: var(--fs-base);
+  line-height: 1.75;
+  color: var(--ink-secondary);
+  max-width: 72ch;
+}
+.overview__findings {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.overview__findings h3 {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+.overview__findings ol,
+.overview__findings ul,
+.plain-list {
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+.overview__findings li,
+.plain-list li {
+  font-size: var(--fs-base);
+  line-height: 1.65;
+  color: var(--ink-secondary);
+}
+
+/* ─── Pills & Badges ─── */
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+.pill--risk {
+  background: var(--risk-bg);
+  color: var(--risk);
+}
+.pill--info {
+  background: var(--border-light);
+  color: var(--muted);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.badge--ok { background: var(--positive-bg); color: var(--positive); }
+.badge--warn { background: #FFF7ED; color: #D97706; }
+.badge--low { background: var(--risk-bg); color: var(--risk); }
+.badge--info { background: var(--border-light); color: var(--muted); }
+
+/* ─── Module frame (body layout is extended per-report) ─── */
+.module {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 36px;
+  overflow: hidden;
+}
+.module__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.module__index {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--faint);
+  min-width: 28px;
+}
+.module__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+.module__callout {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  max-width: 40ch;
+  text-align: right;
+}
+.module--sleep { border-left: 4px solid var(--sleep); }
+.module--sleep .module__index { color: var(--sleep); }
+.module--recovery { border-left: 4px solid var(--recovery); }
+.module--recovery .module__index { color: var(--recovery); }
+.module--activity { border-left: 4px solid var(--activity); }
+.module--activity .module__index { color: var(--activity); }
+.module--body { border-left: 4px solid var(--body); }
+.module--body .module__index { color: var(--body); }
+.module--menstrual { border-left: 4px solid var(--menstrual); }
+.module--menstrual .module__index { color: var(--menstrual); }
+.module--recovery-support { border-left: 4px solid var(--sleep); }
+.module--recovery-support .module__index { color: var(--sleep); }
+
+/* ─── Chart wrappers & legend ─── */
+.chart-wrap {
+  padding: 8px 0 4px;
+}
+.chart-wrap svg {
+  width: 100%;
+  height: auto;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.legend-item i {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 999px;
+}
+
+/* ─── Inline glossary tooltip (CSS-only) ─── */
+.term-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: help;
+  position: relative;
+  user-select: none;
+  vertical-align: middle;
+  background: var(--surface);
+}
+.term-hint:hover,
+.term-hint:focus {
+  color: var(--ink);
+  border-color: var(--faint);
+}
+.term-hint::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 200px;
+  max-width: 280px;
+  padding: 10px 12px;
+  background: var(--ink);
+  color: #FFFFFF;
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  white-space: normal;
+  text-align: left;
+  z-index: 200;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+}
+.term-hint::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 199;
+}
+.term-hint:hover::after,
+.term-hint:focus::after,
+.term-hint:hover::before,
+.term-hint:focus::before {
+  opacity: 1;
+}
+
+/* ─── Glossary card (used in Load & Recovery module) ─── */
+.glossary-card {
+  background: var(--border-light);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+.glossary-card > summary {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-secondary);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.glossary-card > summary::-webkit-details-marker {
+  display: none;
+}
+.glossary-card > summary::before {
+  content: "▸";
+  transition: transform 0.15s;
+  color: var(--faint);
+  font-size: 10px;
+}
+.glossary-card[open] > summary::before {
+  transform: rotate(90deg);
+}
+.glossary-card__body {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+  color: var(--ink-secondary);
+}
+.glossary-card__body dt {
+  font-weight: 600;
+  color: var(--ink);
+}
+.glossary-card__body dd {
+  margin: 2px 0 0 0;
+}
+
+/* ─── Site Footer (shared between health + training reports) ─── */
+.site-footer {
+  margin-top: 0;
+  padding: 24px 20px 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+.site-footer__brand {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--ink-secondary);
+  text-decoration: none;
+}
+.site-footer__brand:hover {
+  color: var(--ink);
+}
+.site-footer__tagline {
+  margin-top: 4px;
+  color: var(--faint);
+  font-size: var(--fs-xs);
+}
+.site-footer__links {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.site-footer__links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  transition: color 0.15s;
+}
+.site-footer__links a:hover {
+  color: var(--ink);
+}
+.site-footer__links svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+/* ─── Cross-report jump link (topbar + footer) ─── */
+.topbar__cross-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--border-light);
+  border: 1px solid var(--border);
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-left: 6px;
+}
+.topbar__cross-link:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+.topbar__cross-link svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+/* ─── Responsive (shared) ─── */
+@media (max-width: 860px) {
+  .summary-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .topbar {
+    padding: 0 12px;
+    gap: 12px;
+  }
+  .topbar__nav {
+    display: none;
+  }
+  .overview {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .topbar__date {
+    display: none;
+  }
+}
+
+/* ─── Print (shared) ─── */
+@media print {
+  .topbar, .site-footer { display: none; }
+  main { padding: 0; max-width: none; }
+  .module, .overview, .metric-card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  body { font-size: var(--fs-sm); }
+  html { background: white; }
+}
+
+.module__body {
+  padding: 0 28px 28px;
+}
+.summary-cards--sport {
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.summary-cards--sport .metric-card {
+  min-width: 210px;
+}
+
+/* ─── Sport module header (emoji + title + pills) ─── */
+.module__header--sport {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 28px 18px;
+  border-bottom: none;
+}
+.module__header--sport h2 {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.module__header--sport p {
+  max-width: 72ch;
+  color: var(--ink-secondary);
+}
+.module__title-wrap {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.module__icon {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--activity-bg);
+  flex-shrink: 0;
+}
+.module__icon--emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* ─── Nested card grid inside a training module body ─── */
+.module-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.module-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-top: 16px;
+}
+.module-card__header h3,
+.module-card h3 {
+  font-size: var(--fs-base);
+  margin-bottom: 8px;
+}
+.module-card p {
+  color: var(--ink-secondary);
+}
+
+/* ─── Training overview / assessment hero ─── */
+.assessment-hero {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+.assessment-hero__main {
+  padding: 28px 32px;
+}
+.assessment-hero__main h1 {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.assessment-hero__text {
+  font-size: var(--fs-base);
+  line-height: 1.8;
+  color: var(--ink-secondary);
+}
+.assessment-hero__aside {
+  padding: 28px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.assessment-hero__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.assessment-hero__stat:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.assessment-hero__stat-label {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.assessment-hero__stat-value {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.assessment-hero__readiness-good { color: var(--positive); }
+.assessment-hero__readiness-moderate { color: #D97706; }
+.assessment-hero__readiness-low { color: var(--risk); }
+
+/* ─── PMC chart two-panel legend ─── */
+.pmc-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 24px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--border-light);
+  border-radius: 8px;
+}
+.pmc-legend__panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  font-size: var(--fs-sm);
+}
+.pmc-legend__panel-title {
+  font-weight: 600;
+  color: var(--ink-secondary);
+  font-size: var(--fs-xs);
+  width: 100%;
+}
+.legend-item__swatch {
+  width: 14px;
+  height: 12px !important;
+  border-radius: 3px !important;
+}
+@media (max-width: 700px) {
+  .pmc-legend {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Training calendar heatmap ─── */
+.heatmap-card {
+  margin-top: 16px;
+}
+.heatmap-card__header h3 {
+  font-size: var(--fs-base);
+  margin-bottom: 8px;
+}
+.heatmap-card__header p {
+  color: var(--ink-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+}
+.heatmap-wrap {
+  margin-top: 16px;
+  width: 100%;
+}
+.heatmap-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.heatmap-legend__swatches {
+  display: inline-flex;
+  gap: 3px;
+}
+.heatmap-legend__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+/* ─── Training-specific responsive ─── */
+@media (max-width: 860px) {
+  .module-card-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .module__header--sport,
+  .module__body {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .assessment-hero {
+    grid-template-columns: 1fr;
+  }
+  .assessment-hero__aside {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .assessment-hero__stat {
+    flex: 1 1 40%;
+    border-top: none;
+    padding-top: 0;
+  }
+}
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="topbar__title">Apple Health Training Report</div>
+      <span class="topbar__date">2016-10-10 ~ 2026-04-15</span>
+      <nav class="topbar__nav">
+        <a href="#assessment">Assessment</a>
+        <a href="#load-recovery">Load &amp; Recovery</a>
+        <a href="#sports">Sports</a>
+        <a href="#actions">Actions</a>
+        <a href="#appendix">Appendix</a>
+      </nav>
+      <a href="./report.html" class="topbar__cross-link" aria-label="Health Report">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5l-7 7 7 7M19 12H5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Health Report
+      </a>
+      <a href="https://github.com/RuochenLyu/apple-health-analyst" class="topbar__github" aria-label="GitHub" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
+    </div>
+    <main>
+      <section id="assessment" class="assessment-hero">
+        <div class="assessment-hero__main">
+          <h1>Training Assessment</h1>
+          <p class="assessment-hero__text">As of 2026-04-15, your training status looks more like a maintenance-and-consolidation phase than a new build phase. Fitness (CTL) is 92.25, Fatigue (ATL) is 96.85, and Form (TSB) is -4.6, which means you are carrying some fatigue but still within a manageable range. Readiness is rated good, and recovery support remains adequate: sleep is up by 0.16 hours versus baseline, HRV is up 1.18%, and resting heart rate is down 0.95 bpm. CTL has risen 154.34% over the last 90 days but changed only -0.03% over the last 30 days, so the right move now is to stabilize strength training and boxing rather than force another step up in load.</p>
+        </div>
+        <aside class="assessment-hero__aside">
+          <div class="assessment-hero__stat">
+            <span class="assessment-hero__stat-label">Training State<span class="term-hint" tabindex="0" role="note" data-tip="Derived from TSB (form) and CTL trend" aria-label="Derived from TSB (form) and CTL trend">?</span></span>
+            <span class="assessment-hero__stat-value">Maintaining</span>
+          </div>
+          <div class="assessment-hero__stat">
+            <span class="assessment-hero__stat-label">Readiness<span class="term-hint" tabindex="0" role="note" data-tip="Training state blended with sleep / HRV / resting HR signals" aria-label="Training state blended with sleep / HRV / resting HR signals">?</span></span>
+            <span class="assessment-hero__stat-value assessment-hero__readiness-good">Good</span>
+          </div>
+          <div class="assessment-hero__stat">
+    <span class="assessment-hero__stat-label">Fitness (CTL)<span class="term-hint" tabindex="0" role="note" data-tip="42-day average daily load — your long-term fitness base" aria-label="42-day average daily load — your long-term fitness base">?</span></span>
+    <span class="assessment-hero__stat-value">92.25 MET·min/day</span>
+    <span class="assessment-hero__stat-label">CTL 30-day change: -0.03%</span>
+  </div>
+          <div class="assessment-hero__stat">
+    <span class="assessment-hero__stat-label">Form (TSB)<span class="term-hint" tabindex="0" role="note" data-tip="CTL minus ATL — higher is fresher, lower is more fatigued" aria-label="CTL minus ATL — higher is fresher, lower is more fatigued">?</span></span>
+    <span class="assessment-hero__stat-value ">-4.6</span>
+    <span class="assessment-hero__stat-label">Neutral</span>
+  </div>
+          <div class="assessment-hero__stat">
+            <span class="assessment-hero__stat-label">Primary Sport<span class="term-hint" tabindex="0" role="note" data-tip="Highest-scoring sport when weighted by the last 180 days of volume" aria-label="Highest-scoring sport when weighted by the last 180 days of volume">?</span></span>
+            <span class="assessment-hero__stat-value">Traditional Strength Training</span>
+          </div>
+        </aside>
+      </section>
+
+      <section id="findings" class="overview">
+        <h2 class="overview__title">Overall Findings</h2>
+        <ul class="plain-list">
+          <li>As of 2026-04-15, CTL is 92.25, ATL is 96.85, and TSB is -4.6; this reflects mild accumulated fatigue rather than clear overload, so training can continue but hard sessions still need spacing.</li><li>CTL rose 154.34% over the last 90 days, but changed only -0.03% over the last 30 days, which suggests that the major load build already happened and recent weeks have been more about consolidation.</li><li>You completed 9 workouts, 522.78 minutes, and 3390.02 kcal in the last 30 days, led by Traditional Strength Training and Boxing; however, sport variety fell from 4 categories at baseline to 3 recently, leaving less room for low-intensity recovery work.</li><li>Recovery support has not fallen behind load: sleep is up by 0.16 hours, HRV is up 1.18%, and resting heart rate is down 0.95 bpm versus baseline, which is consistent with a sustainable maintenance phase.</li>
+        </ul>
+      </section>
+
+      <section id="load-recovery" class="module module--recovery-support">
+        <div class="module__header">
+          <span class="module__index">01</span>
+          <div>
+            <h2 class="module__title">Load &amp; Recovery</h2>
+            <p class="module__callout">Recovery broadly supports the current load</p>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="module-card-grid">
+            <div class="module-card">
+              <h3>Load Change</h3>
+              <ul class="plain-list">
+                <li>Fitness (CTL)：92.25 MET·min/day</li><li>CTL 30-day change：-0.03%</li><li>CTL 90-day change：+154.34%</li><li>Form (TSB)：-4.6 · Neutral</li><li>Fatigue (ATL)：96.85 MET·min/day</li>
+                <li>Workouts vs baseline：3.38</li>
+                <li>Duration vs baseline：135.79 min</li>
+                <li>Workout variety：3（vs baseline -1）</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <h3>Recovery Support</h3>
+              <ul class="plain-list">
+                <li>Sleep vs Baseline：0.16 h</li>
+                <li>HRV vs Baseline：1.18%</li>
+                <li>Resting HR vs Baseline：-0.95 bpm</li>
+              </ul>
+            </div>
+          </div>
+          <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>Training Load Curve (Fitness · Fatigue · Form)</h3>
+          <p>As of 2026-04-15, CTL is 92.25, ATL is 96.85, and TSB is -4.6. CTL climbed strongly over the prior 90 days, but the last 30 days were nearly flat, which is characteristic of consolidation rather than new build.</p>
+        </div>
+      </div>
+      <div class="pmc-legend">
+        <div class="pmc-legend__panel">
+          <span class="pmc-legend__panel-title">Top · Training volume (left axis, MET·min)</span>
+          <span class="legend-item"><i style="background:#F97316"></i>Fitness (CTL)</span>
+          <span class="legend-item"><i style="background:#0EA5E9"></i>Fatigue (ATL)</span>
+        </div>
+        <div class="pmc-legend__panel">
+          <span class="pmc-legend__panel-title">Bottom · Form (TSB = CTL − ATL)</span>
+          <span class="legend-item"><i class="legend-item__swatch" style="background:#22C55E"></i>Above 0 · Fresher</span>
+          <span class="legend-item"><i class="legend-item__swatch" style="background:#EF4444"></i>Below 0 · Accumulated fatigue</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 280" role="img" aria-label="Trend chart" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="18" x2="684" y2="18" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="22" text-anchor="end" font-size="10" fill="#64748B">229</text><line x1="52" y1="91.06" x2="684" y2="91.06" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="95.06" text-anchor="end" font-size="10" fill="#64748B">114</text><line x1="52" y1="164.12" x2="684" y2="164.12" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="168.12" text-anchor="end" font-size="10" fill="#64748B">0</text>
+  <line x1="52" y1="178.12" x2="684" y2="178.12" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="182.12" text-anchor="end" font-size="10" fill="#64748B">+126</text><line x1="52" y1="214.06" x2="684" y2="214.06" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="218.06" text-anchor="end" font-size="10" fill="#64748B">0</text><line x1="52" y1="250" x2="684" y2="250" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="254" text-anchor="end" font-size="10" fill="#64748B">-126</text>
+  <line x1="52" y1="171.12" x2="684" y2="171.12" stroke="#E5E7EB" stroke-width="1" />
+  <text x="52" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">04-21</text><text x="163.52941176470588" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">06-23</text><text x="262.66666666666663" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">08-18</text><text x="374.19607843137254" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">10-20</text><text x="473.3333333333333" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">12-15</text><text x="584.8627450980392" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">02-16</text><text x="684" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">04-13</text>
+  <path d="M 52 51.03448598436957 L 64.3921568627451 126.29719984365208 L 76.7843137254902 18 L 89.1764705882353 117.03772911193943 L 101.56862745098039 62.176481778697806 L 113.9607843137255 41.02838666850093 L 126.3529411764706 61.257554290505794 L 138.7450980392157 37.831284782499495 L 151.13725490196077 138.2304943083679 L 163.52941176470588 37.0591304347826 L 175.921568627451 64.31426447692229 L 188.31372549019608 50.93238293012601 L 200.7058823529412 63.446388515852064 L 213.09803921568627 73.14617866899005 L 225.49019607843138 63.695264710570726 L 237.88235294117646 68.37924232399394 L 250.27450980392157 92.53299609348556 L 262.66666666666663 41.37936591746313 L 275.05882352941177 60.44711129744755 L 287.4509803921569 75.34139433522652 L 299.843137254902 18.004147936578647 L 312.2352941176471 52.34268136686515 L 324.62745098039215 145.44790395520937 L 337.01960784313724 141.1404313543093 L 349.4117647058824 161.05052693180306 L 361.80392156862746 65.97982054927034 L 374.19607843137254 56.47785506372924 L 386.5882352941176 51.25145497463713 L 398.98039215686276 141.58713221662487 L 411.37254901960785 146.04137795800006 L 423.7647058823529 150.6232525171797 L 436.156862745098 73.4524878317207 L 448.54901960784315 50.99619733902823 L 460.94117647058823 149.0215108537339 L 473.3333333333333 162.10346467868973 L 485.72549019607845 163.85197948261066 L 498.11764705882354 164.08171135465867 L 510.5098039215686 111.98362792688332 L 522.9019607843138 56.31193760058346 L 535.2941176470588 58.22636986765016 L 547.686274509804 45.08698307468232 L 560.0784313725491 148.23021218334634 L 572.4705882352941 162.0013616244462 L 584.8627450980392 76.01782706959011 L 597.2549019607843 74.9010749138012 L 609.6470588235294 62.47640950053827 L 622.0392156862745 50.43463054068867 L 634.4313725490196 38.75021227069152 L 646.8235294117648 48.99242489949842 L 659.2156862745098 59.164441678512844 L 671.6078431372549 142.67197716796267 L 684 102.31574497819645" fill="none" stroke="#0EA5E9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /><circle cx="52" cy="51.03448598436957" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-04-21: 177.21 MET·min</title></circle><circle cx="64.3921568627451" cy="126.29719984365208" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-04-28: 59.27 MET·min</title></circle><circle cx="76.7843137254902" cy="18" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-05-05: 410.93 MET·min</title></circle><circle cx="89.1764705882353" cy="117.03772911193943" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-05-12: 73.78 MET·min</title></circle><circle cx="101.56862745098039" cy="62.176481778697806" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-05-19: 159.75 MET·min</title></circle><circle cx="113.9607843137255" cy="41.02838666850093" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-05-26: 192.89 MET·min</title></circle><circle cx="126.3529411764706" cy="61.257554290505794" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-06-02: 161.19 MET·min</title></circle><circle cx="138.7450980392157" cy="37.831284782499495" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-06-09: 197.9 MET·min</title></circle><circle cx="151.13725490196077" cy="138.2304943083679" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-06-16: 40.57 MET·min</title></circle><circle cx="163.52941176470588" cy="37.0591304347826" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-06-23: 199.11 MET·min</title></circle><circle cx="175.921568627451" cy="64.31426447692229" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-06-30: 156.4 MET·min</title></circle><circle cx="188.31372549019608" cy="50.93238293012601" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-07-07: 177.37 MET·min</title></circle><circle cx="200.7058823529412" cy="63.446388515852064" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-07-14: 157.76 MET·min</title></circle><circle cx="213.09803921568627" cy="73.14617866899005" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-07-21: 142.56 MET·min</title></circle><circle cx="225.49019607843138" cy="63.695264710570726" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-07-28: 157.37 MET·min</title></circle><circle cx="237.88235294117646" cy="68.37924232399394" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-08-04: 150.03 MET·min</title></circle><circle cx="250.27450980392157" cy="92.53299609348556" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-08-11: 112.18 MET·min</title></circle><circle cx="262.66666666666663" cy="41.37936591746313" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-08-18: 192.34 MET·min</title></circle><circle cx="275.05882352941177" cy="60.44711129744755" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-08-25: 162.46 MET·min</title></circle><circle cx="287.4509803921569" cy="75.34139433522652" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-09-01: 139.12 MET·min</title></circle><circle cx="299.843137254902" cy="18.004147936578647" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-09-08: 228.97 MET·min</title></circle><circle cx="312.2352941176471" cy="52.34268136686515" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-09-15: 175.16 MET·min</title></circle><circle cx="324.62745098039215" cy="145.44790395520937" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-09-22: 29.26 MET·min</title></circle><circle cx="337.01960784313724" cy="141.1404313543093" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-09-29: 36.01 MET·min</title></circle><circle cx="349.4117647058824" cy="161.05052693180306" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-10-06: 4.81 MET·min</title></circle><circle cx="361.80392156862746" cy="65.97982054927034" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-10-13: 153.79 MET·min</title></circle><circle cx="374.19607843137254" cy="56.47785506372924" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-10-20: 168.68 MET·min</title></circle><circle cx="386.5882352941176" cy="51.25145497463713" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-10-27: 176.87 MET·min</title></circle><circle cx="398.98039215686276" cy="141.58713221662487" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-11-03: 35.31 MET·min</title></circle><circle cx="411.37254901960785" cy="146.04137795800006" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-11-10: 28.33 MET·min</title></circle><circle cx="423.7647058823529" cy="150.6232525171797" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-11-17: 21.15 MET·min</title></circle><circle cx="436.156862745098" cy="73.4524878317207" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-11-24: 142.08 MET·min</title></circle><circle cx="448.54901960784315" cy="50.99619733902823" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-12-01: 177.27 MET·min</title></circle><circle cx="460.94117647058823" cy="149.0215108537339" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-12-08: 23.66 MET·min</title></circle><circle cx="473.3333333333333" cy="162.10346467868973" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-12-15: 3.16 MET·min</title></circle><circle cx="485.72549019607845" cy="163.85197948261066" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-12-22: 0.42 MET·min</title></circle><circle cx="498.11764705882354" cy="164.08171135465867" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2025-12-29: 0.06 MET·min</title></circle><circle cx="510.5098039215686" cy="111.98362792688332" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-01-05: 81.7 MET·min</title></circle><circle cx="522.9019607843138" cy="56.31193760058346" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-01-12: 168.94 MET·min</title></circle><circle cx="535.2941176470588" cy="58.22636986765016" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-01-19: 165.94 MET·min</title></circle><circle cx="547.686274509804" cy="45.08698307468232" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-01-26: 186.53 MET·min</title></circle><circle cx="560.0784313725491" cy="148.23021218334634" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-02-02: 24.9 MET·min</title></circle><circle cx="572.4705882352941" cy="162.0013616244462" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-02-09: 3.32 MET·min</title></circle><circle cx="584.8627450980392" cy="76.01782706959011" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-02-16: 138.06 MET·min</title></circle><circle cx="597.2549019607843" cy="74.9010749138012" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-02-23: 139.81 MET·min</title></circle><circle cx="609.6470588235294" cy="62.47640950053827" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-03-02: 159.28 MET·min</title></circle><circle cx="622.0392156862745" cy="50.43463054068867" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-03-09: 178.15 MET·min</title></circle><circle cx="634.4313725490196" cy="38.75021227069152" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-03-16: 196.46 MET·min</title></circle><circle cx="646.8235294117648" cy="48.99242489949842" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-03-23: 180.41 MET·min</title></circle><circle cx="659.2156862745098" cy="59.164441678512844" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-03-30: 164.47 MET·min</title></circle><circle cx="671.6078431372549" cy="142.67197716796267" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-04-06: 33.61 MET·min</title></circle><circle cx="684" cy="102.31574497819645" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>Fatigue (ATL) 2026-04-13: 96.85 MET·min</title></circle>
+  <path d="M 52 75.36692009878742 L 64.3921568627451 86.489771570445 L 76.7843137254902 49.924115269470875 L 89.1764705882353 76.43262072745456 L 101.56862745098039 73.40143630459893 L 113.9607843137255 63.81651208748495 L 126.3529411764706 68.12398468838505 L 138.7450980392157 67.84320128921527 L 151.13725490196077 90.75257408511354 L 163.52941176470588 79.6361040543462 L 175.921568627451 81.42290750360844 L 188.31372549019608 78.13646544514393 L 200.7058823529412 79.70629990413863 L 213.09803921568627 83.22885527554138 L 225.49019607843138 81.66540225743688 L 237.88235294117646 83.62450461073516 L 250.27450980392157 89.4252343799473 L 262.66666666666663 83.49687579293071 L 275.05882352941177 83.87976224634404 L 287.4509803921569 88.90195622694905 L 299.843137254902 78.38534163986262 L 312.2352941176471 76.82188862175812 L 324.62745098039215 98.62727214364793 L 337.01960784313724 103.71966197404537 L 349.4117647058824 120.84106788251196 L 361.80392156862746 111.76027749572555 L 374.19607843137254 103.91110520075205 L 386.5882352941176 100.05033346216752 L 398.98039215686276 114.58087436920383 L 411.37254901960785 121.30053162660798 L 423.7647058823529 128.05847752935347 L 436.156862745098 119.68602708138172 L 448.54901960784315 108.83757756800371 L 460.94117647058823 124.51039639438982 L 473.3333333333333 135.74173236118116 L 485.72549019607845 143.78234788286136 L 498.11764705882354 149.55117044762235 L 510.5098039215686 140.41932853371415 L 522.9019607843138 126.46949874768808 L 535.2941176470588 118.18000703128924 L 547.686274509804 107.56128938995923 L 560.0784313725491 123.59785034708801 L 572.4705882352941 135.08444394948827 L 584.8627450980392 112.60900913412512 L 597.2549019607843 112.8004523608318 L 609.6470588235294 108.34620661945658 L 622.0392156862745 102.36041506442801 L 634.4313725490196 94.16664496138249 L 646.8235294117648 93.5667895177016 L 659.2156862745098 90.18462584588374 L 671.6078431372549 107.52938218550813 L 684 105.25120778769873" fill="none" stroke="#F97316" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" /><circle cx="52" cy="75.36692009878742" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-04-21: 139.08 MET·min</title></circle><circle cx="64.3921568627451" cy="86.489771570445" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-04-28: 121.65 MET·min</title></circle><circle cx="76.7843137254902" cy="49.924115269470875" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-05-05: 178.95 MET·min</title></circle><circle cx="89.1764705882353" cy="76.43262072745456" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-05-12: 137.41 MET·min</title></circle><circle cx="101.56862745098039" cy="73.40143630459893" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-05-19: 142.16 MET·min</title></circle><circle cx="113.9607843137255" cy="63.81651208748495" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-05-26: 157.18 MET·min</title></circle><circle cx="126.3529411764706" cy="68.12398468838505" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-06-02: 150.43 MET·min</title></circle><circle cx="138.7450980392157" cy="67.84320128921527" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-06-09: 150.87 MET·min</title></circle><circle cx="151.13725490196077" cy="90.75257408511354" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-06-16: 114.97 MET·min</title></circle><circle cx="163.52941176470588" cy="79.6361040543462" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-06-23: 132.39 MET·min</title></circle><circle cx="175.921568627451" cy="81.42290750360844" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-06-30: 129.59 MET·min</title></circle><circle cx="188.31372549019608" cy="78.13646544514393" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-07-07: 134.74 MET·min</title></circle><circle cx="200.7058823529412" cy="79.70629990413863" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-07-14: 132.28 MET·min</title></circle><circle cx="213.09803921568627" cy="83.22885527554138" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-07-21: 126.76 MET·min</title></circle><circle cx="225.49019607843138" cy="81.66540225743688" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-07-28: 129.21 MET·min</title></circle><circle cx="237.88235294117646" cy="83.62450461073516" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-08-04: 126.14 MET·min</title></circle><circle cx="250.27450980392157" cy="89.4252343799473" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-08-11: 117.05 MET·min</title></circle><circle cx="262.66666666666663" cy="83.49687579293071" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-08-18: 126.34 MET·min</title></circle><circle cx="275.05882352941177" cy="83.87976224634404" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-08-25: 125.74 MET·min</title></circle><circle cx="287.4509803921569" cy="88.90195622694905" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-09-01: 117.87 MET·min</title></circle><circle cx="299.843137254902" cy="78.38534163986262" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-09-08: 134.35 MET·min</title></circle><circle cx="312.2352941176471" cy="76.82188862175812" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-09-15: 136.8 MET·min</title></circle><circle cx="324.62745098039215" cy="98.62727214364793" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-09-22: 102.63 MET·min</title></circle><circle cx="337.01960784313724" cy="103.71966197404537" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-09-29: 94.65 MET·min</title></circle><circle cx="349.4117647058824" cy="120.84106788251196" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-10-06: 67.82 MET·min</title></circle><circle cx="361.80392156862746" cy="111.76027749572555" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-10-13: 82.05 MET·min</title></circle><circle cx="374.19607843137254" cy="103.91110520075205" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-10-20: 94.35 MET·min</title></circle><circle cx="386.5882352941176" cy="100.05033346216752" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-10-27: 100.4 MET·min</title></circle><circle cx="398.98039215686276" cy="114.58087436920383" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-11-03: 77.63 MET·min</title></circle><circle cx="411.37254901960785" cy="121.30053162660798" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-11-10: 67.1 MET·min</title></circle><circle cx="423.7647058823529" cy="128.05847752935347" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-11-17: 56.51 MET·min</title></circle><circle cx="436.156862745098" cy="119.68602708138172" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-11-24: 69.63 MET·min</title></circle><circle cx="448.54901960784315" cy="108.83757756800371" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-12-01: 86.63 MET·min</title></circle><circle cx="460.94117647058823" cy="124.51039639438982" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-12-08: 62.07 MET·min</title></circle><circle cx="473.3333333333333" cy="135.74173236118116" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-12-15: 44.47 MET·min</title></circle><circle cx="485.72549019607845" cy="143.78234788286136" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-12-22: 31.87 MET·min</title></circle><circle cx="498.11764705882354" cy="149.55117044762235" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2025-12-29: 22.83 MET·min</title></circle><circle cx="510.5098039215686" cy="140.41932853371415" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-01-05: 37.14 MET·min</title></circle><circle cx="522.9019607843138" cy="126.46949874768808" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-01-12: 59 MET·min</title></circle><circle cx="535.2941176470588" cy="118.18000703128924" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-01-19: 71.99 MET·min</title></circle><circle cx="547.686274509804" cy="107.56128938995923" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-01-26: 88.63 MET·min</title></circle><circle cx="560.0784313725491" cy="123.59785034708801" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-02-02: 63.5 MET·min</title></circle><circle cx="572.4705882352941" cy="135.08444394948827" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-02-09: 45.5 MET·min</title></circle><circle cx="584.8627450980392" cy="112.60900913412512" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-02-16: 80.72 MET·min</title></circle><circle cx="597.2549019607843" cy="112.8004523608318" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-02-23: 80.42 MET·min</title></circle><circle cx="609.6470588235294" cy="108.34620661945658" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-03-02: 87.4 MET·min</title></circle><circle cx="622.0392156862745" cy="102.36041506442801" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-03-09: 96.78 MET·min</title></circle><circle cx="634.4313725490196" cy="94.16664496138249" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-03-16: 109.62 MET·min</title></circle><circle cx="646.8235294117648" cy="93.5667895177016" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-03-23: 110.56 MET·min</title></circle><circle cx="659.2156862745098" cy="90.18462584588374" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-03-30: 115.86 MET·min</title></circle><circle cx="671.6078431372549" cy="107.52938218550813" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-04-06: 88.68 MET·min</title></circle><circle cx="684" cy="105.25120778769873" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>Fitness (CTL) 2026-04-13: 92.25 MET·min</title></circle>
+  <path d="M 52 214.06 L 52 224.90090871344682 L 56.70191865046854 214.06 L 56.70191865046854 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 56.70191865046854 214.06 L 56.70191865046854 214.06 L 64.3921568627451 196.3291167922178 L 67.01827027862375 214.06 L 67.01827027862375 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 67.01827027862375 214.06 L 67.01827027862375 214.06 L 76.7843137254902 250 L 86.5087320632874 214.06 L 86.5087320632874 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 86.5087320632874 214.06 L 86.5087320632874 214.06 L 89.1764705882353 195.97097455365088 L 98.88396520597406 214.06 L 98.88396520597406 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 98.88396520597406 214.06 L 98.88396520597406 214.06 L 101.56862745098039 219.062621745062 L 113.9607843137255 224.210205824782 L 126.3529411764706 217.1184210214129 L 138.7450980392157 227.43064357316567 L 143.54522204138573 214.06 L 143.54522204138573 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 143.54522204138573 214.06 L 143.54522204138573 214.06 L 151.13725490196077 192.91255353223798 L 157.67007195424048 214.06 L 157.67007195424048 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 157.67007195424048 214.06 L 157.67007195424048 214.06 L 163.52941176470588 233.02732665045377 L 175.921568627451 221.68047096506317 L 188.31372549019608 226.1771457381814 L 200.7058823529412 221.30243193546474 L 213.09803921568627 218.55098997568064 L 225.49019607843138 222.06703719081796 L 237.88235294117646 220.85049053917788 L 248.1761160653413 214.06 L 248.1761160653413 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 248.1761160653413 214.06 L 248.1761160653413 214.06 L 250.27450980392157 212.6757518239516 L 251.12594608949675 214.06 L 251.12594608949675 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 251.12594608949675 214.06 L 251.12594608949675 214.06 L 262.66666666666663 232.82267394270124 L 275.05882352941177 224.49728809537933 L 287.4509803921569 220.1000972774186 L 299.843137254902 240.95761907586453 L 312.2352941176471 224.9634414852601 L 316.4894836402433 214.06 L 316.4894836402433 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 316.4894836402433 214.06 L 316.4894836402433 214.06 L 324.62745098039215 193.20247820155407 L 337.01960784313724 197.39217391304348 L 349.4117647058824 196.15004567293434 L 355.20599002438615 214.06 L 355.20599002438615 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 355.20599002438615 214.06 L 355.20599002438615 214.06 L 361.80392156862746 234.45421080728394 L 374.19607843137254 235.18754967673053 L 386.5882352941176 235.79582300255058 L 394.5662470409952 214.06 L 394.5662470409952 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 394.5662470409952 214.06 L 394.5662470409952 214.06 L 398.98039215686276 202.03381102081974 L 411.37254901960785 203.0428625659885 L 423.7647058823529 204.00927813037546 L 427.8291402267242 214.06 L 427.8291402267242 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 427.8291402267242 214.06 L 427.8291402267242 214.06 L 436.156862745098 234.6531787175989 L 448.54901960784315 239.82350198706922 L 457.25281734545814 214.06 L 457.25281734545814 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 457.25281734545814 214.06 L 457.25281734545814 214.06 L 460.94117647058823 203.14234652114598 L 473.3333333333333 202.31520849397947 L 485.72549019607845 205.12349842813927 L 498.11764705882354 207.58785811732605 L 502.30911188004615 214.06 L 502.30911188004615 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 502.30911188004615 214.06 L 502.30911188004615 214.06 L 510.5098039215686 226.72288629218815 L 522.9019607843138 245.31217391304347 L 535.2941176470588 240.7671783617059 L 547.686274509804 241.8870834569073 L 556.5734780616518 214.06 L 556.5734780616518 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 556.5734780616518 214.06 L 556.5734780616518 214.06 L 560.0784313725491 203.08549854677028 L 572.4705882352941 202.07076220416394 L 577.7228106676755 214.06 L 577.7228106676755 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 577.7228106676755 214.06 L 577.7228106676755 214.06 L 584.8627450980392 230.35831425351444 L 597.2549019607843 230.94384838958422 L 609.6470588235294 234.49400438934694 L 622.0392156862745 237.18859837475532 L 634.4313725490196 238.74339047393084 L 646.8235294117648 233.91415505071475 L 659.2156862745098 227.87690017201496 L 665.0257050351005 214.06 L 665.0257050351005 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 665.0257050351005 214.06 L 665.0257050351005 214.06 L 671.6078431372549 198.4069102556498 L 683.0446803826273 214.06 L 683.0446803826273 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 683.0446803826273 214.06 L 683.0446803826273 214.06 L 684 215.3675034106412 L 684 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" />
+  <path d="M 52 224.90090871344682 L 64.3921568627451 196.3291167922178 L 76.7843137254902 250 L 89.1764705882353 195.97097455365088 L 101.56862745098039 219.062621745062 L 113.9607843137255 224.210205824782 L 126.3529411764706 217.1184210214129 L 138.7450980392157 227.43064357316567 L 151.13725490196077 192.91255353223798 L 163.52941176470588 233.02732665045377 L 175.921568627451 221.68047096506317 L 188.31372549019608 226.1771457381814 L 200.7058823529412 221.30243193546474 L 213.09803921568627 218.55098997568064 L 225.49019607843138 222.06703719081796 L 237.88235294117646 220.85049053917788 L 250.27450980392157 212.6757518239516 L 262.66666666666663 232.82267394270124 L 275.05882352941177 224.49728809537933 L 287.4509803921569 220.1000972774186 L 299.843137254902 240.95761907586453 L 312.2352941176471 224.9634414852601 L 324.62745098039215 193.20247820155407 L 337.01960784313724 197.39217391304348 L 349.4117647058824 196.15004567293434 L 361.80392156862746 234.45421080728394 L 374.19607843137254 235.18754967673053 L 386.5882352941176 235.79582300255058 L 398.98039215686276 202.03381102081974 L 411.37254901960785 203.0428625659885 L 423.7647058823529 204.00927813037546 L 436.156862745098 234.6531787175989 L 448.54901960784315 239.82350198706922 L 460.94117647058823 203.14234652114598 L 473.3333333333333 202.31520849397947 L 485.72549019607845 205.12349842813927 L 498.11764705882354 207.58785811732605 L 510.5098039215686 226.72288629218815 L 522.9019607843138 245.31217391304347 L 535.2941176470588 240.7671783617059 L 547.686274509804 241.8870834569073 L 560.0784313725491 203.08549854677028 L 572.4705882352941 202.07076220416394 L 584.8627450980392 230.35831425351444 L 597.2549019607843 230.94384838958422 L 609.6470588235294 234.49400438934694 L 622.0392156862745 237.18859837475532 L 634.4313725490196 238.74339047393084 L 646.8235294117648 233.91415505071475 L 659.2156862745098 227.87690017201496 L 671.6078431372549 198.4069102556498 L 684 215.3675034106412" fill="none" stroke="#6B7280" stroke-opacity="0.45" stroke-width="1" stroke-linejoin="round" />
+  <circle cx="52" cy="224.90090871344682" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-04-21: -38.14 MET·min</title></circle><circle cx="64.3921568627451" cy="196.3291167922178" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-04-28: 62.38 MET·min</title></circle><circle cx="76.7843137254902" cy="250" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-05-05: -231.98 MET·min</title></circle><circle cx="89.1764705882353" cy="195.97097455365088" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-05-12: 63.64 MET·min</title></circle><circle cx="101.56862745098039" cy="219.062621745062" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-05-19: -17.6 MET·min</title></circle><circle cx="113.9607843137255" cy="224.210205824782" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-05-26: -35.71 MET·min</title></circle><circle cx="126.3529411764706" cy="217.1184210214129" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-06-02: -10.76 MET·min</title></circle><circle cx="138.7450980392157" cy="227.43064357316567" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-06-09: -47.04 MET·min</title></circle><circle cx="151.13725490196077" cy="192.91255353223798" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-06-16: 74.4 MET·min</title></circle><circle cx="163.52941176470588" cy="233.02732665045377" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-06-23: -66.73 MET·min</title></circle><circle cx="175.921568627451" cy="221.68047096506317" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-06-30: -26.81 MET·min</title></circle><circle cx="188.31372549019608" cy="226.1771457381814" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-07-07: -42.63 MET·min</title></circle><circle cx="200.7058823529412" cy="221.30243193546474" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-07-14: -25.48 MET·min</title></circle><circle cx="213.09803921568627" cy="218.55098997568064" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-07-21: -15.8 MET·min</title></circle><circle cx="225.49019607843138" cy="222.06703719081796" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-07-28: -28.17 MET·min</title></circle><circle cx="237.88235294117646" cy="220.85049053917788" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-08-04: -23.89 MET·min</title></circle><circle cx="250.27450980392157" cy="212.6757518239516" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-08-11: 4.87 MET·min</title></circle><circle cx="262.66666666666663" cy="232.82267394270124" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-08-18: -66.01 MET·min</title></circle><circle cx="275.05882352941177" cy="224.49728809537933" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-08-25: -36.72 MET·min</title></circle><circle cx="287.4509803921569" cy="220.1000972774186" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-09-01: -21.25 MET·min</title></circle><circle cx="299.843137254902" cy="240.95761907586453" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-09-08: -94.63 MET·min</title></circle><circle cx="312.2352941176471" cy="224.9634414852601" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-09-15: -38.36 MET·min</title></circle><circle cx="324.62745098039215" cy="193.20247820155407" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-09-22: 73.38 MET·min</title></circle><circle cx="337.01960784313724" cy="197.39217391304348" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-09-29: 58.64 MET·min</title></circle><circle cx="349.4117647058824" cy="196.15004567293434" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-10-06: 63.01 MET·min</title></circle><circle cx="361.80392156862746" cy="234.45421080728394" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-10-13: -71.75 MET·min</title></circle><circle cx="374.19607843137254" cy="235.18754967673053" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-10-20: -74.33 MET·min</title></circle><circle cx="386.5882352941176" cy="235.79582300255058" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-10-27: -76.47 MET·min</title></circle><circle cx="398.98039215686276" cy="202.03381102081974" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-11-03: 42.31 MET·min</title></circle><circle cx="411.37254901960785" cy="203.0428625659885" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-11-10: 38.76 MET·min</title></circle><circle cx="423.7647058823529" cy="204.00927813037546" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-11-17: 35.36 MET·min</title></circle><circle cx="436.156862745098" cy="234.6531787175989" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-11-24: -72.45 MET·min</title></circle><circle cx="448.54901960784315" cy="239.82350198706922" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2025-12-01: -90.64 MET·min</title></circle><circle cx="460.94117647058823" cy="203.14234652114598" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-12-08: 38.41 MET·min</title></circle><circle cx="473.3333333333333" cy="202.31520849397947" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-12-15: 41.32 MET·min</title></circle><circle cx="485.72549019607845" cy="205.12349842813927" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-12-22: 31.44 MET·min</title></circle><circle cx="498.11764705882354" cy="207.58785811732605" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2025-12-29: 22.77 MET·min</title></circle><circle cx="510.5098039215686" cy="226.72288629218815" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-01-05: -44.55 MET·min</title></circle><circle cx="522.9019607843138" cy="245.31217391304347" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-01-12: -109.95 MET·min</title></circle><circle cx="535.2941176470588" cy="240.7671783617059" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-01-19: -93.96 MET·min</title></circle><circle cx="547.686274509804" cy="241.8870834569073" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-01-26: -97.9 MET·min</title></circle><circle cx="560.0784313725491" cy="203.08549854677028" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2026-02-02: 38.61 MET·min</title></circle><circle cx="572.4705882352941" cy="202.07076220416394" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2026-02-09: 42.18 MET·min</title></circle><circle cx="584.8627450980392" cy="230.35831425351444" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-02-16: -57.34 MET·min</title></circle><circle cx="597.2549019607843" cy="230.94384838958422" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-02-23: -59.4 MET·min</title></circle><circle cx="609.6470588235294" cy="234.49400438934694" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-03-02: -71.89 MET·min</title></circle><circle cx="622.0392156862745" cy="237.18859837475532" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-03-09: -81.37 MET·min</title></circle><circle cx="634.4313725490196" cy="238.74339047393084" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-03-16: -86.84 MET·min</title></circle><circle cx="646.8235294117648" cy="233.91415505071475" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-03-23: -69.85 MET·min</title></circle><circle cx="659.2156862745098" cy="227.87690017201496" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-03-30: -48.61 MET·min</title></circle><circle cx="671.6078431372549" cy="198.4069102556498" r="3" fill="#22C55E" opacity="0.0001"><title>Form (TSB) 2026-04-06: 55.07 MET·min</title></circle><circle cx="684" cy="215.3675034106412" r="3" fill="#EF4444" opacity="0.0001"><title>Form (TSB) 2026-04-13: -4.6 MET·min</title></circle>
+</svg></div>
+    </div>
+          <div class="module-card heatmap-card">
+    <div class="heatmap-card__header">
+      <h3>Last 12 Months Training Calendar</h3>
+      <p>Each cell is one day; darker = higher training load; empty = rest. Shows at a glance whether sessions are spread out or clustered.</p>
+    </div>
+    <div class="heatmap-wrap">
+      <svg viewBox="0 0 1020 149" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Last 12 Months Training Calendar" xmlns="http://www.w3.org/2000/svg">
+        <text x="70" y="12" font-size="10" fill="#64748B">May</text><text x="146" y="12" font-size="10" fill="#64748B">Jun</text><text x="241" y="12" font-size="10" fill="#64748B">Jul</text><text x="317" y="12" font-size="10" fill="#64748B">Aug</text><text x="393" y="12" font-size="10" fill="#64748B">Sep</text><text x="488" y="12" font-size="10" fill="#64748B">Oct</text><text x="564" y="12" font-size="10" fill="#64748B">Nov</text><text x="640" y="12" font-size="10" fill="#64748B">Dec</text><text x="735" y="12" font-size="10" fill="#64748B">Jan</text><text x="811" y="12" font-size="10" fill="#64748B">Feb</text><text x="887" y="12" font-size="10" fill="#64748B">Mar</text><text x="982" y="12" font-size="10" fill="#64748B">Apr</text>
+        <text x="0" y="49" font-size="10" fill="#64748B">Mon</text><text x="0" y="87" font-size="10" fill="#64748B">Wed</text><text x="0" y="125" font-size="10" fill="#64748B">Fri</text>
+        <rect x="32" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-21: rest</title></rect><rect x="32" y="35" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-22: 350 MET·min</title></rect><rect x="32" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-23: rest</title></rect><rect x="32" y="73" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-24: 94 MET·min</title></rect><rect x="32" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-25: rest</title></rect><rect x="32" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-26: 747 MET·min</title></rect><rect x="32" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-27: rest</title></rect><rect x="51" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-28: rest</title></rect><rect x="51" y="35" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-29: 600 MET·min</title></rect><rect x="51" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-30: rest</title></rect><rect x="51" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-01: rest</title></rect><rect x="51" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-02: rest</title></rect><rect x="51" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-03: rest</title></rect><rect x="51" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-04: rest</title></rect><rect x="70" y="16" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-05: 251 MET·min</title></rect><rect x="70" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-06: rest</title></rect><rect x="70" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-07: 252 MET·min</title></rect><rect x="70" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-08: rest</title></rect><rect x="70" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-09: rest</title></rect><rect x="70" y="111" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-10: 436 MET·min</title></rect><rect x="70" y="130" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-11: 1161 MET·min</title></rect><rect x="89" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-12: rest</title></rect><rect x="89" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-13: rest</title></rect><rect x="89" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-14: 239 MET·min</title></rect><rect x="89" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-15: rest</title></rect><rect x="89" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-16: rest</title></rect><rect x="89" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-17: rest</title></rect><rect x="89" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-18: rest</title></rect><rect x="108" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-19: rest</title></rect><rect x="108" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-20: rest</title></rect><rect x="108" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-21: 272 MET·min</title></rect><rect x="108" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-22: rest</title></rect><rect x="108" y="92" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-23: 580 MET·min</title></rect><rect x="108" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-24: rest</title></rect><rect x="108" y="130" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-25: 187 MET·min</title></rect><rect x="127" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-26: rest</title></rect><rect x="127" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-27: rest</title></rect><rect x="127" y="54" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-28: 721 MET·min</title></rect><rect x="127" y="73" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-29: 169 MET·min</title></rect><rect x="127" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-30: rest</title></rect><rect x="127" y="111" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-31: 295 MET·min</title></rect><rect x="127" y="130" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-01: 165 MET·min</title></rect><rect x="146" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-02: rest</title></rect><rect x="146" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-03: rest</title></rect><rect x="146" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-04: 293 MET·min</title></rect><rect x="146" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-05: rest</title></rect><rect x="146" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-06: rest</title></rect><rect x="146" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-07: 599 MET·min</title></rect><rect x="146" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-08: rest</title></rect><rect x="165" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-09: rest</title></rect><rect x="165" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-10: rest</title></rect><rect x="165" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-11: 174 MET·min</title></rect><rect x="165" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-12: rest</title></rect><rect x="165" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-13: rest</title></rect><rect x="165" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-14: 648 MET·min</title></rect><rect x="165" y="130" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-15: 165 MET·min</title></rect><rect x="184" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-16: rest</title></rect><rect x="184" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-17: rest</title></rect><rect x="184" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-18: 179 MET·min</title></rect><rect x="184" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-19: rest</title></rect><rect x="184" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-20: rest</title></rect><rect x="184" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-21: rest</title></rect><rect x="184" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-22: rest</title></rect><rect x="203" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-23: rest</title></rect><rect x="203" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-24: rest</title></rect><rect x="203" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-25: 318 MET·min</title></rect><rect x="203" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-26: rest</title></rect><rect x="203" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-27: rest</title></rect><rect x="203" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-28: 679 MET·min</title></rect><rect x="203" y="130" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-29: 165 MET·min</title></rect><rect x="222" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-30: rest</title></rect><rect x="222" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-01: rest</title></rect><rect x="222" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-02: 204 MET·min</title></rect><rect x="222" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-03: rest</title></rect><rect x="222" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-04: rest</title></rect><rect x="222" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-05: 606 MET·min</title></rect><rect x="222" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-06: rest</title></rect><rect x="241" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-07: rest</title></rect><rect x="241" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-08: rest</title></rect><rect x="241" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-09: rest</title></rect><rect x="241" y="73" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-10: 317 MET·min</title></rect><rect x="241" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-11: rest</title></rect><rect x="241" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-12: 656 MET·min</title></rect><rect x="241" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-13: rest</title></rect><rect x="260" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-14: rest</title></rect><rect x="260" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-15: rest</title></rect><rect x="260" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-16: 204 MET·min</title></rect><rect x="260" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-17: rest</title></rect><rect x="260" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-18: rest</title></rect><rect x="260" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-19: 629 MET·min</title></rect><rect x="260" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-20: rest</title></rect><rect x="279" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-21: rest</title></rect><rect x="279" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-22: rest</title></rect><rect x="279" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-23: 164 MET·min</title></rect><rect x="279" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-24: rest</title></rect><rect x="279" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-25: rest</title></rect><rect x="279" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-26: 579 MET·min</title></rect><rect x="279" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-27: rest</title></rect><rect x="298" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-28: rest</title></rect><rect x="298" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-29: rest</title></rect><rect x="298" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-30: 287 MET·min</title></rect><rect x="298" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-31: rest</title></rect><rect x="298" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-01: rest</title></rect><rect x="298" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-02: 617 MET·min</title></rect><rect x="298" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-03: rest</title></rect><rect x="317" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-04: rest</title></rect><rect x="317" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-05: rest</title></rect><rect x="317" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-06: 154 MET·min</title></rect><rect x="317" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-07: rest</title></rect><rect x="317" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-08: rest</title></rect><rect x="317" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-09: 623 MET·min</title></rect><rect x="317" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-10: rest</title></rect><rect x="336" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-11: rest</title></rect><rect x="336" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-12: rest</title></rect><rect x="336" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-13: 154 MET·min</title></rect><rect x="336" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-14: rest</title></rect><rect x="336" y="92" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-15: 204 MET·min</title></rect><rect x="336" y="111" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-16: 274 MET·min</title></rect><rect x="336" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-17: rest</title></rect><rect x="355" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-18: rest</title></rect><rect x="355" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-19: rest</title></rect><rect x="355" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-20: 399 MET·min</title></rect><rect x="355" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-21: rest</title></rect><rect x="355" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-22: rest</title></rect><rect x="355" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-23: rest</title></rect><rect x="355" y="130" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-24: 583 MET·min</title></rect><rect x="374" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-25: rest</title></rect><rect x="374" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-26: rest</title></rect><rect x="374" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-27: 145 MET·min</title></rect><rect x="374" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-28: rest</title></rect><rect x="374" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-29: rest</title></rect><rect x="374" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-30: 668 MET·min</title></rect><rect x="374" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-31: rest</title></rect><rect x="393" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-01: rest</title></rect><rect x="393" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-02: rest</title></rect><rect x="393" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-03: rest</title></rect><rect x="393" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-04: rest</title></rect><rect x="393" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-05: rest</title></rect><rect x="393" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-06: 626 MET·min</title></rect><rect x="393" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-07: rest</title></rect><rect x="412" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-08: rest</title></rect><rect x="412" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-09: rest</title></rect><rect x="412" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-10: 221 MET·min</title></rect><rect x="412" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-11: rest</title></rect><rect x="412" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-12: rest</title></rect><rect x="412" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-13: 583 MET·min</title></rect><rect x="412" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-14: 335 MET·min</title></rect><rect x="431" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-15: rest</title></rect><rect x="431" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-16: rest</title></rect><rect x="431" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-17: 322 MET·min</title></rect><rect x="431" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-18: rest</title></rect><rect x="431" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-19: rest</title></rect><rect x="431" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-20: 636 MET·min</title></rect><rect x="431" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-21: rest</title></rect><rect x="450" y="16" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-22: 132 MET·min</title></rect><rect x="450" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-23: rest</title></rect><rect x="450" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-24: rest</title></rect><rect x="450" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-25: rest</title></rect><rect x="450" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-26: rest</title></rect><rect x="450" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-27: rest</title></rect><rect x="450" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-28: rest</title></rect><rect x="469" y="16" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-29: 208 MET·min</title></rect><rect x="469" y="35" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-30: 371 MET·min</title></rect><rect x="469" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-01: rest</title></rect><rect x="469" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-02: rest</title></rect><rect x="469" y="92" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-03: 6 MET·min</title></rect><rect x="469" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-04: rest</title></rect><rect x="469" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-05: rest</title></rect><rect x="488" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-06: rest</title></rect><rect x="488" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-07: rest</title></rect><rect x="488" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-08: rest</title></rect><rect x="488" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-09: rest</title></rect><rect x="488" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-10: rest</title></rect><rect x="488" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-11: rest</title></rect><rect x="488" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-12: rest</title></rect><rect x="507" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-13: rest</title></rect><rect x="507" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-14: rest</title></rect><rect x="507" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-15: 209 MET·min</title></rect><rect x="507" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-16: rest</title></rect><rect x="507" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-17: rest</title></rect><rect x="507" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-18: rest</title></rect><rect x="507" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-19: 546 MET·min</title></rect><rect x="526" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-20: rest</title></rect><rect x="526" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-21: rest</title></rect><rect x="526" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-22: 337 MET·min</title></rect><rect x="526" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-23: rest</title></rect><rect x="526" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-24: rest</title></rect><rect x="526" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-25: rest</title></rect><rect x="526" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-26: 486 MET·min</title></rect><rect x="545" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-27: rest</title></rect><rect x="545" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-28: rest</title></rect><rect x="545" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-29: 172 MET·min</title></rect><rect x="545" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-30: rest</title></rect><rect x="545" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-31: rest</title></rect><rect x="545" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-01: rest</title></rect><rect x="545" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-02: 563 MET·min</title></rect><rect x="564" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-03: rest</title></rect><rect x="564" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-04: rest</title></rect><rect x="564" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-05: 148 MET·min</title></rect><rect x="564" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-06: rest</title></rect><rect x="564" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-07: rest</title></rect><rect x="564" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-08: rest</title></rect><rect x="564" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-09: rest</title></rect><rect x="583" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-10: rest</title></rect><rect x="583" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-11: rest</title></rect><rect x="583" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-12: 299 MET·min</title></rect><rect x="583" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-13: rest</title></rect><rect x="583" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-14: rest</title></rect><rect x="583" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-15: rest</title></rect><rect x="583" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-16: rest</title></rect><rect x="602" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-17: rest</title></rect><rect x="602" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-18: rest</title></rect><rect x="602" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-19: 220 MET·min</title></rect><rect x="602" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-20: rest</title></rect><rect x="602" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-21: rest</title></rect><rect x="602" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-22: rest</title></rect><rect x="602" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-23: rest</title></rect><rect x="621" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-24: rest</title></rect><rect x="621" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-25: rest</title></rect><rect x="621" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-26: 136 MET·min</title></rect><rect x="621" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-27: rest</title></rect><rect x="621" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-28: rest</title></rect><rect x="621" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-29: rest</title></rect><rect x="621" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-30: 514 MET·min</title></rect><rect x="640" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-01: rest</title></rect><rect x="640" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-02: rest</title></rect><rect x="640" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-03: 307 MET·min</title></rect><rect x="640" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-04: rest</title></rect><rect x="640" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-05: rest</title></rect><rect x="640" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-06: rest</title></rect><rect x="640" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-07: 536 MET·min</title></rect><rect x="659" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-08: rest</title></rect><rect x="659" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-09: rest</title></rect><rect x="659" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-10: rest</title></rect><rect x="659" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-11: rest</title></rect><rect x="659" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-12: rest</title></rect><rect x="659" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-13: rest</title></rect><rect x="659" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-14: rest</title></rect><rect x="678" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-15: rest</title></rect><rect x="678" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-16: rest</title></rect><rect x="678" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-17: rest</title></rect><rect x="678" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-18: rest</title></rect><rect x="678" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-19: rest</title></rect><rect x="678" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-20: rest</title></rect><rect x="678" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-21: rest</title></rect><rect x="697" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-22: rest</title></rect><rect x="697" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-23: rest</title></rect><rect x="697" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-24: rest</title></rect><rect x="697" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-25: rest</title></rect><rect x="697" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-26: rest</title></rect><rect x="697" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-27: rest</title></rect><rect x="697" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-28: rest</title></rect><rect x="716" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-29: rest</title></rect><rect x="716" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-30: rest</title></rect><rect x="716" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-31: rest</title></rect><rect x="716" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-01: rest</title></rect><rect x="716" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-02: rest</title></rect><rect x="716" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-03: rest</title></rect><rect x="716" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-04: rest</title></rect><rect x="735" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-05: rest</title></rect><rect x="735" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-06: rest</title></rect><rect x="735" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-07: 236 MET·min</title></rect><rect x="735" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-08: rest</title></rect><rect x="735" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-09: rest</title></rect><rect x="735" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-10: rest</title></rect><rect x="735" y="130" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-11: 252 MET·min</title></rect><rect x="754" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-12: rest</title></rect><rect x="754" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-13: rest</title></rect><rect x="754" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-14: 126 MET·min</title></rect><rect x="754" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-15: rest</title></rect><rect x="754" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-16: rest</title></rect><rect x="754" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-17: rest</title></rect><rect x="754" y="130" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-18: 592 MET·min</title></rect><rect x="773" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-19: rest</title></rect><rect x="773" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-20: rest</title></rect><rect x="773" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-21: 128 MET·min</title></rect><rect x="773" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-22: rest</title></rect><rect x="773" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-23: rest</title></rect><rect x="773" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-24: rest</title></rect><rect x="773" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-25: 533 MET·min</title></rect><rect x="792" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-26: rest</title></rect><rect x="792" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-27: rest</title></rect><rect x="792" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-28: 273 MET·min</title></rect><rect x="792" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-29: rest</title></rect><rect x="792" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-30: rest</title></rect><rect x="792" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-31: rest</title></rect><rect x="792" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-01: 571 MET·min</title></rect><rect x="811" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-02: rest</title></rect><rect x="811" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-03: rest</title></rect><rect x="811" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-04: rest</title></rect><rect x="811" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-05: rest</title></rect><rect x="811" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-06: rest</title></rect><rect x="811" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-07: rest</title></rect><rect x="811" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-08: rest</title></rect><rect x="830" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-09: rest</title></rect><rect x="830" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-10: rest</title></rect><rect x="830" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-11: rest</title></rect><rect x="830" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-12: rest</title></rect><rect x="830" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-13: rest</title></rect><rect x="830" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-14: rest</title></rect><rect x="830" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-15: rest</title></rect><rect x="849" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-16: rest</title></rect><rect x="849" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-17: rest</title></rect><rect x="849" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-18: 335 MET·min</title></rect><rect x="849" y="73" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-19: 212 MET·min</title></rect><rect x="849" y="92" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-20: 631 MET·min</title></rect><rect x="849" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-21: rest</title></rect><rect x="849" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-22: rest</title></rect><rect x="868" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-23: rest</title></rect><rect x="868" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-24: rest</title></rect><rect x="868" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-25: rest</title></rect><rect x="868" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-26: rest</title></rect><rect x="868" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-27: rest</title></rect><rect x="868" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-28: rest</title></rect><rect x="868" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-01: 486 MET·min</title></rect><rect x="887" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-02: rest</title></rect><rect x="887" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-03: rest</title></rect><rect x="887" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-04: 152 MET·min</title></rect><rect x="887" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-05: rest</title></rect><rect x="887" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-06: rest</title></rect><rect x="887" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-07: rest</title></rect><rect x="887" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-08: 514 MET·min</title></rect><rect x="906" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-09: rest</title></rect><rect x="906" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-10: rest</title></rect><rect x="906" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-11: 210 MET·min</title></rect><rect x="906" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-12: rest</title></rect><rect x="906" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-13: rest</title></rect><rect x="906" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-14: rest</title></rect><rect x="906" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-15: 561 MET·min</title></rect><rect x="925" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-16: rest</title></rect><rect x="925" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-17: rest</title></rect><rect x="925" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-18: 343 MET·min</title></rect><rect x="925" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-19: rest</title></rect><rect x="925" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-20: rest</title></rect><rect x="925" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-21: rest</title></rect><rect x="925" y="130" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-22: 582 MET·min</title></rect><rect x="944" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-23: rest</title></rect><rect x="944" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-24: rest</title></rect><rect x="944" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-25: 140 MET·min</title></rect><rect x="944" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-26: rest</title></rect><rect x="944" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-27: rest</title></rect><rect x="944" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-28: rest</title></rect><rect x="944" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-29: 572 MET·min</title></rect><rect x="963" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-30: rest</title></rect><rect x="963" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-31: rest</title></rect><rect x="963" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-01: 174 MET·min</title></rect><rect x="963" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-02: rest</title></rect><rect x="963" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-03: rest</title></rect><rect x="963" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-04: 675 MET·min</title></rect><rect x="963" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-05: rest</title></rect><rect x="982" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-06: rest</title></rect><rect x="982" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-07: rest</title></rect><rect x="982" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-08: 147 MET·min</title></rect><rect x="982" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-09: rest</title></rect><rect x="982" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-10: rest</title></rect><rect x="982" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-11: rest</title></rect><rect x="982" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-12: rest</title></rect><rect x="1001" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-13: rest</title></rect><rect x="1001" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-14: rest</title></rect><rect x="1001" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-15: 331 MET·min</title></rect>
+      </svg>
+    </div>
+    <div class="heatmap-legend">
+      <span>Less</span>
+      <span class="heatmap-legend__swatches"><span class="heatmap-legend__swatch" style="background:#F2F2F7"></span><span class="heatmap-legend__swatch" style="background:#FED7AA"></span><span class="heatmap-legend__swatch" style="background:#FDBA74"></span><span class="heatmap-legend__swatch" style="background:#FB923C"></span><span class="heatmap-legend__swatch" style="background:#EA580C"></span><span class="heatmap-legend__swatch" style="background:#C2410C"></span></span>
+      <span>More</span>
+    </div>
+  </div>
+          <div class="module-card">
+    <div class="module-card__header">
+      <div>
+        <h3>Training Load and Recovery Support Index</h3>
+        <p>Training load index reached 119.08 in 2026-03, while in 2026-04 sleep support index was 101.75, HRV support index 100.31, and resting-heart-rate support index 100.34, indicating that recovery support has broadly kept pace with load.</p>
+      </div>
+    </div>
+    <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>Training Load Index</span><span class="legend-item"><i style="background:#EF4444"></i>Sleep Support Index</span><span class="legend-item"><i style="background:#0EA5E9"></i>HRV Support Index</span><span class="legend-item"><i style="background:#22C55E"></i>Resting HR Support Index</span></div>
+    <div class="chart-wrap"><svg viewBox="0 0 700 220" role="img" aria-label="Trend chart" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="48" y1="16" x2="684" y2="16" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="20" text-anchor="end" font-size="10" fill="#94A3B8">183</text><line x1="48" y1="58" x2="684" y2="58" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="62" text-anchor="end" font-size="10" fill="#94A3B8">140</text><line x1="48" y1="100" x2="684" y2="100" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="104" text-anchor="end" font-size="10" fill="#94A3B8">98.0</text><line x1="48" y1="142" x2="684" y2="142" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="146" text-anchor="end" font-size="10" fill="#94A3B8">55.7</text><line x1="48" y1="184" x2="684" y2="184" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="188" text-anchor="end" font-size="10" fill="#94A3B8">13.4</text>
+  <text x="48" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="163.63636363636363" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="279.27272727272725" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="394.9090909090909" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="452.72727272727275" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="568.3636363636364" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="684" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <path d="M 48 30 L 105.81818181818181 78.43291516053581 L 163.63636363636363 79.25650294138492 L 221.45454545454544 47.73194414912467 L 279.27272727272725 59.7980012757814 L 337.09090909090907 132.8591679070097 L 394.9090909090909 121.547239350769 L 452.72727272727275 170 L 510.54545454545456 108.46906230065916 L 568.3636363636364 127.3321993054079 L 626.1818181818181 79.10766177617123 L 684 141.938478985045" fill="none" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><circle cx="48" cy="30" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2025-05: 168.57 index</title></circle><circle cx="105.81818181818181" cy="78.43291516053581" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2025-06: 119.76 index</title></circle><circle cx="163.63636363636363" cy="79.25650294138492" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2025-07: 118.93 index</title></circle><circle cx="221.45454545454544" cy="47.73194414912467" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2025-08: 150.7 index</title></circle><circle cx="279.27272727272725" cy="59.7980012757814" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2025-09: 138.54 index</title></circle><circle cx="337.09090909090907" cy="132.8591679070097" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2025-10: 64.91 index</title></circle><circle cx="394.9090909090909" cy="121.547239350769" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2025-11: 76.31 index</title></circle><circle cx="452.72727272727275" cy="170" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2025-12: 27.48 index</title></circle><circle cx="510.54545454545456" cy="108.46906230065916" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2026-01: 89.49 index</title></circle><circle cx="568.3636363636364" cy="127.3321993054079" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2026-02: 70.48 index</title></circle><circle cx="626.1818181818181" cy="79.10766177617123" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2026-03: 119.08 index</title></circle><circle cx="684" cy="141.938478985045" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>Training Load Index 2026-04: 55.76 index</title></circle><path d="M 48 97.1769792331136 L 105.81818181818181 95.1924303635977 L 163.63636363636363 95.80764051314763 L 221.45454545454544 99.77673825217946 L 279.27272727272725 103.23977602948472" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><path d="M 394.9090909090909 103.12070309731376 L 452.72727272727275 97.42504784180309 L 510.54545454545456 94.56729746970018 L 568.3636363636364 99.8958111843504 L 626.1818181818181 95.80764051314763 L 684 96.3037777305266" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><circle cx="48" cy="97.1769792331136" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2025-05: 100.87 index</title></circle><circle cx="105.81818181818181" cy="95.1924303635977" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2025-06: 102.87 index</title></circle><circle cx="163.63636363636363" cy="95.80764051314763" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2025-07: 102.25 index</title></circle><circle cx="221.45454545454544" cy="99.77673825217946" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2025-08: 98.25 index</title></circle><circle cx="279.27272727272725" cy="103.23977602948472" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2025-09: 94.76 index</title></circle><circle cx="394.9090909090909" cy="103.12070309731376" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2025-11: 94.88 index</title></circle><circle cx="452.72727272727275" cy="97.42504784180309" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2025-12: 100.62 index</title></circle><circle cx="510.54545454545456" cy="94.56729746970018" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2026-01: 103.5 index</title></circle><circle cx="568.3636363636364" cy="99.8958111843504" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2026-02: 98.13 index</title></circle><circle cx="626.1818181818181" cy="95.80764051314763" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2026-03: 102.25 index</title></circle><circle cx="684" cy="96.3037777305266" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Sleep Support Index 2026-04: 101.75 index</title></circle><path d="M 48 100.5804805443334 L 105.81818181818181 89.00063789070805 L 163.63636363636363 85.96427812034871 L 221.45454545454544 95.73818130271457 L 279.27272727272725 89.3677794315685 L 337.09090909090907 91.25310085760862 L 394.9090909090909 99.1218371252392 L 452.72727272727275 109.23311361542277 L 510.54545454545456 102.6642568573251 L 568.3636363636364 108.03246154936564 L 626.1818181818181 107.84392940676163 L 684 97.73265291657806" fill="none" stroke="#0EA5E9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><circle cx="48" cy="100.5804805443334" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2025-05: 97.44 index</title></circle><circle cx="105.81818181818181" cy="89.00063789070805" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2025-06: 109.11 index</title></circle><circle cx="163.63636363636363" cy="85.96427812034871" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2025-07: 112.17 index</title></circle><circle cx="221.45454545454544" cy="95.73818130271457" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2025-08: 102.32 index</title></circle><circle cx="279.27272727272725" cy="89.3677794315685" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2025-09: 108.74 index</title></circle><circle cx="337.09090909090907" cy="91.25310085760862" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2025-10: 106.84 index</title></circle><circle cx="394.9090909090909" cy="99.1218371252392" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2025-11: 98.91 index</title></circle><circle cx="452.72727272727275" cy="109.23311361542277" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2025-12: 88.72 index</title></circle><circle cx="510.54545454545456" cy="102.6642568573251" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2026-01: 95.34 index</title></circle><circle cx="568.3636363636364" cy="108.03246154936564" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2026-02: 89.93 index</title></circle><circle cx="626.1818181818181" cy="107.84392940676163" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2026-03: 90.12 index</title></circle><circle cx="684" cy="97.73265291657806" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV Support Index 2026-04: 100.31 index</title></circle><path d="M 48 92.60259408887943 L 105.81818181818181 93.94216457580266 L 163.63636363636363 95.54964916011056 L 221.45454545454544 92.92012190800197 L 279.27272727272725 100.1934935147778 L 337.09090909090907 98.37763129917073 L 394.9090909090909 99.36990573392869 L 452.72727272727275 101.78113261039053 L 510.54545454545456 97.11744276702812 L 568.3636363636364 104.16259125380961 L 626.1818181818181 101.26514990431639 L 684 97.70288468353532" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><circle cx="48" cy="92.60259408887943" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2025-05: 105.48 index</title></circle><circle cx="105.81818181818181" cy="93.94216457580266" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2025-06: 104.13 index</title></circle><circle cx="163.63636363636363" cy="95.54964916011056" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2025-07: 102.51 index</title></circle><circle cx="221.45454545454544" cy="92.92012190800197" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2025-08: 105.16 index</title></circle><circle cx="279.27272727272725" cy="100.1934935147778" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2025-09: 97.83 index</title></circle><circle cx="337.09090909090907" cy="98.37763129917073" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2025-10: 99.66 index</title></circle><circle cx="394.9090909090909" cy="99.36990573392869" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2025-11: 98.66 index</title></circle><circle cx="452.72727272727275" cy="101.78113261039053" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2025-12: 96.23 index</title></circle><circle cx="510.54545454545456" cy="97.11744276702812" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2026-01: 100.93 index</title></circle><circle cx="568.3636363636364" cy="104.16259125380961" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2026-02: 93.83 index</title></circle><circle cx="626.1818181818181" cy="101.26514990431639" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2026-03: 96.75 index</title></circle><circle cx="684" cy="97.70288468353532" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>Resting HR Support Index 2026-04: 100.34 index</title></circle>
+</svg></div>
+  </div>
+          <details class="glossary-card">
+    <summary>What do these metrics mean?</summary>
+    <dl class="glossary-card__body">
+      <div><dt>Fitness (CTL)</dt><dd>42-day exponentially weighted average of daily training load (MET-minutes). Tracks how much you've been training over the long haul. Rising CTL = building fitness; falling CTL = detraining or deliberate taper. Unit MET-minute = intensity multiplier × duration.</dd></div><div><dt>Fatigue (ATL)</dt><dd>7-day exponentially weighted average of daily load. Reflects how tired the past week left you. A sharp ATL rise means you just added volume and should plan recovery.</dd></div><div><dt>Form (TSB)</dt><dd>TSB = CTL − ATL, also called Form in TrainingPeaks. Positive TSB = feeling fresh (fitness high, fatigue low); negative TSB = carrying fatigue. Above +25 is tapered; below -30 is near overreaching.</dd></div><div><dt>MET-minutes</dt><dd>Unit of training load. 1 MET ≈ sitting still. Running ≈ 8.5 MET, walking ≈ 3.5 MET, strength ≈ 5 MET. A 60-minute run ≈ 510 MET-minutes.</dd></div><div><dt>Readiness</dt><dd>Combines training state with sleep / HRV / resting HR recovery signals. Good = hold or add volume; Moderate = stabilise rhythm; Low = prioritise recovery.</dd></div>
+    </dl>
+  </details>
+        </div>
+      </section>
+
+      <section id="sports">
+        <section id="traditional-strength-training" class="module module--activity sport-module">
+    <div class="module__header module__header--sport">
+      <div class="module__title-wrap">
+        <span class="module__index">02</span>
+        <span class="module__icon module__icon--emoji"><span aria-hidden="true">🏋️</span></span>
+        <div>
+          <h2>Traditional Strength Training</h2>
+          <p>This is your most stable current sport. Over the last 30 days you completed 5 sessions totaling 275.96 minutes, averaging 55.19 minutes each. Frequency is stronger than the baseline-equivalent period, while session duration has stayed almost unchanged, which suggests a mature and repeatable structure.</p>
+        </div>
+      </div>
+      <div class="pills"><span class="badge badge--warn">Load rising</span><span class="badge badge--low">Recovery unsupported</span><span class="badge badge--warn">Consistency uneven</span></div>
+    </div>
+    <div class="module__body">
+      <div class="summary-cards summary-cards--sport">
+        <div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Last 30 Days</div>
+    <div class="metric-card__value">5 Workouts</div>
+    <div class="metric-card__sub">275.96 min</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Active Energy</div>
+    <div class="metric-card__value">1464.47 kcal</div>
+    <div class="metric-card__sub">Last 30 Days</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Average HR</div>
+    <div class="metric-card__value">111.25 bpm</div>
+    <div class="metric-card__sub">Last 30 Days</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Active Months (12M)</div>
+    <div class="metric-card__value">11</div>
+    <div class="metric-card__sub">Longest Gap：35 days</div>
+  </div>
+      </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>Load Change</h3>
+          <ul class="plain-list">
+            <li>Last 30 Days：5 Workouts / 275.96 min</li><li>90-Day Baseline：6 Workouts / 334.01 min</li><li>Last 180 Days：18 Workouts / 1007.81 min</li><li>Last 365 Days：45 Workouts / 2509.76 min</li><li>All-Time：146 Workouts / 7940.11 min</li>
+            <li>Rhythm Trend：Recent rhythm is sparser</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>Recovery Support</h3>
+          <ul class="plain-list">
+            <li>Recovery Samples：10</li>
+            <li>Next-Day Sleep Delta：-0.35 h</li>
+            <li>Next-Day HRV Delta：-0.4</li>
+            <li>Next-Day Resting HR Delta：-0.56 bpm</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>Traditional Strength Training Monthly Rhythm</h3>
+          <p>Across the last 12 months, strength training usually landed in the 3 to 5 session range per month, with average session duration staying close to 55 minutes, making it your most stable current sport.</p>
+        </div>
+      </div>
+      <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>Monthly Workouts</span><span class="legend-item"><i style="background:#EF4444"></i>Avg Duration per Workout</span></div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 240" role="img" aria-label="Trend chart" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="20" x2="648" y2="20" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="24" text-anchor="end" font-size="10" fill="#F97316">5.8</text><text x="654" y="24" text-anchor="start" font-size="10" fill="#EF4444">59.2</text><line x1="52" y1="66" x2="648" y2="66" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="70" text-anchor="end" font-size="10" fill="#F97316">4.3</text><text x="654" y="70" text-anchor="start" font-size="10" fill="#EF4444">56.2</text><line x1="52" y1="112" x2="648" y2="112" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="116" text-anchor="end" font-size="10" fill="#F97316">2.9</text><text x="654" y="116" text-anchor="start" font-size="10" fill="#EF4444">53.2</text><line x1="52" y1="158" x2="648" y2="158" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="162" text-anchor="end" font-size="10" fill="#F97316">1.4</text><text x="654" y="162" text-anchor="start" font-size="10" fill="#EF4444">50.2</text><line x1="52" y1="204" x2="648" y2="204" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="208" text-anchor="end" font-size="10" fill="#F97316">0</text><text x="654" y="208" text-anchor="start" font-size="10" fill="#EF4444">47.1</text>
+  <text x="69.65833333333333" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="171.6007575757576" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="273.54318181818184" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="375.4856060606061" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="426.4568181818182" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="528.3992424242425" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="630.3416666666667" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <g><title>Monthly Workouts 2025-05: 5 sessions</title><rect x="56" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-06: 5 sessions</title><rect x="106.97121212121212" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-07: 5 sessions</title><rect x="157.94242424242427" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-08: 5 sessions</title><rect x="208.91363636363636" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-09: 3 sessions</title><rect x="259.8848484848485" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-10: 3 sessions</title><rect x="310.85606060606057" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-11: 4 sessions</title><rect x="361.8272727272727" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-12: 1 sessions</title><rect x="412.79848484848486" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-01: 4 sessions</title><rect x="463.769696969697" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-02: 0 sessions</title><rect x="514.7409090909092" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-03: 4 sessions</title><rect x="565.7121212121212" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-04: 3 sessions</title><rect x="616.6833333333334" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g>
+  <path d="M 69.65833333333333 35.33333333333334 L 120.62954545454545 61.16915918909933 L 171.6007575757576 50.31505483549347 L 222.5719696969697 188.66666666666666 L 273.54318181818184 59.79328680624795 L 324.5143939393939 37.77932868062473 L 375.4856060606061 65.29677633765371 L 426.4568181818182 51.07942838152212 L 477.42803030303037 82.87736789631106" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 579.3704545454545 70.95314057826519 L 630.3416666666667 77.52675307411097" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><circle cx="69.65833333333333" cy="35.33333333333334" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-05: 58.18 min</title></circle><circle cx="120.62954545454545" cy="61.16915918909933" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-06: 56.49 min</title></circle><circle cx="171.6007575757576" cy="50.31505483549347" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-07: 57.2 min</title></circle><circle cx="222.5719696969697" cy="188.66666666666666" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-08: 48.15 min</title></circle><circle cx="273.54318181818184" cy="59.79328680624795" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-09: 56.58 min</title></circle><circle cx="324.5143939393939" cy="37.77932868062473" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-10: 58.02 min</title></circle><circle cx="375.4856060606061" cy="65.29677633765371" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-11: 56.22 min</title></circle><circle cx="426.4568181818182" cy="51.07942838152212" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-12: 57.15 min</title></circle><circle cx="477.42803030303037" cy="82.87736789631106" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-01: 55.07 min</title></circle><circle cx="579.3704545454545" cy="70.95314057826519" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-03: 55.85 min</title></circle><circle cx="630.3416666666667" cy="77.52675307411097" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-04: 55.42 min</title></circle>
+</svg></div>
+    </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>Key Signals</h3>
+          <ul class="plain-list">
+            <li>Last 30 days: 5 sessions, 275.96 total minutes, 55.19 average minutes per session; baseline 90 days: 6 sessions, 334.01 total minutes, 55.67 average minutes.</li><li>Average active energy rose to 292.89 kcal from a baseline of 263.76 kcal, and average heart rate rose to 111.25 bpm from 106.02 bpm, indicating slightly higher stimulus at similar session duration.</li><li>Recovery-after-workout sample count is 10, with next-day sleep at -0.35 hours, next-day HRV at -0.4 ms, and next-day resting heart rate at -0.56 bpm, which does not suggest a meaningful recovery collapse.</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>Sport Recommendations</h3>
+          <ul class="plain-list">
+            <li>For the next 2 weeks, keep strength training at 2 to 3 sessions per week and keep most sessions in the 50 to 60 minute range.</li><li>Avoid another long break of more than 5 to 7 days without a strength session; even spacing matters more than making sessions longer.</li><li>If boxing sessions are already demanding, keep strength days at maintenance volume rather than turning both sports into hard days on the same schedule.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section><section id="boxing" class="module module--activity sport-module">
+    <div class="module__header module__header--sport">
+      <div class="module__title-wrap">
+        <span class="module__index">03</span>
+        <span class="module__icon module__icon--emoji"><span aria-hidden="true">🥊</span></span>
+        <div>
+          <h2>Boxing</h2>
+          <p>Boxing remains a high-quality, high-demand sport in your current mix, but recent execution looks more like maintenance than expansion. In the last 30 days you logged 3 boxing sessions for 214.55 minutes, with lower frequency than baseline but similar session size and intact training quality.</p>
+        </div>
+      </div>
+      <div class="pills"><span class="badge badge--warn">Load rising</span><span class="badge badge--low">Recovery unsupported</span><span class="badge badge--warn">Consistency uneven</span></div>
+    </div>
+    <div class="module__body">
+      <div class="summary-cards summary-cards--sport">
+        <div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Last 30 Days</div>
+    <div class="metric-card__value">3 Workouts</div>
+    <div class="metric-card__sub">214.55 min</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Active Energy</div>
+    <div class="metric-card__value">1848.31 kcal</div>
+    <div class="metric-card__sub">Last 30 Days</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Average HR</div>
+    <div class="metric-card__value">141.08 bpm</div>
+    <div class="metric-card__sub">Last 30 Days</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Active Months (12M)</div>
+    <div class="metric-card__value">12</div>
+    <div class="metric-card__sub">Longest Gap：42 days</div>
+  </div>
+      </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>Load Change</h3>
+          <ul class="plain-list">
+            <li>Last 30 Days：3 Workouts / 214.55 min</li><li>90-Day Baseline：6 Workouts / 444.11 min</li><li>Last 180 Days：14 Workouts / 1021.64 min</li><li>Last 365 Days：31 Workouts / 2243.71 min</li><li>All-Time：172 Workouts / 12080.63 min</li>
+            <li>Rhythm Trend：Recent rhythm is sparser</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>Recovery Support</h3>
+          <ul class="plain-list">
+            <li>Recovery Samples：11</li>
+            <li>Next-Day Sleep Delta：-0.44 h</li>
+            <li>Next-Day HRV Delta：0.49</li>
+            <li>Next-Day Resting HR Delta：-1.63 bpm</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>Boxing Monthly Rhythm</h3>
+          <p>Boxing frequency rebounded to 5 sessions in 2026-03 and sits at 1 session so far in 2026-04, while average duration remains in the roughly 71 to 79 minute range, indicating high per-session demand but uneven monthly rhythm.</p>
+        </div>
+      </div>
+      <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>Monthly Workouts</span><span class="legend-item"><i style="background:#EF4444"></i>Avg Duration per Workout</span></div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 240" role="img" aria-label="Trend chart" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="20" x2="648" y2="20" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="24" text-anchor="end" font-size="10" fill="#F97316">5.8</text><text x="654" y="24" text-anchor="start" font-size="10" fill="#EF4444">81.0</text><line x1="52" y1="66" x2="648" y2="66" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="70" text-anchor="end" font-size="10" fill="#F97316">4.3</text><text x="654" y="70" text-anchor="start" font-size="10" fill="#EF4444">76.6</text><line x1="52" y1="112" x2="648" y2="112" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="116" text-anchor="end" font-size="10" fill="#F97316">2.9</text><text x="654" y="116" text-anchor="start" font-size="10" fill="#EF4444">72.2</text><line x1="52" y1="158" x2="648" y2="158" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="162" text-anchor="end" font-size="10" fill="#F97316">1.4</text><text x="654" y="162" text-anchor="start" font-size="10" fill="#EF4444">67.8</text><line x1="52" y1="204" x2="648" y2="204" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="208" text-anchor="end" font-size="10" fill="#F97316">0</text><text x="654" y="208" text-anchor="start" font-size="10" fill="#EF4444">63.4</text>
+  <text x="69.65833333333333" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="171.6007575757576" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="273.54318181818184" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="375.4856060606061" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="426.4568181818182" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="528.3992424242425" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="630.3416666666667" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <g><title>Monthly Workouts 2025-05: 3 sessions</title><rect x="56" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-06: 3 sessions</title><rect x="106.97121212121212" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-07: 4 sessions</title><rect x="157.94242424242427" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-08: 3 sessions</title><rect x="208.91363636363636" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-09: 3 sessions</title><rect x="259.8848484848485" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-10: 2 sessions</title><rect x="310.85606060606057" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-11: 2 sessions</title><rect x="361.8272727272727" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-12: 1 sessions</title><rect x="412.79848484848486" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-01: 2 sessions</title><rect x="463.769696969697" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-02: 1 sessions</title><rect x="514.7409090909092" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-03: 5 sessions</title><rect x="565.7121212121212" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-04: 1 sessions</title><rect x="616.6833333333334" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g>
+  <path d="M 69.65833333333333 188.66666666666669 L 120.62954545454545 120.87829246139879 L 171.6007575757576 98.10808356039962 L 222.5719696969697 59.98365122615809 L 273.54318181818184 142.9173478655768 L 324.5143939393939 141.7683923705723 L 375.4856060606061 96.5413260672117 L 426.4568181818182 63.22161671207999 L 477.42803030303037 92.25885558583116 L 528.3992424242425 35.33333333333337 L 579.3704545454545 119.52043596730255 L 630.3416666666667 99.15258855585839" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><circle cx="69.65833333333333" cy="188.66666666666669" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-05: 64.87 min</title></circle><circle cx="120.62954545454545" cy="120.87829246139879" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-06: 71.36 min</title></circle><circle cx="171.6007575757576" cy="98.10808356039962" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-07: 73.54 min</title></circle><circle cx="222.5719696969697" cy="59.98365122615809" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-08: 77.19 min</title></circle><circle cx="273.54318181818184" cy="142.9173478655768" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-09: 69.25 min</title></circle><circle cx="324.5143939393939" cy="141.7683923705723" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-10: 69.36 min</title></circle><circle cx="375.4856060606061" cy="96.5413260672117" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-11: 73.69 min</title></circle><circle cx="426.4568181818182" cy="63.22161671207999" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-12: 76.88 min</title></circle><circle cx="477.42803030303037" cy="92.25885558583116" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-01: 74.1 min</title></circle><circle cx="528.3992424242425" cy="35.33333333333337" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-02: 79.55 min</title></circle><circle cx="579.3704545454545" cy="119.52043596730255" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-03: 71.49 min</title></circle><circle cx="630.3416666666667" cy="99.15258855585839" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-04: 73.44 min</title></circle>
+</svg></div>
+    </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>Key Signals</h3>
+          <ul class="plain-list">
+            <li>Last 30 days: 3 boxing sessions, 214.55 total minutes, 71.52 average minutes; baseline 90 days: 6 sessions, 444.11 minutes, 74.02 average minutes.</li><li>Average active energy was 616.1 kcal versus 593.74 kcal at baseline, and average heart rate was 141.08 bpm versus 135.84 bpm, so the per-session training stimulus has not softened.</li><li>Recovery-after-boxing sample count is 11, with next-day HRV at +0.49 ms and resting heart rate at -1.63 bpm, but next-day sleep at -0.44 hours, which means recovery can handle the load only if sleep support stays intact.</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>Sport Recommendations</h3>
+          <ul class="plain-list">
+            <li>For the next 2 weeks, keep boxing at 2 to 3 sessions and avoid increasing frequency while TSB is still -4.6.</li><li>Follow each boxing day with either a low-intensity day or a rest day, and protect sleep on the same night.</li><li>If you want more boxing volume, add one shorter session first instead of making already long sessions even longer.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section><section id="walking" class="module module--activity sport-module">
+    <div class="module__header module__header--sport">
+      <div class="module__title-wrap">
+        <span class="module__index">04</span>
+        <span class="module__icon module__icon--emoji"><span aria-hidden="true">🚶</span></span>
+        <div>
+          <h2>Walking</h2>
+          <p>Walking is currently too sparse to function as a real recovery tool. In the last 30 days you logged only 1 walking session for 32.27 minutes, which is clearly below the baseline period.</p>
+        </div>
+      </div>
+      <div class="pills"><span class="badge badge--warn">Load falling</span><span class="badge badge--low">Recovery unsupported</span><span class="badge badge--warn">Consistency uneven</span></div>
+    </div>
+    <div class="module__body">
+      <div class="summary-cards summary-cards--sport">
+        <div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Last 180 Days</div>
+    <div class="metric-card__value">4 Workouts</div>
+    <div class="metric-card__sub">228.44 min</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Active Energy</div>
+    <div class="metric-card__value">759.18 kcal</div>
+    <div class="metric-card__sub">Last 180 Days</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Distance</div>
+    <div class="metric-card__value">11.37 km</div>
+    <div class="metric-card__sub">Last 180 Days</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Average HR</div>
+    <div class="metric-card__value">88 bpm</div>
+    <div class="metric-card__sub">Last 180 Days</div>
+  </div>
+      </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>Load Change</h3>
+          <ul class="plain-list">
+            <li>Last 180 Days：4 Workouts / 228.44 min</li><li>Last 30 Days：1 Workouts / 32.27 min</li><li>90-Day Baseline：3 Workouts / 196.17 min</li><li>Last 365 Days：19 Workouts / 1149.36 min</li><li>All-Time：106 Workouts / 6293.31 min</li>
+            <li>Rhythm Trend：Recent rhythm is sparser</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>Recovery Support</h3>
+          <ul class="plain-list">
+            <li>Recovery Samples：3</li>
+            <li>Next-Day Sleep Delta：-0.54 h</li>
+            <li>Next-Day HRV Delta：-4.08</li>
+            <li>Next-Day Resting HR Delta：3.37 bpm</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>Walking Monthly Rhythm</h3>
+          <p>Bars = monthly workout count (left axis); line = average duration per workout (right axis). Two orthogonal dimensions — how often and how long — together describe the rhythm better than either alone.</p>
+        </div>
+      </div>
+      <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>Monthly Workouts</span><span class="legend-item"><i style="background:#EF4444"></i>Avg Duration per Workout</span></div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 240" role="img" aria-label="Trend chart" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="20" x2="648" y2="20" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="24" text-anchor="end" font-size="10" fill="#F97316">5.8</text><text x="654" y="24" text-anchor="start" font-size="10" fill="#EF4444">80.7</text><line x1="52" y1="66" x2="648" y2="66" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="70" text-anchor="end" font-size="10" fill="#F97316">4.3</text><text x="654" y="70" text-anchor="start" font-size="10" fill="#EF4444">67.5</text><line x1="52" y1="112" x2="648" y2="112" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="116" text-anchor="end" font-size="10" fill="#F97316">2.9</text><text x="654" y="116" text-anchor="start" font-size="10" fill="#EF4444">54.3</text><line x1="52" y1="158" x2="648" y2="158" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="162" text-anchor="end" font-size="10" fill="#F97316">1.4</text><text x="654" y="162" text-anchor="start" font-size="10" fill="#EF4444">41.1</text><line x1="52" y1="204" x2="648" y2="204" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="208" text-anchor="end" font-size="10" fill="#F97316">0</text><text x="654" y="208" text-anchor="start" font-size="10" fill="#EF4444">27.9</text>
+  <text x="69.65833333333333" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="171.6007575757576" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="273.54318181818184" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="375.4856060606061" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="426.4568181818182" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="528.3992424242425" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="630.3416666666667" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <g><title>Monthly Workouts 2025-05: 5 sessions</title><rect x="56" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-06: 2 sessions</title><rect x="106.97121212121212" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-07: 0 sessions</title><rect x="157.94242424242427" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-08: 3 sessions</title><rect x="208.91363636363636" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-09: 4 sessions</title><rect x="259.8848484848485" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-10: 0 sessions</title><rect x="310.85606060606057" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-11: 0 sessions</title><rect x="361.8272727272727" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-12: 0 sessions</title><rect x="412.79848484848486" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-01: 1 sessions</title><rect x="463.769696969697" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-02: 2 sessions</title><rect x="514.7409090909092" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-03: 0 sessions</title><rect x="565.7121212121212" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-04: 1 sessions</title><rect x="616.6833333333334" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g>
+  <path d="M 69.65833333333333 105.92032113913505 L 120.62954545454545 148.42581231538287" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 222.5719696969697 35.333333333333314 L 273.54318181818184 52.231008104218716" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 477.42803030303037 64.00711959403165 L 528.3992424242425 77.90850564265696" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 630.3416666666667 188.66666666666666" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><circle cx="69.65833333333333" cy="105.92032113913505" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-05: 56.02 min</title></circle><circle cx="120.62954545454545" cy="148.42581231538287" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-06: 43.82 min</title></circle><circle cx="222.5719696969697" cy="35.333333333333314" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-08: 76.28 min</title></circle><circle cx="273.54318181818184" cy="52.231008104218716" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-09: 71.43 min</title></circle><circle cx="477.42803030303037" cy="64.00711959403165" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-01: 68.05 min</title></circle><circle cx="528.3992424242425" cy="77.90850564265696" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-02: 64.06 min</title></circle><circle cx="630.3416666666667" cy="188.66666666666666" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2026-04: 32.27 min</title></circle>
+</svg></div>
+    </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>Key Signals</h3>
+          <ul class="plain-list">
+            <li>Last 30 days: 1 session, 32.27 minutes, 1.54 km; baseline 90 days: 3 sessions, 196.17 minutes, 9.83 km.</li><li>Only 7 of the last 12 months included any walking sessions, and the longest gap was 103 days, which points to weak continuity for low-intensity recovery work.</li><li>Recovery-after-walking sample count is only 3, with next-day HRV at -4.08 ms and resting heart rate at +3.37 bpm, which is too sparse to interpret as a stable pattern.</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>Sport Recommendations</h3>
+          <ul class="plain-list">
+            <li>Over the next 2 weeks, add 4 to 6 easy walks of 20 to 40 minutes on non-boxing days and treat them as recovery support, not performance sessions.</li><li>Place walking after boxing days or on evenings following strength work to make it a predictable recovery habit.</li><li>Several short walks will serve recovery better than one or two occasional long ones.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section><section id="cycling" class="module module--activity sport-module">
+    <div class="module__header module__header--sport">
+      <div class="module__title-wrap">
+        <span class="module__index">05</span>
+        <span class="module__icon module__icon--emoji"><span aria-hidden="true">🚴</span></span>
+        <div>
+          <h2>Cycling</h2>
+          <p>Cycling is dormant in the current training block. There were no cycling sessions in the last 30, 90, or 180 days, and the most recent ride was on 2025-10-03. It remains a historically important sport in your long-term data, but it is no longer part of the active structure right now.</p>
+        </div>
+      </div>
+      <div class="pills"><span class="badge badge--info">Load stable</span><span class="badge badge--low">Recovery unsupported</span><span class="badge badge--warn">Consistency uneven</span></div>
+    </div>
+    <div class="module__body">
+      <div class="summary-cards summary-cards--sport">
+        <div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Last 365 Days</div>
+    <div class="metric-card__value">6 Workouts</div>
+    <div class="metric-card__sub">117.01 min</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Active Energy</div>
+    <div class="metric-card__value">365.06 kcal</div>
+    <div class="metric-card__sub">Last 365 Days</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Distance</div>
+    <div class="metric-card__value">23.4 km</div>
+    <div class="metric-card__sub">Last 365 Days</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">Average HR</div>
+    <div class="metric-card__value">94.5 bpm</div>
+    <div class="metric-card__sub">Last 365 Days</div>
+  </div>
+      </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>Load Change</h3>
+          <ul class="plain-list">
+            <li>Last 365 Days：6 Workouts / 117.01 min</li><li>All-Time：270 Workouts / 5811.88 min</li>
+            <li>Rhythm Trend：Recent rhythm is sparser</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>Recovery Support</h3>
+          <ul class="plain-list">
+            <li>Recovery Samples：0</li>
+            <li>Next-Day Sleep Delta：Insufficient data</li>
+            <li>Next-Day HRV Delta：Insufficient data</li>
+            <li>Next-Day Resting HR Delta：Insufficient data</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>Cycling Monthly Rhythm</h3>
+          <p>Bars = monthly workout count (left axis); line = average duration per workout (right axis). Two orthogonal dimensions — how often and how long — together describe the rhythm better than either alone.</p>
+        </div>
+      </div>
+      <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>Monthly Workouts</span><span class="legend-item"><i style="background:#EF4444"></i>Avg Duration per Workout</span></div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 240" role="img" aria-label="Trend chart" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="20" x2="648" y2="20" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="24" text-anchor="end" font-size="10" fill="#F97316">2.3</text><text x="654" y="24" text-anchor="start" font-size="10" fill="#EF4444">30.8</text><line x1="52" y1="66" x2="648" y2="66" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="70" text-anchor="end" font-size="10" fill="#F97316">1.7</text><text x="654" y="70" text-anchor="start" font-size="10" fill="#EF4444">23.4</text><line x1="52" y1="112" x2="648" y2="112" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="116" text-anchor="end" font-size="10" fill="#F97316">1.1</text><text x="654" y="116" text-anchor="start" font-size="10" fill="#EF4444">16.1</text><line x1="52" y1="158" x2="648" y2="158" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="162" text-anchor="end" font-size="10" fill="#F97316">0.6</text><text x="654" y="162" text-anchor="start" font-size="10" fill="#EF4444">8.8</text><line x1="52" y1="204" x2="648" y2="204" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="208" text-anchor="end" font-size="10" fill="#F97316">0</text><text x="654" y="208" text-anchor="start" font-size="10" fill="#EF4444">1.4</text>
+  <text x="69.65833333333333" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="171.6007575757576" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="273.54318181818184" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="375.4856060606061" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="426.4568181818182" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="528.3992424242425" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="630.3416666666667" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <g><title>Monthly Workouts 2025-05: 2 sessions</title><rect x="56" y="43.99999999999997" width="27.316666666666666" height="160.00000000000003" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-06: 0 sessions</title><rect x="106.97121212121212" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-07: 0 sessions</title><rect x="157.94242424242427" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-08: 0 sessions</title><rect x="208.91363636363636" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-09: 1 sessions</title><rect x="259.8848484848485" y="123.99999999999999" width="27.316666666666666" height="80.00000000000001" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-10: 1 sessions</title><rect x="310.85606060606057" y="123.99999999999999" width="27.316666666666666" height="80.00000000000001" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-11: 0 sessions</title><rect x="361.8272727272727" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2025-12: 0 sessions</title><rect x="412.79848484848486" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-01: 0 sessions</title><rect x="463.769696969697" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-02: 0 sessions</title><rect x="514.7409090909092" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-03: 0 sessions</title><rect x="565.7121212121212" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>Monthly Workouts 2026-04: 0 sessions</title><rect x="616.6833333333334" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g>
+  <path d="M 69.65833333333333 35.333333333333286" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 273.54318181818184 133.96294782727148 L 324.5143939393939 188.66666666666666" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><circle cx="69.65833333333333" cy="35.333333333333286" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-05: 28.34 min</title></circle><circle cx="273.54318181818184" cy="133.96294782727148" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-09: 12.6 min</title></circle><circle cx="324.5143939393939" cy="188.66666666666666" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>Avg Duration per Workout 2025-10: 3.87 min</title></circle>
+</svg></div>
+    </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>Key Signals</h3>
+          <ul class="plain-list">
+            <li>There were 0 cycling sessions in the last 30, 90, and 180 days; the most recent cycling record was on 2025-10-03.</li><li>There were only 6 cycling sessions in the trailing 365 days versus 270 all-time, which confirms that this sport has largely exited your current mix.</li><li>Only 3 of the last 12 months included any cycling, and the longest gap was 126 days, showing a clear loss of continuity.</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>Sport Recommendations</h3>
+          <ul class="plain-list">
+            <li>If you want to preserve basic cycling tolerance, reintroduce it cautiously with 1 to 2 easy rides of 20 to 30 minutes over the next 2 weeks.</li><li>If your current priority is strength plus boxing, cycling can remain optional rather than forced back into the schedule.</li><li>If you bring cycling back, track next-day fatigue and sleep before expanding it any further.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+      </section>
+
+      <section id="actions" class="module">
+        <div class="module__header">
+          <div>
+            <h2>Next 2 Weeks</h2>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="module-card-grid">
+            <div class="module-card">
+              <h3>Watchouts</h3>
+              <ul class="plain-list"><li>TSB at -4.6 means you are not fully fresh, so this is not the ideal moment to raise both boxing frequency and strength volume at the same time.</li><li>Sport variety dropped from 4 categories to 3, and recovery-oriented low-intensity work is limited, which makes the week more dependent on hard sessions.</li><li>Longest gaps of 35 days in strength training and 42 days in boxing suggest that consistency, not session length, is the main structural weakness.</li><li>The latest SpO2 reading of 92% may still be noise, but it should be confirmed before you decide to push intensity higher.</li></ul>
+            </div>
+            <div class="module-card">
+              <h3>Next 2 Weeks</h3>
+              <ul class="plain-list"><li>Keep the next 14 days around 8 to 10 total sessions and roughly 450 to 550 total training minutes, emphasizing stability rather than progression.</li><li>Target 4 to 5 strength sessions, 2 to 3 boxing sessions, and 4 to 6 easy walks of 20 to 40 minutes as recovery work.</li><li>Avoid 3 consecutive high-load days, and make sure each boxing day is followed by either low intensity or rest.</li><li>Repeat resting SpO2 checks 3 times before your next high-intensity session; if values again fall to 93% or lower, or symptoms appear, convert that day to light recovery instead.</li></ul>
+            </div>
+          </div>
+          <div class="module-card-grid">
+            <div class="module-card">
+              <h3>Questions for a Doctor</h3>
+              <ul class="plain-list"><li>I am maintaining regular training, but my latest blood oxygen reading on 2026-04-15 was 92%. If repeat checks stay low, does that change how cautious I should be with boxing and strength work?</li><li>My recent VO2 Max average was 43.43 versus a 90-day baseline of 45.56. If training also feels harder, is that decline meaningful enough to evaluate further?</li></ul>
+            </div>
+            <div class="module-card">
+              <h3>Chart Interpretation</h3>
+              <ul class="plain-list"><li>Training Load Curve (Fitness · Fatigue · Form)：As of 2026-04-15, CTL is 92.25, ATL is 96.85, and TSB is -4.6. CTL climbed strongly over the prior 90 days, but the last 30 days were nearly flat, which is characteristic of consolidation rather than new build.</li><li>Training Load and Recovery Support Index：Training load index reached 119.08 in 2026-03, while in 2026-04 sleep support index was 101.75, HRV support index 100.31, and resting-heart-rate support index 100.34, indicating that recovery support has broadly kept pace with load.</li><li>Traditional Strength Training Monthly Rhythm：Across the last 12 months, strength training usually landed in the 3 to 5 session range per month, with average session duration staying close to 55 minutes, making it your most stable current sport.</li><li>Boxing Monthly Rhythm：Boxing frequency rebounded to 5 sessions in 2026-03 and sits at 1 session so far in 2026-04, while average duration remains in the roughly 71 to 79 minute range, indicating high per-session demand but uneven monthly rhythm.</li><li>Walking Monthly Rhythm：Best interpreted as a long-term direction rather than a single-session signal.</li><li>Cycling Monthly Rhythm：Best interpreted as a long-term direction rather than a single-session signal.</li></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="appendix" class="module">
+        <div class="module__header">
+          <div>
+            <h2>Data Limits &amp; Boundaries</h2>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="module-card-grid">
+            <div class="module-card">
+              <h3>Data Limits &amp; Boundaries</h3>
+              <ul class="plain-list"><li>The last 30 days include only 9 workouts, so this training-status read reflects the current block more than your full long-term capacity.</li><li>Some sports do not have all metric types; for example, Traditional Strength Training has no meaningful distance coverage, so it should not be interpreted like an endurance sport.</li><li>Walking has only 3 recovery-after-workout samples, and Cycling has 0 sessions in the last 180 days, so recent conclusions for those sports are lower confidence.</li></ul>
+            </div>
+            <div class="module-card">
+              <h3>Disclaimer</h3>
+              <p>This report is for training management reference only and is not a medical diagnosis or a competitive training prescription.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <a href="https://github.com/RuochenLyu/apple-health-analyst" class="site-footer__brand" target="_blank" rel="noopener">apple-health-analyst</a>
+      <div class="site-footer__tagline">Privacy-first Apple Health training analysis</div>
+      <div class="site-footer__links">
+        <a href="./report.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5l-7 7 7 7M19 12H5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Health Report
+        </a>
+        <a href="https://github.com/RuochenLyu/apple-health-analyst" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </footer>
+  </body>
+</html>

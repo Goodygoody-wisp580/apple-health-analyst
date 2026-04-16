@@ -13,11 +13,11 @@ function fixturePath(name: string): string {
 }
 
 describe("prepare pipeline", () => {
-  it("builds summary and insights with v2 schema", async () => {
+  it("builds summary and insights with the expanded schema", async () => {
     const prepared = await prepareAnalysis(fixturePath("multi-source-export"), {}, zhTranslations);
 
     expect(prepared.summary.sources.primary.sleep).toBe("Withings");
-    expect(prepared.insights.metadata.schemaVersion).toBe("2.1.0");
+    expect(prepared.insights.metadata.schemaVersion).toBe("2.3.0");
     expect(prepared.insights.charts.map((chart) => chart.id)).toEqual([
       "sleep",
       "recovery",
@@ -29,6 +29,18 @@ describe("prepare pipeline", () => {
     expect(prepared.insights.narrativeContext.outputSchemaVersion).toBe("2.0.0");
     expect(prepared.insights.crossMetric).toBeDefined();
     expect(prepared.insights.crossMetric.compositeAssessment).toBeDefined();
+    expect(prepared.insights.historicalContext.activity.workoutTypes.length).toBeGreaterThan(0);
+    expect(prepared.insights.historicalContext.activity.workoutTypes[0]?.recentMonths).toHaveLength(12);
+    expect(prepared.insights.training.summary.trainingState).toBeDefined();
+    expect(prepared.insights.training.summary.readiness).toBeDefined();
+    expect(prepared.insights.training.charts.map((chart) => chart.id)).toEqual(
+      expect.arrayContaining([
+        "training_load",
+        "training_recovery",
+      ]),
+    );
+    expect(prepared.insights.training.charts.some((chart) => chart.id.startsWith("sport_"))).toBe(true);
+    expect(prepared.insights.training.narrativeContext.outputSchemaVersion).toBe("1.0.0");
   });
 
   it("prepare command writes summary and insights json", async () => {
@@ -45,8 +57,16 @@ describe("prepare pipeline", () => {
     const insights = JSON.parse(await readFile(path.join(outDir, "insights.json"), "utf8"));
 
     expect(summary.input.zipPath).toContain("multi-source-export/export.zip");
-    expect(insights.metadata.schemaVersion).toBe("2.1.0");
+    expect(insights.metadata.schemaVersion).toBe("2.3.0");
     expect(insights.charts).toHaveLength(4);
     expect(insights.historicalContext.interpretationHints).toBeInstanceOf(Array);
+    expect(insights.training).toBeDefined();
+    expect(insights.training.charts.map((chart: { id: string }) => chart.id)).toEqual(
+      expect.arrayContaining([
+        "training_load",
+        "training_recovery",
+      ]),
+    );
+    expect(insights.training.charts.some((chart: { id: string }) => chart.id.startsWith("sport_"))).toBe(true);
   });
 });

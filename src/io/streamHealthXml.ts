@@ -24,7 +24,7 @@ interface ZipEntryLike {
   stream: () => NodeJS.ReadableStream;
 }
 
-type HandlerName = "HealthData" | "Me" | "ExportDate" | "Record" | "Workout" | "ActivitySummary";
+type HandlerName = "HealthData" | "Me" | "ExportDate" | "Record" | "ActivitySummary";
 
 type CategoryMetric = "menstrualFlow" | "intermenstrualBleeding" | "contraceptive";
 
@@ -58,6 +58,29 @@ function parseNumeric(value: string | undefined): number | null {
   }
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseBooleanLike(value: string | undefined): boolean | null {
+  if (value === "1" || value?.toLowerCase() === "true") {
+    return true;
+  }
+  if (value === "0" || value?.toLowerCase() === "false") {
+    return false;
+  }
+  return null;
+}
+
+function normalizeDistance(value: number, unit: string | undefined): number {
+  if (!unit || unit === "km") {
+    return value;
+  }
+  if (unit === "m") {
+    return value / 1000;
+  }
+  if (unit === "mi") {
+    return value * 1.60934;
+  }
+  return value;
 }
 
 function plainAttributes(rawAttributes: Record<string, unknown>): Record<string, string> {
@@ -159,6 +182,7 @@ export async function parseHealthExport(
     contraceptive: [],
     attachments: summarizeAttachments(entries, mainXmlEntry.path),
   };
+  let currentWorkout: WorkoutSample | null = null;
 
   const registerSource = (sourceName: string, kind: "record" | "workout", metric?: MetricKey) => {
     const canonicalName = canonicalizeSourceName(sourceName);
@@ -277,31 +301,6 @@ export async function parseHealthExport(
       };
       parsed.records[metric].push(quantitySample);
     },
-    Workout: (attributes) => {
-      parsed.workoutCount += 1;
-      const sourceName = attributes.sourceName ?? "未知来源";
-      const startDate = attributes.startDate ? new Date(attributes.startDate) : null;
-      const endDate = attributes.endDate ? new Date(attributes.endDate) : startDate;
-
-      updateCoverage(startDate);
-      updateCoverage(endDate);
-
-      registerSource(sourceName, "workout");
-
-      if (!startDate || !endDate) {
-        return;
-      }
-
-      const workout: WorkoutSample = {
-        sourceName,
-        canonicalSource: canonicalizeSourceName(sourceName),
-        workoutActivityType: attributes.workoutActivityType ?? "HKWorkoutActivityTypeOther",
-        durationMinutes: parseNumeric(attributes.duration),
-        startDate,
-        endDate,
-      };
-      parsed.workouts.push(workout);
-    },
     ActivitySummary: (attributes) => {
       parsed.activitySummaryCount += 1;
 
@@ -332,9 +331,78 @@ export async function parseHealthExport(
 
   const parser = new SaxesParser({ xmlns: false });
   parser.on("opentag", (tag) => {
+    const attributes = plainAttributes(tag.attributes);
+    if (tag.name === "Workout") {
+      parsed.workoutCount += 1;
+      const sourceName = attributes.sourceName ?? "未知来源";
+      const startDate = attributes.startDate ? new Date(attributes.startDate) : null;
+      const endDate = attributes.endDate ? new Date(attributes.endDate) : startDate;
+
+      updateCoverage(startDate);
+      updateCoverage(endDate);
+      registerSource(sourceName, "workout");
+
+      if (!startDate || !endDate) {
+        currentWorkout = null;
+        return;
+      }
+
+      currentWorkout = {
+        sourceName,
+        canonicalSource: canonicalizeSourceName(sourceName),
+        workoutActivityType: attributes.workoutActivityType ?? "HKWorkoutActivityTypeOther",
+        durationMinutes: parseNumeric(attributes.duration),
+        startDate,
+        endDate,
+        activeEnergyBurnedKcal: null,
+        basalEnergyBurnedKcal: null,
+        distanceKm: null,
+        averageHeartRateBpm: null,
+        minHeartRateBpm: null,
+        maxHeartRateBpm: null,
+        averageMETs: null,
+        isIndoor: null,
+      };
+      return;
+    }
+
+    if (tag.name === "WorkoutStatistics" && currentWorkout) {
+      const metricType = attributes.type ?? "";
+      if (metricType === "HKQuantityTypeIdentifierActiveEnergyBurned") {
+        currentWorkout.activeEnergyBurnedKcal = parseNumeric(attributes.sum);
+      } else if (metricType === "HKQuantityTypeIdentifierBasalEnergyBurned") {
+        currentWorkout.basalEnergyBurnedKcal = parseNumeric(attributes.sum);
+      } else if (metricType === "HKQuantityTypeIdentifierHeartRate") {
+        currentWorkout.averageHeartRateBpm = parseNumeric(attributes.average);
+        currentWorkout.minHeartRateBpm = parseNumeric(attributes.minimum);
+        currentWorkout.maxHeartRateBpm = parseNumeric(attributes.maximum);
+      } else if (metricType.startsWith("HKQuantityTypeIdentifierDistance")) {
+        const distance = parseNumeric(attributes.sum);
+        currentWorkout.distanceKm =
+          distance === null ? null : normalizeDistance(distance, attributes.unit);
+      }
+      return;
+    }
+
+    if (tag.name === "MetadataEntry" && currentWorkout) {
+      const key = attributes.key ?? "";
+      if (key === "HKAverageMETs") {
+        currentWorkout.averageMETs = parseNumeric(attributes.value);
+      } else if (key === "HKIndoorWorkout") {
+        currentWorkout.isIndoor = parseBooleanLike(attributes.value);
+      }
+      return;
+    }
+
     const handler = handlers[tag.name as HandlerName];
     if (handler) {
-      handler(plainAttributes(tag.attributes));
+      handler(attributes);
+    }
+  });
+  parser.on("closetag", (tag) => {
+    if (tag.name === "Workout" && currentWorkout) {
+      parsed.workouts.push(currentWorkout);
+      currentWorkout = null;
     }
   });
 

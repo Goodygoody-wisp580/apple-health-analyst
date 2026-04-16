@@ -1,6 +1,7 @@
 dist/
 node_modules/
 coverage/
+.npm-cache/
 .DS_Store
 tmp/
 output/

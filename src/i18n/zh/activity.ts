@@ -1,4 +1,5 @@
 export const activityZh = {
+  workoutLabelLocale: "zh" as const,
   // ── Separators ──
   partSep: "；",
   partEnd: "。",
@@ -81,4 +82,6 @@ export const activityZh = {
   doctorOptimize: (weeklyMin: number) =>
     `"基于我的年龄和当前运动量（周均 ${weeklyMin} 分钟），有没有更优化的运动组合建议？"`,
 };
-export type ActivityT = typeof activityZh;
+export type ActivityT = Omit<typeof activityZh, "workoutLabelLocale"> & {
+  workoutLabelLocale: "zh" | "en";
+};

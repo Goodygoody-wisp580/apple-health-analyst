@@ -8,6 +8,8 @@ import { menstrualCycleEn } from "./menstrualCycle.js";
 import { recoveryEn } from "./recovery.js";
 import { renderEn } from "./render.js";
 import { sleepEn } from "./sleep.js";
+import { trainingInsightsEn } from "./trainingInsights.js";
+import { trainingRenderEn } from "./trainingRender.js";
 
 export const enTranslations: Translations = {
   common: commonEn,
@@ -19,4 +21,6 @@ export const enTranslations: Translations = {
   menstrualCycle: menstrualCycleEn,
   insights: insightsEn,
   render: renderEn,
+  trainingInsights: trainingInsightsEn,
+  trainingRender: trainingRenderEn,
 };

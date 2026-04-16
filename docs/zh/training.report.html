@@ -1,0 +1,1327 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Apple Health 运动报告</title>
+    <meta property="og:title" content="Apple Health 运动报告" />
+    <meta property="og:description" content="隐私优先的 Apple Health 运动分析" />
+    <meta property="og:type" content="article" />
+    <meta name="description" content="隐私优先的 Apple Health 运动分析" />
+    <style>
+:root {
+  --bg: #F2F2F7;
+  --surface: #FFFFFF;
+  --ink: #1C1C1E;
+  --ink-secondary: #3A3A3C;
+  --muted: #8E8E93;
+  --faint: #AEAEB2;
+  --border: #E5E5EA;
+  --border-light: #F2F2F7;
+  --sleep: #6366F1;
+  --sleep-bg: #EEF2FF;
+  --recovery: #10B981;
+  --recovery-bg: #ECFDF5;
+  --activity: #F97316;
+  --activity-bg: #FFF7ED;
+  --body: #6B7280;
+  --body-bg: #F3F4F6;
+  --menstrual: #EC4899;
+  --menstrual-bg: #FDF2F8;
+  --risk: #EF4444;
+  --risk-bg: #FEF2F2;
+  --positive: #22C55E;
+  --positive-bg: #F0FDF4;
+  --fs-xs: 11px;
+  --fs-sm: 13px;
+  --fs-base: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: none;
+  --shadow-md: none;
+}
+* { box-sizing: border-box; margin: 0; }
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+body {
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--fs-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Topbar ─── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 52px;
+}
+.topbar__title {
+  font-weight: 600;
+  font-size: var(--fs-base);
+  white-space: nowrap;
+}
+.topbar__date {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.topbar__nav {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.topbar__nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.topbar__nav a:hover {
+  background: var(--border-light);
+  color: var(--ink);
+}
+.topbar__github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+.topbar__github:hover {
+  background: var(--border-light);
+  color: var(--ink);
+}
+.topbar__github svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  display: block;
+}
+
+/* ─── Layout ─── */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 0;
+}
+section {
+  scroll-margin-top: 64px;
+}
+
+/* ─── Summary Cards ─── */
+.summary-cards {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.metric-card {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+.metric-card__label {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.metric-card__value {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.metric-card__sub {
+  font-size: var(--fs-sm);
+  color: var(--faint);
+  margin-top: 4px;
+}
+
+/* ─── Overview ─── */
+.overview {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 28px;
+}
+.overview__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.overview__text {
+  font-size: var(--fs-base);
+  line-height: 1.75;
+  color: var(--ink-secondary);
+  max-width: 72ch;
+}
+.overview__findings {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.overview__findings h3 {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+.overview__findings ol,
+.overview__findings ul,
+.plain-list {
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+.overview__findings li,
+.plain-list li {
+  font-size: var(--fs-base);
+  line-height: 1.65;
+  color: var(--ink-secondary);
+}
+
+/* ─── Pills & Badges ─── */
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+.pill--risk {
+  background: var(--risk-bg);
+  color: var(--risk);
+}
+.pill--info {
+  background: var(--border-light);
+  color: var(--muted);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.badge--ok { background: var(--positive-bg); color: var(--positive); }
+.badge--warn { background: #FFF7ED; color: #D97706; }
+.badge--low { background: var(--risk-bg); color: var(--risk); }
+.badge--info { background: var(--border-light); color: var(--muted); }
+
+/* ─── Module frame (body layout is extended per-report) ─── */
+.module {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 36px;
+  overflow: hidden;
+}
+.module__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.module__index {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--faint);
+  min-width: 28px;
+}
+.module__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+.module__callout {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  max-width: 40ch;
+  text-align: right;
+}
+.module--sleep { border-left: 4px solid var(--sleep); }
+.module--sleep .module__index { color: var(--sleep); }
+.module--recovery { border-left: 4px solid var(--recovery); }
+.module--recovery .module__index { color: var(--recovery); }
+.module--activity { border-left: 4px solid var(--activity); }
+.module--activity .module__index { color: var(--activity); }
+.module--body { border-left: 4px solid var(--body); }
+.module--body .module__index { color: var(--body); }
+.module--menstrual { border-left: 4px solid var(--menstrual); }
+.module--menstrual .module__index { color: var(--menstrual); }
+.module--recovery-support { border-left: 4px solid var(--sleep); }
+.module--recovery-support .module__index { color: var(--sleep); }
+
+/* ─── Chart wrappers & legend ─── */
+.chart-wrap {
+  padding: 8px 0 4px;
+}
+.chart-wrap svg {
+  width: 100%;
+  height: auto;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.legend-item i {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 999px;
+}
+
+/* ─── Inline glossary tooltip (CSS-only) ─── */
+.term-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: help;
+  position: relative;
+  user-select: none;
+  vertical-align: middle;
+  background: var(--surface);
+}
+.term-hint:hover,
+.term-hint:focus {
+  color: var(--ink);
+  border-color: var(--faint);
+}
+.term-hint::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 200px;
+  max-width: 280px;
+  padding: 10px 12px;
+  background: var(--ink);
+  color: #FFFFFF;
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  white-space: normal;
+  text-align: left;
+  z-index: 200;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+}
+.term-hint::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 199;
+}
+.term-hint:hover::after,
+.term-hint:focus::after,
+.term-hint:hover::before,
+.term-hint:focus::before {
+  opacity: 1;
+}
+
+/* ─── Glossary card (used in Load & Recovery module) ─── */
+.glossary-card {
+  background: var(--border-light);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+.glossary-card > summary {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-secondary);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.glossary-card > summary::-webkit-details-marker {
+  display: none;
+}
+.glossary-card > summary::before {
+  content: "▸";
+  transition: transform 0.15s;
+  color: var(--faint);
+  font-size: 10px;
+}
+.glossary-card[open] > summary::before {
+  transform: rotate(90deg);
+}
+.glossary-card__body {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+  color: var(--ink-secondary);
+}
+.glossary-card__body dt {
+  font-weight: 600;
+  color: var(--ink);
+}
+.glossary-card__body dd {
+  margin: 2px 0 0 0;
+}
+
+/* ─── Site Footer (shared between health + training reports) ─── */
+.site-footer {
+  margin-top: 0;
+  padding: 24px 20px 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+.site-footer__brand {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--ink-secondary);
+  text-decoration: none;
+}
+.site-footer__brand:hover {
+  color: var(--ink);
+}
+.site-footer__tagline {
+  margin-top: 4px;
+  color: var(--faint);
+  font-size: var(--fs-xs);
+}
+.site-footer__links {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.site-footer__links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  transition: color 0.15s;
+}
+.site-footer__links a:hover {
+  color: var(--ink);
+}
+.site-footer__links svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+/* ─── Cross-report jump link (topbar + footer) ─── */
+.topbar__cross-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--border-light);
+  border: 1px solid var(--border);
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-left: 6px;
+}
+.topbar__cross-link:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+.topbar__cross-link svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+/* ─── Responsive (shared) ─── */
+@media (max-width: 860px) {
+  .summary-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .topbar {
+    padding: 0 12px;
+    gap: 12px;
+  }
+  .topbar__nav {
+    display: none;
+  }
+  .overview {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .topbar__date {
+    display: none;
+  }
+}
+
+/* ─── Print (shared) ─── */
+@media print {
+  .topbar, .site-footer { display: none; }
+  main { padding: 0; max-width: none; }
+  .module, .overview, .metric-card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  body { font-size: var(--fs-sm); }
+  html { background: white; }
+}
+
+.module__body {
+  padding: 0 28px 28px;
+}
+.summary-cards--sport {
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.summary-cards--sport .metric-card {
+  min-width: 210px;
+}
+
+/* ─── Sport module header (emoji + title + pills) ─── */
+.module__header--sport {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 28px 18px;
+  border-bottom: none;
+}
+.module__header--sport h2 {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.module__header--sport p {
+  max-width: 72ch;
+  color: var(--ink-secondary);
+}
+.module__title-wrap {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.module__icon {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--activity-bg);
+  flex-shrink: 0;
+}
+.module__icon--emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* ─── Nested card grid inside a training module body ─── */
+.module-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.module-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-top: 16px;
+}
+.module-card__header h3,
+.module-card h3 {
+  font-size: var(--fs-base);
+  margin-bottom: 8px;
+}
+.module-card p {
+  color: var(--ink-secondary);
+}
+
+/* ─── Training overview / assessment hero ─── */
+.assessment-hero {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+.assessment-hero__main {
+  padding: 28px 32px;
+}
+.assessment-hero__main h1 {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.assessment-hero__text {
+  font-size: var(--fs-base);
+  line-height: 1.8;
+  color: var(--ink-secondary);
+}
+.assessment-hero__aside {
+  padding: 28px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.assessment-hero__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.assessment-hero__stat:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.assessment-hero__stat-label {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.assessment-hero__stat-value {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.assessment-hero__readiness-good { color: var(--positive); }
+.assessment-hero__readiness-moderate { color: #D97706; }
+.assessment-hero__readiness-low { color: var(--risk); }
+
+/* ─── PMC chart two-panel legend ─── */
+.pmc-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 24px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--border-light);
+  border-radius: 8px;
+}
+.pmc-legend__panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  font-size: var(--fs-sm);
+}
+.pmc-legend__panel-title {
+  font-weight: 600;
+  color: var(--ink-secondary);
+  font-size: var(--fs-xs);
+  width: 100%;
+}
+.legend-item__swatch {
+  width: 14px;
+  height: 12px !important;
+  border-radius: 3px !important;
+}
+@media (max-width: 700px) {
+  .pmc-legend {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Training calendar heatmap ─── */
+.heatmap-card {
+  margin-top: 16px;
+}
+.heatmap-card__header h3 {
+  font-size: var(--fs-base);
+  margin-bottom: 8px;
+}
+.heatmap-card__header p {
+  color: var(--ink-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+}
+.heatmap-wrap {
+  margin-top: 16px;
+  width: 100%;
+}
+.heatmap-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.heatmap-legend__swatches {
+  display: inline-flex;
+  gap: 3px;
+}
+.heatmap-legend__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+/* ─── Training-specific responsive ─── */
+@media (max-width: 860px) {
+  .module-card-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .module__header--sport,
+  .module__body {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .assessment-hero {
+    grid-template-columns: 1fr;
+  }
+  .assessment-hero__aside {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .assessment-hero__stat {
+    flex: 1 1 40%;
+    border-top: none;
+    padding-top: 0;
+  }
+}
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="topbar__title">Apple Health 运动报告</div>
+      <span class="topbar__date">2016-10-10 ~ 2026-04-15</span>
+      <nav class="topbar__nav">
+        <a href="#assessment">评估</a>
+        <a href="#load-recovery">负荷与恢复</a>
+        <a href="#sports">专项</a>
+        <a href="#actions">建议</a>
+        <a href="#appendix">附录</a>
+      </nav>
+      <a href="./report.html" class="topbar__cross-link" aria-label="健康报告">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5l-7 7 7 7M19 12H5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        健康报告
+      </a>
+      <a href="https://github.com/RuochenLyu/apple-health-analyst" class="topbar__github" aria-label="GitHub" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
+    </div>
+    <main>
+      <section id="assessment" class="assessment-hero">
+        <div class="assessment-hero__main">
+          <h1>训练评估</h1>
+          <p class="assessment-hero__text">截至 2026-04-15，你的训练状态更接近维持并巩固，而不是重新起量。日常训练量 CTL 92.25、最近一周疲劳 ATL 96.85、新鲜度 TSB -4.6，说明体内有一定疲劳但仍在可控区间；同时准备度被判定为 good，恢复支持也尚可，近 30 天睡眠比基线多 0.16 小时、HRV 提高 1.18%、静息心率下降 0.95 bpm。近 90 天 CTL 较之前提高 154.34%，但近 30 天几乎横盘，仅变化 -0.03%，所以当前更适合稳住力量训练加拳击的节奏，而不是继续上强度或盲目加量。</p>
+        </div>
+        <aside class="assessment-hero__aside">
+          <div class="assessment-hero__stat">
+            <span class="assessment-hero__stat-label">训练状态<span class="term-hint" tabindex="0" role="note" data-tip="基于 TSB 新鲜度和 CTL 趋势的综合判断" aria-label="基于 TSB 新鲜度和 CTL 趋势的综合判断">?</span></span>
+            <span class="assessment-hero__stat-value">维持中</span>
+          </div>
+          <div class="assessment-hero__stat">
+            <span class="assessment-hero__stat-label">恢复准备度<span class="term-hint" tabindex="0" role="note" data-tip="训练状态叠加睡眠/HRV/静息心率的综合恢复信号" aria-label="训练状态叠加睡眠/HRV/静息心率的综合恢复信号">?</span></span>
+            <span class="assessment-hero__stat-value assessment-hero__readiness-good">良好</span>
+          </div>
+          <div class="assessment-hero__stat">
+    <span class="assessment-hero__stat-label">日常训练量 (CTL)<span class="term-hint" tabindex="0" role="note" data-tip="过去 42 天的日均训练负荷，反映长期体能底子" aria-label="过去 42 天的日均训练负荷，反映长期体能底子">?</span></span>
+    <span class="assessment-hero__stat-value">92.25 MET·分钟/天</span>
+    <span class="assessment-hero__stat-label">CTL 30 天变化: -0.03%</span>
+  </div>
+          <div class="assessment-hero__stat">
+    <span class="assessment-hero__stat-label">新鲜度 (TSB)<span class="term-hint" tabindex="0" role="note" data-tip="CTL 减去 ATL，正值越大越新鲜，负值越大越累" aria-label="CTL 减去 ATL，正值越大越新鲜，负值越大越累">?</span></span>
+    <span class="assessment-hero__stat-value ">-4.6</span>
+    <span class="assessment-hero__stat-label">维持常态</span>
+  </div>
+          <div class="assessment-hero__stat">
+            <span class="assessment-hero__stat-label">主专项<span class="term-hint" tabindex="0" role="note" data-tip="按近 180 天训练量加权排在第一的专项" aria-label="按近 180 天训练量加权排在第一的专项">?</span></span>
+            <span class="assessment-hero__stat-value">传统力量训练</span>
+          </div>
+        </aside>
+      </section>
+
+      <section id="findings" class="overview">
+        <h2 class="overview__title">整体发现</h2>
+        <ul class="plain-list">
+          <li>截至 2026-04-15，CTL 92.25、ATL 96.85、TSB -4.6；这是轻度负疲劳而非明显过载，说明可以继续训练，但高强度课之间仍要留恢复空间。</li><li>近 90 天 CTL 提高 154.34%，而近 30 天 CTL 基本不变，仅为 -0.03%，表明前一阶段已经完成显著上量，最近更多是在巩固而不是继续爬坡。</li><li>近 30 天共 9 次训练、522.78 分钟、3390.02 kcal，主轴是传统力量训练 5 次和拳击 3 次；训练种类从基线期 4 种降到 3 种，恢复性低强度内容偏少。</li><li>恢复支持没有掉链子：近 30 天睡眠比基线多 0.16 小时、HRV 提高 1.18%、静息心率下降 0.95 bpm，所以当前维持期具备继续稳定执行的基础。</li>
+        </ul>
+      </section>
+
+      <section id="load-recovery" class="module module--recovery-support">
+        <div class="module__header">
+          <span class="module__index">01</span>
+          <div>
+            <h2 class="module__title">负荷与恢复</h2>
+            <p class="module__callout">恢复基本能支撑当前训练量</p>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="module-card-grid">
+            <div class="module-card">
+              <h3>训练负荷变化</h3>
+              <ul class="plain-list">
+                <li>日常训练量 (CTL)：92.25 MET·分钟/天</li><li>CTL 30 天变化：-0.03%</li><li>CTL 90 天变化：+154.34%</li><li>新鲜度 (TSB)：-4.6 · 维持常态</li><li>累积疲劳 (ATL)：96.85 MET·分钟/天</li>
+                <li>训练次数 相对基线：3.38</li>
+                <li>总时长 相对基线：135.79 分钟</li>
+                <li>运动多样性：3（相对基线 -1）</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <h3>恢复支持</h3>
+              <ul class="plain-list">
+                <li>睡眠相对基线：0.16 小时</li>
+                <li>HRV 相对基线：1.18%</li>
+                <li>静息心率相对基线：-0.95 bpm</li>
+              </ul>
+            </div>
+          </div>
+          <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>训练负荷曲线（日常训练量 · 累积疲劳 · 新鲜度）</h3>
+          <p>截至 2026-04-15，CTL 92.25、ATL 96.85、TSB -4.6；近 90 天 CTL 明显抬升，但最近 30 天基本横盘，说明前期上量后已经进入维持和巩固阶段。</p>
+        </div>
+      </div>
+      <div class="pmc-legend">
+        <div class="pmc-legend__panel">
+          <span class="pmc-legend__panel-title">上半 · 训练量（左轴 MET·分钟）</span>
+          <span class="legend-item"><i style="background:#F97316"></i>日常训练量 (CTL)</span>
+          <span class="legend-item"><i style="background:#0EA5E9"></i>最近一周疲劳 (ATL)</span>
+        </div>
+        <div class="pmc-legend__panel">
+          <span class="pmc-legend__panel-title">下半 · 新鲜度（TSB = CTL − ATL）</span>
+          <span class="legend-item"><i class="legend-item__swatch" style="background:#22C55E"></i>0 线上方 · 较新鲜</span>
+          <span class="legend-item"><i class="legend-item__swatch" style="background:#EF4444"></i>0 线下方 · 累积疲劳</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 280" role="img" aria-label="趋势图" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="18" x2="684" y2="18" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="22" text-anchor="end" font-size="10" fill="#64748B">229</text><line x1="52" y1="91.06" x2="684" y2="91.06" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="95.06" text-anchor="end" font-size="10" fill="#64748B">114</text><line x1="52" y1="164.12" x2="684" y2="164.12" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="168.12" text-anchor="end" font-size="10" fill="#64748B">0</text>
+  <line x1="52" y1="178.12" x2="684" y2="178.12" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="182.12" text-anchor="end" font-size="10" fill="#64748B">+126</text><line x1="52" y1="214.06" x2="684" y2="214.06" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="218.06" text-anchor="end" font-size="10" fill="#64748B">0</text><line x1="52" y1="250" x2="684" y2="250" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="254" text-anchor="end" font-size="10" fill="#64748B">-126</text>
+  <line x1="52" y1="171.12" x2="684" y2="171.12" stroke="#E5E7EB" stroke-width="1" />
+  <text x="52" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">04-21</text><text x="163.52941176470588" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">06-23</text><text x="262.66666666666663" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">08-18</text><text x="374.19607843137254" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">10-20</text><text x="473.3333333333333" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">12-15</text><text x="584.8627450980392" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">02-16</text><text x="684" y="266" text-anchor="middle" font-size="10" fill="#94A3B8">04-13</text>
+  <path d="M 52 51.03448598436957 L 64.3921568627451 126.29719984365208 L 76.7843137254902 18 L 89.1764705882353 117.03772911193943 L 101.56862745098039 62.176481778697806 L 113.9607843137255 41.02838666850093 L 126.3529411764706 61.257554290505794 L 138.7450980392157 37.831284782499495 L 151.13725490196077 138.2304943083679 L 163.52941176470588 37.0591304347826 L 175.921568627451 64.31426447692229 L 188.31372549019608 50.93238293012601 L 200.7058823529412 63.446388515852064 L 213.09803921568627 73.14617866899005 L 225.49019607843138 63.695264710570726 L 237.88235294117646 68.37924232399394 L 250.27450980392157 92.53299609348556 L 262.66666666666663 41.37936591746313 L 275.05882352941177 60.44711129744755 L 287.4509803921569 75.34139433522652 L 299.843137254902 18.004147936578647 L 312.2352941176471 52.34268136686515 L 324.62745098039215 145.44790395520937 L 337.01960784313724 141.1404313543093 L 349.4117647058824 161.05052693180306 L 361.80392156862746 65.97982054927034 L 374.19607843137254 56.47785506372924 L 386.5882352941176 51.25145497463713 L 398.98039215686276 141.58713221662487 L 411.37254901960785 146.04137795800006 L 423.7647058823529 150.6232525171797 L 436.156862745098 73.4524878317207 L 448.54901960784315 50.99619733902823 L 460.94117647058823 149.0215108537339 L 473.3333333333333 162.10346467868973 L 485.72549019607845 163.85197948261066 L 498.11764705882354 164.08171135465867 L 510.5098039215686 111.98362792688332 L 522.9019607843138 56.31193760058346 L 535.2941176470588 58.22636986765016 L 547.686274509804 45.08698307468232 L 560.0784313725491 148.23021218334634 L 572.4705882352941 162.0013616244462 L 584.8627450980392 76.01782706959011 L 597.2549019607843 74.9010749138012 L 609.6470588235294 62.47640950053827 L 622.0392156862745 50.43463054068867 L 634.4313725490196 38.75021227069152 L 646.8235294117648 48.99242489949842 L 659.2156862745098 59.164441678512844 L 671.6078431372549 142.67197716796267 L 684 102.31574497819645" fill="none" stroke="#0EA5E9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /><circle cx="52" cy="51.03448598436957" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-04-21: 177.21 MET·分钟</title></circle><circle cx="64.3921568627451" cy="126.29719984365208" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-04-28: 59.27 MET·分钟</title></circle><circle cx="76.7843137254902" cy="18" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-05-05: 410.93 MET·分钟</title></circle><circle cx="89.1764705882353" cy="117.03772911193943" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-05-12: 73.78 MET·分钟</title></circle><circle cx="101.56862745098039" cy="62.176481778697806" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-05-19: 159.75 MET·分钟</title></circle><circle cx="113.9607843137255" cy="41.02838666850093" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-05-26: 192.89 MET·分钟</title></circle><circle cx="126.3529411764706" cy="61.257554290505794" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-06-02: 161.19 MET·分钟</title></circle><circle cx="138.7450980392157" cy="37.831284782499495" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-06-09: 197.9 MET·分钟</title></circle><circle cx="151.13725490196077" cy="138.2304943083679" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-06-16: 40.57 MET·分钟</title></circle><circle cx="163.52941176470588" cy="37.0591304347826" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-06-23: 199.11 MET·分钟</title></circle><circle cx="175.921568627451" cy="64.31426447692229" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-06-30: 156.4 MET·分钟</title></circle><circle cx="188.31372549019608" cy="50.93238293012601" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-07-07: 177.37 MET·分钟</title></circle><circle cx="200.7058823529412" cy="63.446388515852064" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-07-14: 157.76 MET·分钟</title></circle><circle cx="213.09803921568627" cy="73.14617866899005" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-07-21: 142.56 MET·分钟</title></circle><circle cx="225.49019607843138" cy="63.695264710570726" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-07-28: 157.37 MET·分钟</title></circle><circle cx="237.88235294117646" cy="68.37924232399394" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-08-04: 150.03 MET·分钟</title></circle><circle cx="250.27450980392157" cy="92.53299609348556" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-08-11: 112.18 MET·分钟</title></circle><circle cx="262.66666666666663" cy="41.37936591746313" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-08-18: 192.34 MET·分钟</title></circle><circle cx="275.05882352941177" cy="60.44711129744755" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-08-25: 162.46 MET·分钟</title></circle><circle cx="287.4509803921569" cy="75.34139433522652" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-09-01: 139.12 MET·分钟</title></circle><circle cx="299.843137254902" cy="18.004147936578647" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-09-08: 228.97 MET·分钟</title></circle><circle cx="312.2352941176471" cy="52.34268136686515" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-09-15: 175.16 MET·分钟</title></circle><circle cx="324.62745098039215" cy="145.44790395520937" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-09-22: 29.26 MET·分钟</title></circle><circle cx="337.01960784313724" cy="141.1404313543093" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-09-29: 36.01 MET·分钟</title></circle><circle cx="349.4117647058824" cy="161.05052693180306" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-10-06: 4.81 MET·分钟</title></circle><circle cx="361.80392156862746" cy="65.97982054927034" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-10-13: 153.79 MET·分钟</title></circle><circle cx="374.19607843137254" cy="56.47785506372924" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-10-20: 168.68 MET·分钟</title></circle><circle cx="386.5882352941176" cy="51.25145497463713" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-10-27: 176.87 MET·分钟</title></circle><circle cx="398.98039215686276" cy="141.58713221662487" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-11-03: 35.31 MET·分钟</title></circle><circle cx="411.37254901960785" cy="146.04137795800006" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-11-10: 28.33 MET·分钟</title></circle><circle cx="423.7647058823529" cy="150.6232525171797" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-11-17: 21.15 MET·分钟</title></circle><circle cx="436.156862745098" cy="73.4524878317207" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-11-24: 142.08 MET·分钟</title></circle><circle cx="448.54901960784315" cy="50.99619733902823" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-12-01: 177.27 MET·分钟</title></circle><circle cx="460.94117647058823" cy="149.0215108537339" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-12-08: 23.66 MET·分钟</title></circle><circle cx="473.3333333333333" cy="162.10346467868973" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-12-15: 3.16 MET·分钟</title></circle><circle cx="485.72549019607845" cy="163.85197948261066" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-12-22: 0.42 MET·分钟</title></circle><circle cx="498.11764705882354" cy="164.08171135465867" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2025-12-29: 0.06 MET·分钟</title></circle><circle cx="510.5098039215686" cy="111.98362792688332" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-01-05: 81.7 MET·分钟</title></circle><circle cx="522.9019607843138" cy="56.31193760058346" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-01-12: 168.94 MET·分钟</title></circle><circle cx="535.2941176470588" cy="58.22636986765016" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-01-19: 165.94 MET·分钟</title></circle><circle cx="547.686274509804" cy="45.08698307468232" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-01-26: 186.53 MET·分钟</title></circle><circle cx="560.0784313725491" cy="148.23021218334634" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-02-02: 24.9 MET·分钟</title></circle><circle cx="572.4705882352941" cy="162.0013616244462" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-02-09: 3.32 MET·分钟</title></circle><circle cx="584.8627450980392" cy="76.01782706959011" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-02-16: 138.06 MET·分钟</title></circle><circle cx="597.2549019607843" cy="74.9010749138012" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-02-23: 139.81 MET·分钟</title></circle><circle cx="609.6470588235294" cy="62.47640950053827" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-03-02: 159.28 MET·分钟</title></circle><circle cx="622.0392156862745" cy="50.43463054068867" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-03-09: 178.15 MET·分钟</title></circle><circle cx="634.4313725490196" cy="38.75021227069152" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-03-16: 196.46 MET·分钟</title></circle><circle cx="646.8235294117648" cy="48.99242489949842" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-03-23: 180.41 MET·分钟</title></circle><circle cx="659.2156862745098" cy="59.164441678512844" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-03-30: 164.47 MET·分钟</title></circle><circle cx="671.6078431372549" cy="142.67197716796267" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-04-06: 33.61 MET·分钟</title></circle><circle cx="684" cy="102.31574497819645" r="2.5" fill="#0EA5E9" stroke="#fff" stroke-width="1"><title>最近一周疲劳 (ATL) 2026-04-13: 96.85 MET·分钟</title></circle>
+  <path d="M 52 75.36692009878742 L 64.3921568627451 86.489771570445 L 76.7843137254902 49.924115269470875 L 89.1764705882353 76.43262072745456 L 101.56862745098039 73.40143630459893 L 113.9607843137255 63.81651208748495 L 126.3529411764706 68.12398468838505 L 138.7450980392157 67.84320128921527 L 151.13725490196077 90.75257408511354 L 163.52941176470588 79.6361040543462 L 175.921568627451 81.42290750360844 L 188.31372549019608 78.13646544514393 L 200.7058823529412 79.70629990413863 L 213.09803921568627 83.22885527554138 L 225.49019607843138 81.66540225743688 L 237.88235294117646 83.62450461073516 L 250.27450980392157 89.4252343799473 L 262.66666666666663 83.49687579293071 L 275.05882352941177 83.87976224634404 L 287.4509803921569 88.90195622694905 L 299.843137254902 78.38534163986262 L 312.2352941176471 76.82188862175812 L 324.62745098039215 98.62727214364793 L 337.01960784313724 103.71966197404537 L 349.4117647058824 120.84106788251196 L 361.80392156862746 111.76027749572555 L 374.19607843137254 103.91110520075205 L 386.5882352941176 100.05033346216752 L 398.98039215686276 114.58087436920383 L 411.37254901960785 121.30053162660798 L 423.7647058823529 128.05847752935347 L 436.156862745098 119.68602708138172 L 448.54901960784315 108.83757756800371 L 460.94117647058823 124.51039639438982 L 473.3333333333333 135.74173236118116 L 485.72549019607845 143.78234788286136 L 498.11764705882354 149.55117044762235 L 510.5098039215686 140.41932853371415 L 522.9019607843138 126.46949874768808 L 535.2941176470588 118.18000703128924 L 547.686274509804 107.56128938995923 L 560.0784313725491 123.59785034708801 L 572.4705882352941 135.08444394948827 L 584.8627450980392 112.60900913412512 L 597.2549019607843 112.8004523608318 L 609.6470588235294 108.34620661945658 L 622.0392156862745 102.36041506442801 L 634.4313725490196 94.16664496138249 L 646.8235294117648 93.5667895177016 L 659.2156862745098 90.18462584588374 L 671.6078431372549 107.52938218550813 L 684 105.25120778769873" fill="none" stroke="#F97316" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" /><circle cx="52" cy="75.36692009878742" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-04-21: 139.08 MET·分钟</title></circle><circle cx="64.3921568627451" cy="86.489771570445" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-04-28: 121.65 MET·分钟</title></circle><circle cx="76.7843137254902" cy="49.924115269470875" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-05-05: 178.95 MET·分钟</title></circle><circle cx="89.1764705882353" cy="76.43262072745456" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-05-12: 137.41 MET·分钟</title></circle><circle cx="101.56862745098039" cy="73.40143630459893" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-05-19: 142.16 MET·分钟</title></circle><circle cx="113.9607843137255" cy="63.81651208748495" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-05-26: 157.18 MET·分钟</title></circle><circle cx="126.3529411764706" cy="68.12398468838505" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-06-02: 150.43 MET·分钟</title></circle><circle cx="138.7450980392157" cy="67.84320128921527" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-06-09: 150.87 MET·分钟</title></circle><circle cx="151.13725490196077" cy="90.75257408511354" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-06-16: 114.97 MET·分钟</title></circle><circle cx="163.52941176470588" cy="79.6361040543462" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-06-23: 132.39 MET·分钟</title></circle><circle cx="175.921568627451" cy="81.42290750360844" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-06-30: 129.59 MET·分钟</title></circle><circle cx="188.31372549019608" cy="78.13646544514393" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-07-07: 134.74 MET·分钟</title></circle><circle cx="200.7058823529412" cy="79.70629990413863" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-07-14: 132.28 MET·分钟</title></circle><circle cx="213.09803921568627" cy="83.22885527554138" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-07-21: 126.76 MET·分钟</title></circle><circle cx="225.49019607843138" cy="81.66540225743688" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-07-28: 129.21 MET·分钟</title></circle><circle cx="237.88235294117646" cy="83.62450461073516" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-08-04: 126.14 MET·分钟</title></circle><circle cx="250.27450980392157" cy="89.4252343799473" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-08-11: 117.05 MET·分钟</title></circle><circle cx="262.66666666666663" cy="83.49687579293071" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-08-18: 126.34 MET·分钟</title></circle><circle cx="275.05882352941177" cy="83.87976224634404" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-08-25: 125.74 MET·分钟</title></circle><circle cx="287.4509803921569" cy="88.90195622694905" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-09-01: 117.87 MET·分钟</title></circle><circle cx="299.843137254902" cy="78.38534163986262" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-09-08: 134.35 MET·分钟</title></circle><circle cx="312.2352941176471" cy="76.82188862175812" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-09-15: 136.8 MET·分钟</title></circle><circle cx="324.62745098039215" cy="98.62727214364793" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-09-22: 102.63 MET·分钟</title></circle><circle cx="337.01960784313724" cy="103.71966197404537" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-09-29: 94.65 MET·分钟</title></circle><circle cx="349.4117647058824" cy="120.84106788251196" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-10-06: 67.82 MET·分钟</title></circle><circle cx="361.80392156862746" cy="111.76027749572555" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-10-13: 82.05 MET·分钟</title></circle><circle cx="374.19607843137254" cy="103.91110520075205" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-10-20: 94.35 MET·分钟</title></circle><circle cx="386.5882352941176" cy="100.05033346216752" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-10-27: 100.4 MET·分钟</title></circle><circle cx="398.98039215686276" cy="114.58087436920383" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-11-03: 77.63 MET·分钟</title></circle><circle cx="411.37254901960785" cy="121.30053162660798" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-11-10: 67.1 MET·分钟</title></circle><circle cx="423.7647058823529" cy="128.05847752935347" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-11-17: 56.51 MET·分钟</title></circle><circle cx="436.156862745098" cy="119.68602708138172" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-11-24: 69.63 MET·分钟</title></circle><circle cx="448.54901960784315" cy="108.83757756800371" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-12-01: 86.63 MET·分钟</title></circle><circle cx="460.94117647058823" cy="124.51039639438982" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-12-08: 62.07 MET·分钟</title></circle><circle cx="473.3333333333333" cy="135.74173236118116" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-12-15: 44.47 MET·分钟</title></circle><circle cx="485.72549019607845" cy="143.78234788286136" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-12-22: 31.87 MET·分钟</title></circle><circle cx="498.11764705882354" cy="149.55117044762235" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2025-12-29: 22.83 MET·分钟</title></circle><circle cx="510.5098039215686" cy="140.41932853371415" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-01-05: 37.14 MET·分钟</title></circle><circle cx="522.9019607843138" cy="126.46949874768808" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-01-12: 59 MET·分钟</title></circle><circle cx="535.2941176470588" cy="118.18000703128924" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-01-19: 71.99 MET·分钟</title></circle><circle cx="547.686274509804" cy="107.56128938995923" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-01-26: 88.63 MET·分钟</title></circle><circle cx="560.0784313725491" cy="123.59785034708801" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-02-02: 63.5 MET·分钟</title></circle><circle cx="572.4705882352941" cy="135.08444394948827" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-02-09: 45.5 MET·分钟</title></circle><circle cx="584.8627450980392" cy="112.60900913412512" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-02-16: 80.72 MET·分钟</title></circle><circle cx="597.2549019607843" cy="112.8004523608318" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-02-23: 80.42 MET·分钟</title></circle><circle cx="609.6470588235294" cy="108.34620661945658" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-03-02: 87.4 MET·分钟</title></circle><circle cx="622.0392156862745" cy="102.36041506442801" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-03-09: 96.78 MET·分钟</title></circle><circle cx="634.4313725490196" cy="94.16664496138249" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-03-16: 109.62 MET·分钟</title></circle><circle cx="646.8235294117648" cy="93.5667895177016" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-03-23: 110.56 MET·分钟</title></circle><circle cx="659.2156862745098" cy="90.18462584588374" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-03-30: 115.86 MET·分钟</title></circle><circle cx="671.6078431372549" cy="107.52938218550813" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-04-06: 88.68 MET·分钟</title></circle><circle cx="684" cy="105.25120778769873" r="2.5" fill="#F97316" stroke="#fff" stroke-width="1"><title>日常训练量 (CTL) 2026-04-13: 92.25 MET·分钟</title></circle>
+  <path d="M 52 214.06 L 52 224.90090871344682 L 56.70191865046854 214.06 L 56.70191865046854 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 56.70191865046854 214.06 L 56.70191865046854 214.06 L 64.3921568627451 196.3291167922178 L 67.01827027862375 214.06 L 67.01827027862375 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 67.01827027862375 214.06 L 67.01827027862375 214.06 L 76.7843137254902 250 L 86.5087320632874 214.06 L 86.5087320632874 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 86.5087320632874 214.06 L 86.5087320632874 214.06 L 89.1764705882353 195.97097455365088 L 98.88396520597406 214.06 L 98.88396520597406 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 98.88396520597406 214.06 L 98.88396520597406 214.06 L 101.56862745098039 219.062621745062 L 113.9607843137255 224.210205824782 L 126.3529411764706 217.1184210214129 L 138.7450980392157 227.43064357316567 L 143.54522204138573 214.06 L 143.54522204138573 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 143.54522204138573 214.06 L 143.54522204138573 214.06 L 151.13725490196077 192.91255353223798 L 157.67007195424048 214.06 L 157.67007195424048 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 157.67007195424048 214.06 L 157.67007195424048 214.06 L 163.52941176470588 233.02732665045377 L 175.921568627451 221.68047096506317 L 188.31372549019608 226.1771457381814 L 200.7058823529412 221.30243193546474 L 213.09803921568627 218.55098997568064 L 225.49019607843138 222.06703719081796 L 237.88235294117646 220.85049053917788 L 248.1761160653413 214.06 L 248.1761160653413 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 248.1761160653413 214.06 L 248.1761160653413 214.06 L 250.27450980392157 212.6757518239516 L 251.12594608949675 214.06 L 251.12594608949675 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 251.12594608949675 214.06 L 251.12594608949675 214.06 L 262.66666666666663 232.82267394270124 L 275.05882352941177 224.49728809537933 L 287.4509803921569 220.1000972774186 L 299.843137254902 240.95761907586453 L 312.2352941176471 224.9634414852601 L 316.4894836402433 214.06 L 316.4894836402433 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 316.4894836402433 214.06 L 316.4894836402433 214.06 L 324.62745098039215 193.20247820155407 L 337.01960784313724 197.39217391304348 L 349.4117647058824 196.15004567293434 L 355.20599002438615 214.06 L 355.20599002438615 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 355.20599002438615 214.06 L 355.20599002438615 214.06 L 361.80392156862746 234.45421080728394 L 374.19607843137254 235.18754967673053 L 386.5882352941176 235.79582300255058 L 394.5662470409952 214.06 L 394.5662470409952 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 394.5662470409952 214.06 L 394.5662470409952 214.06 L 398.98039215686276 202.03381102081974 L 411.37254901960785 203.0428625659885 L 423.7647058823529 204.00927813037546 L 427.8291402267242 214.06 L 427.8291402267242 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 427.8291402267242 214.06 L 427.8291402267242 214.06 L 436.156862745098 234.6531787175989 L 448.54901960784315 239.82350198706922 L 457.25281734545814 214.06 L 457.25281734545814 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 457.25281734545814 214.06 L 457.25281734545814 214.06 L 460.94117647058823 203.14234652114598 L 473.3333333333333 202.31520849397947 L 485.72549019607845 205.12349842813927 L 498.11764705882354 207.58785811732605 L 502.30911188004615 214.06 L 502.30911188004615 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 502.30911188004615 214.06 L 502.30911188004615 214.06 L 510.5098039215686 226.72288629218815 L 522.9019607843138 245.31217391304347 L 535.2941176470588 240.7671783617059 L 547.686274509804 241.8870834569073 L 556.5734780616518 214.06 L 556.5734780616518 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 556.5734780616518 214.06 L 556.5734780616518 214.06 L 560.0784313725491 203.08549854677028 L 572.4705882352941 202.07076220416394 L 577.7228106676755 214.06 L 577.7228106676755 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 577.7228106676755 214.06 L 577.7228106676755 214.06 L 584.8627450980392 230.35831425351444 L 597.2549019607843 230.94384838958422 L 609.6470588235294 234.49400438934694 L 622.0392156862745 237.18859837475532 L 634.4313725490196 238.74339047393084 L 646.8235294117648 233.91415505071475 L 659.2156862745098 227.87690017201496 L 665.0257050351005 214.06 L 665.0257050351005 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" /><path d="M 665.0257050351005 214.06 L 665.0257050351005 214.06 L 671.6078431372549 198.4069102556498 L 683.0446803826273 214.06 L 683.0446803826273 214.06 Z" fill="#22C55E" fill-opacity="0.35" stroke="none" /><path d="M 683.0446803826273 214.06 L 683.0446803826273 214.06 L 684 215.3675034106412 L 684 214.06 Z" fill="#EF4444" fill-opacity="0.35" stroke="none" />
+  <path d="M 52 224.90090871344682 L 64.3921568627451 196.3291167922178 L 76.7843137254902 250 L 89.1764705882353 195.97097455365088 L 101.56862745098039 219.062621745062 L 113.9607843137255 224.210205824782 L 126.3529411764706 217.1184210214129 L 138.7450980392157 227.43064357316567 L 151.13725490196077 192.91255353223798 L 163.52941176470588 233.02732665045377 L 175.921568627451 221.68047096506317 L 188.31372549019608 226.1771457381814 L 200.7058823529412 221.30243193546474 L 213.09803921568627 218.55098997568064 L 225.49019607843138 222.06703719081796 L 237.88235294117646 220.85049053917788 L 250.27450980392157 212.6757518239516 L 262.66666666666663 232.82267394270124 L 275.05882352941177 224.49728809537933 L 287.4509803921569 220.1000972774186 L 299.843137254902 240.95761907586453 L 312.2352941176471 224.9634414852601 L 324.62745098039215 193.20247820155407 L 337.01960784313724 197.39217391304348 L 349.4117647058824 196.15004567293434 L 361.80392156862746 234.45421080728394 L 374.19607843137254 235.18754967673053 L 386.5882352941176 235.79582300255058 L 398.98039215686276 202.03381102081974 L 411.37254901960785 203.0428625659885 L 423.7647058823529 204.00927813037546 L 436.156862745098 234.6531787175989 L 448.54901960784315 239.82350198706922 L 460.94117647058823 203.14234652114598 L 473.3333333333333 202.31520849397947 L 485.72549019607845 205.12349842813927 L 498.11764705882354 207.58785811732605 L 510.5098039215686 226.72288629218815 L 522.9019607843138 245.31217391304347 L 535.2941176470588 240.7671783617059 L 547.686274509804 241.8870834569073 L 560.0784313725491 203.08549854677028 L 572.4705882352941 202.07076220416394 L 584.8627450980392 230.35831425351444 L 597.2549019607843 230.94384838958422 L 609.6470588235294 234.49400438934694 L 622.0392156862745 237.18859837475532 L 634.4313725490196 238.74339047393084 L 646.8235294117648 233.91415505071475 L 659.2156862745098 227.87690017201496 L 671.6078431372549 198.4069102556498 L 684 215.3675034106412" fill="none" stroke="#6B7280" stroke-opacity="0.45" stroke-width="1" stroke-linejoin="round" />
+  <circle cx="52" cy="224.90090871344682" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-04-21: -38.14 MET·分钟</title></circle><circle cx="64.3921568627451" cy="196.3291167922178" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-04-28: 62.38 MET·分钟</title></circle><circle cx="76.7843137254902" cy="250" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-05-05: -231.98 MET·分钟</title></circle><circle cx="89.1764705882353" cy="195.97097455365088" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-05-12: 63.64 MET·分钟</title></circle><circle cx="101.56862745098039" cy="219.062621745062" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-05-19: -17.6 MET·分钟</title></circle><circle cx="113.9607843137255" cy="224.210205824782" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-05-26: -35.71 MET·分钟</title></circle><circle cx="126.3529411764706" cy="217.1184210214129" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-06-02: -10.76 MET·分钟</title></circle><circle cx="138.7450980392157" cy="227.43064357316567" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-06-09: -47.04 MET·分钟</title></circle><circle cx="151.13725490196077" cy="192.91255353223798" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-06-16: 74.4 MET·分钟</title></circle><circle cx="163.52941176470588" cy="233.02732665045377" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-06-23: -66.73 MET·分钟</title></circle><circle cx="175.921568627451" cy="221.68047096506317" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-06-30: -26.81 MET·分钟</title></circle><circle cx="188.31372549019608" cy="226.1771457381814" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-07-07: -42.63 MET·分钟</title></circle><circle cx="200.7058823529412" cy="221.30243193546474" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-07-14: -25.48 MET·分钟</title></circle><circle cx="213.09803921568627" cy="218.55098997568064" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-07-21: -15.8 MET·分钟</title></circle><circle cx="225.49019607843138" cy="222.06703719081796" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-07-28: -28.17 MET·分钟</title></circle><circle cx="237.88235294117646" cy="220.85049053917788" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-08-04: -23.89 MET·分钟</title></circle><circle cx="250.27450980392157" cy="212.6757518239516" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-08-11: 4.87 MET·分钟</title></circle><circle cx="262.66666666666663" cy="232.82267394270124" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-08-18: -66.01 MET·分钟</title></circle><circle cx="275.05882352941177" cy="224.49728809537933" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-08-25: -36.72 MET·分钟</title></circle><circle cx="287.4509803921569" cy="220.1000972774186" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-09-01: -21.25 MET·分钟</title></circle><circle cx="299.843137254902" cy="240.95761907586453" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-09-08: -94.63 MET·分钟</title></circle><circle cx="312.2352941176471" cy="224.9634414852601" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-09-15: -38.36 MET·分钟</title></circle><circle cx="324.62745098039215" cy="193.20247820155407" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-09-22: 73.38 MET·分钟</title></circle><circle cx="337.01960784313724" cy="197.39217391304348" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-09-29: 58.64 MET·分钟</title></circle><circle cx="349.4117647058824" cy="196.15004567293434" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-10-06: 63.01 MET·分钟</title></circle><circle cx="361.80392156862746" cy="234.45421080728394" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-10-13: -71.75 MET·分钟</title></circle><circle cx="374.19607843137254" cy="235.18754967673053" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-10-20: -74.33 MET·分钟</title></circle><circle cx="386.5882352941176" cy="235.79582300255058" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-10-27: -76.47 MET·分钟</title></circle><circle cx="398.98039215686276" cy="202.03381102081974" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-11-03: 42.31 MET·分钟</title></circle><circle cx="411.37254901960785" cy="203.0428625659885" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-11-10: 38.76 MET·分钟</title></circle><circle cx="423.7647058823529" cy="204.00927813037546" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-11-17: 35.36 MET·分钟</title></circle><circle cx="436.156862745098" cy="234.6531787175989" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-11-24: -72.45 MET·分钟</title></circle><circle cx="448.54901960784315" cy="239.82350198706922" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2025-12-01: -90.64 MET·分钟</title></circle><circle cx="460.94117647058823" cy="203.14234652114598" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-12-08: 38.41 MET·分钟</title></circle><circle cx="473.3333333333333" cy="202.31520849397947" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-12-15: 41.32 MET·分钟</title></circle><circle cx="485.72549019607845" cy="205.12349842813927" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-12-22: 31.44 MET·分钟</title></circle><circle cx="498.11764705882354" cy="207.58785811732605" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2025-12-29: 22.77 MET·分钟</title></circle><circle cx="510.5098039215686" cy="226.72288629218815" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-01-05: -44.55 MET·分钟</title></circle><circle cx="522.9019607843138" cy="245.31217391304347" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-01-12: -109.95 MET·分钟</title></circle><circle cx="535.2941176470588" cy="240.7671783617059" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-01-19: -93.96 MET·分钟</title></circle><circle cx="547.686274509804" cy="241.8870834569073" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-01-26: -97.9 MET·分钟</title></circle><circle cx="560.0784313725491" cy="203.08549854677028" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2026-02-02: 38.61 MET·分钟</title></circle><circle cx="572.4705882352941" cy="202.07076220416394" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2026-02-09: 42.18 MET·分钟</title></circle><circle cx="584.8627450980392" cy="230.35831425351444" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-02-16: -57.34 MET·分钟</title></circle><circle cx="597.2549019607843" cy="230.94384838958422" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-02-23: -59.4 MET·分钟</title></circle><circle cx="609.6470588235294" cy="234.49400438934694" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-03-02: -71.89 MET·分钟</title></circle><circle cx="622.0392156862745" cy="237.18859837475532" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-03-09: -81.37 MET·分钟</title></circle><circle cx="634.4313725490196" cy="238.74339047393084" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-03-16: -86.84 MET·分钟</title></circle><circle cx="646.8235294117648" cy="233.91415505071475" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-03-23: -69.85 MET·分钟</title></circle><circle cx="659.2156862745098" cy="227.87690017201496" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-03-30: -48.61 MET·分钟</title></circle><circle cx="671.6078431372549" cy="198.4069102556498" r="3" fill="#22C55E" opacity="0.0001"><title>新鲜度 (TSB) 2026-04-06: 55.07 MET·分钟</title></circle><circle cx="684" cy="215.3675034106412" r="3" fill="#EF4444" opacity="0.0001"><title>新鲜度 (TSB) 2026-04-13: -4.6 MET·分钟</title></circle>
+</svg></div>
+    </div>
+          <div class="module-card heatmap-card">
+    <div class="heatmap-card__header">
+      <h3>近 12 个月训练日历</h3>
+      <p>每个方块代表一天，颜色越深当天训练负荷越高；空白 = 休息日。可以一眼看出你是分散训练还是集中冲量。</p>
+    </div>
+    <div class="heatmap-wrap">
+      <svg viewBox="0 0 1020 149" preserveAspectRatio="xMidYMid meet" role="img" aria-label="近 12 个月训练日历" xmlns="http://www.w3.org/2000/svg">
+        <text x="70" y="12" font-size="10" fill="#64748B">5月</text><text x="146" y="12" font-size="10" fill="#64748B">6月</text><text x="241" y="12" font-size="10" fill="#64748B">7月</text><text x="317" y="12" font-size="10" fill="#64748B">8月</text><text x="393" y="12" font-size="10" fill="#64748B">9月</text><text x="488" y="12" font-size="10" fill="#64748B">10月</text><text x="564" y="12" font-size="10" fill="#64748B">11月</text><text x="640" y="12" font-size="10" fill="#64748B">12月</text><text x="735" y="12" font-size="10" fill="#64748B">1月</text><text x="811" y="12" font-size="10" fill="#64748B">2月</text><text x="887" y="12" font-size="10" fill="#64748B">3月</text><text x="982" y="12" font-size="10" fill="#64748B">4月</text>
+        <text x="0" y="49" font-size="10" fill="#64748B">周一</text><text x="0" y="87" font-size="10" fill="#64748B">周三</text><text x="0" y="125" font-size="10" fill="#64748B">周五</text>
+        <rect x="32" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-21：休息</title></rect><rect x="32" y="35" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-22：350 MET·分钟</title></rect><rect x="32" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-23：休息</title></rect><rect x="32" y="73" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-24：94 MET·分钟</title></rect><rect x="32" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-25：休息</title></rect><rect x="32" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-26：747 MET·分钟</title></rect><rect x="32" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-27：休息</title></rect><rect x="51" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-28：休息</title></rect><rect x="51" y="35" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-29：600 MET·分钟</title></rect><rect x="51" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-04-30：休息</title></rect><rect x="51" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-01：休息</title></rect><rect x="51" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-02：休息</title></rect><rect x="51" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-03：休息</title></rect><rect x="51" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-04：休息</title></rect><rect x="70" y="16" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-05：251 MET·分钟</title></rect><rect x="70" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-06：休息</title></rect><rect x="70" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-07：252 MET·分钟</title></rect><rect x="70" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-08：休息</title></rect><rect x="70" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-09：休息</title></rect><rect x="70" y="111" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-10：436 MET·分钟</title></rect><rect x="70" y="130" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-11：1161 MET·分钟</title></rect><rect x="89" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-12：休息</title></rect><rect x="89" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-13：休息</title></rect><rect x="89" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-14：239 MET·分钟</title></rect><rect x="89" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-15：休息</title></rect><rect x="89" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-16：休息</title></rect><rect x="89" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-17：休息</title></rect><rect x="89" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-18：休息</title></rect><rect x="108" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-19：休息</title></rect><rect x="108" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-20：休息</title></rect><rect x="108" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-21：272 MET·分钟</title></rect><rect x="108" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-22：休息</title></rect><rect x="108" y="92" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-23：580 MET·分钟</title></rect><rect x="108" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-24：休息</title></rect><rect x="108" y="130" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-25：187 MET·分钟</title></rect><rect x="127" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-26：休息</title></rect><rect x="127" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-27：休息</title></rect><rect x="127" y="54" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-28：721 MET·分钟</title></rect><rect x="127" y="73" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-29：169 MET·分钟</title></rect><rect x="127" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-30：休息</title></rect><rect x="127" y="111" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-05-31：295 MET·分钟</title></rect><rect x="127" y="130" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-01：165 MET·分钟</title></rect><rect x="146" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-02：休息</title></rect><rect x="146" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-03：休息</title></rect><rect x="146" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-04：293 MET·分钟</title></rect><rect x="146" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-05：休息</title></rect><rect x="146" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-06：休息</title></rect><rect x="146" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-07：599 MET·分钟</title></rect><rect x="146" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-08：休息</title></rect><rect x="165" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-09：休息</title></rect><rect x="165" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-10：休息</title></rect><rect x="165" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-11：174 MET·分钟</title></rect><rect x="165" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-12：休息</title></rect><rect x="165" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-13：休息</title></rect><rect x="165" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-14：648 MET·分钟</title></rect><rect x="165" y="130" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-15：165 MET·分钟</title></rect><rect x="184" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-16：休息</title></rect><rect x="184" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-17：休息</title></rect><rect x="184" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-18：179 MET·分钟</title></rect><rect x="184" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-19：休息</title></rect><rect x="184" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-20：休息</title></rect><rect x="184" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-21：休息</title></rect><rect x="184" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-22：休息</title></rect><rect x="203" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-23：休息</title></rect><rect x="203" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-24：休息</title></rect><rect x="203" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-25：318 MET·分钟</title></rect><rect x="203" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-26：休息</title></rect><rect x="203" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-27：休息</title></rect><rect x="203" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-28：679 MET·分钟</title></rect><rect x="203" y="130" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-29：165 MET·分钟</title></rect><rect x="222" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-06-30：休息</title></rect><rect x="222" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-01：休息</title></rect><rect x="222" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-02：204 MET·分钟</title></rect><rect x="222" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-03：休息</title></rect><rect x="222" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-04：休息</title></rect><rect x="222" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-05：606 MET·分钟</title></rect><rect x="222" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-06：休息</title></rect><rect x="241" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-07：休息</title></rect><rect x="241" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-08：休息</title></rect><rect x="241" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-09：休息</title></rect><rect x="241" y="73" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-10：317 MET·分钟</title></rect><rect x="241" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-11：休息</title></rect><rect x="241" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-12：656 MET·分钟</title></rect><rect x="241" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-13：休息</title></rect><rect x="260" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-14：休息</title></rect><rect x="260" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-15：休息</title></rect><rect x="260" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-16：204 MET·分钟</title></rect><rect x="260" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-17：休息</title></rect><rect x="260" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-18：休息</title></rect><rect x="260" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-19：629 MET·分钟</title></rect><rect x="260" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-20：休息</title></rect><rect x="279" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-21：休息</title></rect><rect x="279" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-22：休息</title></rect><rect x="279" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-23：164 MET·分钟</title></rect><rect x="279" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-24：休息</title></rect><rect x="279" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-25：休息</title></rect><rect x="279" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-26：579 MET·分钟</title></rect><rect x="279" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-27：休息</title></rect><rect x="298" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-28：休息</title></rect><rect x="298" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-29：休息</title></rect><rect x="298" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-30：287 MET·分钟</title></rect><rect x="298" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-07-31：休息</title></rect><rect x="298" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-01：休息</title></rect><rect x="298" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-02：617 MET·分钟</title></rect><rect x="298" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-03：休息</title></rect><rect x="317" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-04：休息</title></rect><rect x="317" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-05：休息</title></rect><rect x="317" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-06：154 MET·分钟</title></rect><rect x="317" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-07：休息</title></rect><rect x="317" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-08：休息</title></rect><rect x="317" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-09：623 MET·分钟</title></rect><rect x="317" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-10：休息</title></rect><rect x="336" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-11：休息</title></rect><rect x="336" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-12：休息</title></rect><rect x="336" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-13：154 MET·分钟</title></rect><rect x="336" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-14：休息</title></rect><rect x="336" y="92" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-15：204 MET·分钟</title></rect><rect x="336" y="111" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-16：274 MET·分钟</title></rect><rect x="336" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-17：休息</title></rect><rect x="355" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-18：休息</title></rect><rect x="355" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-19：休息</title></rect><rect x="355" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-20：399 MET·分钟</title></rect><rect x="355" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-21：休息</title></rect><rect x="355" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-22：休息</title></rect><rect x="355" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-23：休息</title></rect><rect x="355" y="130" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-24：583 MET·分钟</title></rect><rect x="374" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-25：休息</title></rect><rect x="374" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-26：休息</title></rect><rect x="374" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-27：145 MET·分钟</title></rect><rect x="374" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-28：休息</title></rect><rect x="374" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-29：休息</title></rect><rect x="374" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-30：668 MET·分钟</title></rect><rect x="374" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-08-31：休息</title></rect><rect x="393" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-01：休息</title></rect><rect x="393" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-02：休息</title></rect><rect x="393" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-03：休息</title></rect><rect x="393" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-04：休息</title></rect><rect x="393" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-05：休息</title></rect><rect x="393" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-06：626 MET·分钟</title></rect><rect x="393" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-07：休息</title></rect><rect x="412" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-08：休息</title></rect><rect x="412" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-09：休息</title></rect><rect x="412" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-10：221 MET·分钟</title></rect><rect x="412" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-11：休息</title></rect><rect x="412" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-12：休息</title></rect><rect x="412" y="111" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-13：583 MET·分钟</title></rect><rect x="412" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-14：335 MET·分钟</title></rect><rect x="431" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-15：休息</title></rect><rect x="431" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-16：休息</title></rect><rect x="431" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-17：322 MET·分钟</title></rect><rect x="431" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-18：休息</title></rect><rect x="431" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-19：休息</title></rect><rect x="431" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-20：636 MET·分钟</title></rect><rect x="431" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-21：休息</title></rect><rect x="450" y="16" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-22：132 MET·分钟</title></rect><rect x="450" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-23：休息</title></rect><rect x="450" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-24：休息</title></rect><rect x="450" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-25：休息</title></rect><rect x="450" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-26：休息</title></rect><rect x="450" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-27：休息</title></rect><rect x="450" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-28：休息</title></rect><rect x="469" y="16" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-29：208 MET·分钟</title></rect><rect x="469" y="35" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-09-30：371 MET·分钟</title></rect><rect x="469" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-01：休息</title></rect><rect x="469" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-02：休息</title></rect><rect x="469" y="92" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-03：6 MET·分钟</title></rect><rect x="469" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-04：休息</title></rect><rect x="469" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-05：休息</title></rect><rect x="488" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-06：休息</title></rect><rect x="488" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-07：休息</title></rect><rect x="488" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-08：休息</title></rect><rect x="488" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-09：休息</title></rect><rect x="488" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-10：休息</title></rect><rect x="488" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-11：休息</title></rect><rect x="488" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-12：休息</title></rect><rect x="507" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-13：休息</title></rect><rect x="507" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-14：休息</title></rect><rect x="507" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-15：209 MET·分钟</title></rect><rect x="507" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-16：休息</title></rect><rect x="507" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-17：休息</title></rect><rect x="507" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-18：休息</title></rect><rect x="507" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-19：546 MET·分钟</title></rect><rect x="526" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-20：休息</title></rect><rect x="526" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-21：休息</title></rect><rect x="526" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-22：337 MET·分钟</title></rect><rect x="526" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-23：休息</title></rect><rect x="526" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-24：休息</title></rect><rect x="526" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-25：休息</title></rect><rect x="526" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-26：486 MET·分钟</title></rect><rect x="545" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-27：休息</title></rect><rect x="545" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-28：休息</title></rect><rect x="545" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-29：172 MET·分钟</title></rect><rect x="545" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-30：休息</title></rect><rect x="545" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-10-31：休息</title></rect><rect x="545" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-01：休息</title></rect><rect x="545" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-02：563 MET·分钟</title></rect><rect x="564" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-03：休息</title></rect><rect x="564" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-04：休息</title></rect><rect x="564" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-05：148 MET·分钟</title></rect><rect x="564" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-06：休息</title></rect><rect x="564" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-07：休息</title></rect><rect x="564" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-08：休息</title></rect><rect x="564" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-09：休息</title></rect><rect x="583" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-10：休息</title></rect><rect x="583" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-11：休息</title></rect><rect x="583" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-12：299 MET·分钟</title></rect><rect x="583" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-13：休息</title></rect><rect x="583" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-14：休息</title></rect><rect x="583" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-15：休息</title></rect><rect x="583" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-16：休息</title></rect><rect x="602" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-17：休息</title></rect><rect x="602" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-18：休息</title></rect><rect x="602" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-19：220 MET·分钟</title></rect><rect x="602" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-20：休息</title></rect><rect x="602" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-21：休息</title></rect><rect x="602" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-22：休息</title></rect><rect x="602" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-23：休息</title></rect><rect x="621" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-24：休息</title></rect><rect x="621" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-25：休息</title></rect><rect x="621" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-26：136 MET·分钟</title></rect><rect x="621" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-27：休息</title></rect><rect x="621" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-28：休息</title></rect><rect x="621" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-29：休息</title></rect><rect x="621" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-11-30：514 MET·分钟</title></rect><rect x="640" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-01：休息</title></rect><rect x="640" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-02：休息</title></rect><rect x="640" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-03：307 MET·分钟</title></rect><rect x="640" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-04：休息</title></rect><rect x="640" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-05：休息</title></rect><rect x="640" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-06：休息</title></rect><rect x="640" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-07：536 MET·分钟</title></rect><rect x="659" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-08：休息</title></rect><rect x="659" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-09：休息</title></rect><rect x="659" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-10：休息</title></rect><rect x="659" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-11：休息</title></rect><rect x="659" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-12：休息</title></rect><rect x="659" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-13：休息</title></rect><rect x="659" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-14：休息</title></rect><rect x="678" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-15：休息</title></rect><rect x="678" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-16：休息</title></rect><rect x="678" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-17：休息</title></rect><rect x="678" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-18：休息</title></rect><rect x="678" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-19：休息</title></rect><rect x="678" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-20：休息</title></rect><rect x="678" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-21：休息</title></rect><rect x="697" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-22：休息</title></rect><rect x="697" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-23：休息</title></rect><rect x="697" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-24：休息</title></rect><rect x="697" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-25：休息</title></rect><rect x="697" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-26：休息</title></rect><rect x="697" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-27：休息</title></rect><rect x="697" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-28：休息</title></rect><rect x="716" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-29：休息</title></rect><rect x="716" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-30：休息</title></rect><rect x="716" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2025-12-31：休息</title></rect><rect x="716" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-01：休息</title></rect><rect x="716" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-02：休息</title></rect><rect x="716" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-03：休息</title></rect><rect x="716" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-04：休息</title></rect><rect x="735" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-05：休息</title></rect><rect x="735" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-06：休息</title></rect><rect x="735" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-07：236 MET·分钟</title></rect><rect x="735" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-08：休息</title></rect><rect x="735" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-09：休息</title></rect><rect x="735" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-10：休息</title></rect><rect x="735" y="130" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-11：252 MET·分钟</title></rect><rect x="754" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-12：休息</title></rect><rect x="754" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-13：休息</title></rect><rect x="754" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-14：126 MET·分钟</title></rect><rect x="754" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-15：休息</title></rect><rect x="754" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-16：休息</title></rect><rect x="754" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-17：休息</title></rect><rect x="754" y="130" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-18：592 MET·分钟</title></rect><rect x="773" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-19：休息</title></rect><rect x="773" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-20：休息</title></rect><rect x="773" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-21：128 MET·分钟</title></rect><rect x="773" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-22：休息</title></rect><rect x="773" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-23：休息</title></rect><rect x="773" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-24：休息</title></rect><rect x="773" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-25：533 MET·分钟</title></rect><rect x="792" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-26：休息</title></rect><rect x="792" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-27：休息</title></rect><rect x="792" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-28：273 MET·分钟</title></rect><rect x="792" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-29：休息</title></rect><rect x="792" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-30：休息</title></rect><rect x="792" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-01-31：休息</title></rect><rect x="792" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-01：571 MET·分钟</title></rect><rect x="811" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-02：休息</title></rect><rect x="811" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-03：休息</title></rect><rect x="811" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-04：休息</title></rect><rect x="811" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-05：休息</title></rect><rect x="811" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-06：休息</title></rect><rect x="811" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-07：休息</title></rect><rect x="811" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-08：休息</title></rect><rect x="830" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-09：休息</title></rect><rect x="830" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-10：休息</title></rect><rect x="830" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-11：休息</title></rect><rect x="830" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-12：休息</title></rect><rect x="830" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-13：休息</title></rect><rect x="830" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-14：休息</title></rect><rect x="830" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-15：休息</title></rect><rect x="849" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-16：休息</title></rect><rect x="849" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-17：休息</title></rect><rect x="849" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-18：335 MET·分钟</title></rect><rect x="849" y="73" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-19：212 MET·分钟</title></rect><rect x="849" y="92" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-20：631 MET·分钟</title></rect><rect x="849" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-21：休息</title></rect><rect x="849" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-22：休息</title></rect><rect x="868" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-23：休息</title></rect><rect x="868" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-24：休息</title></rect><rect x="868" y="54" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-25：休息</title></rect><rect x="868" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-26：休息</title></rect><rect x="868" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-27：休息</title></rect><rect x="868" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-02-28：休息</title></rect><rect x="868" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-01：486 MET·分钟</title></rect><rect x="887" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-02：休息</title></rect><rect x="887" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-03：休息</title></rect><rect x="887" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-04：152 MET·分钟</title></rect><rect x="887" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-05：休息</title></rect><rect x="887" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-06：休息</title></rect><rect x="887" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-07：休息</title></rect><rect x="887" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-08：514 MET·分钟</title></rect><rect x="906" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-09：休息</title></rect><rect x="906" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-10：休息</title></rect><rect x="906" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-11：210 MET·分钟</title></rect><rect x="906" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-12：休息</title></rect><rect x="906" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-13：休息</title></rect><rect x="906" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-14：休息</title></rect><rect x="906" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-15：561 MET·分钟</title></rect><rect x="925" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-16：休息</title></rect><rect x="925" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-17：休息</title></rect><rect x="925" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-18：343 MET·分钟</title></rect><rect x="925" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-19：休息</title></rect><rect x="925" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-20：休息</title></rect><rect x="925" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-21：休息</title></rect><rect x="925" y="130" width="16" height="16" rx="2" fill="#EA580C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-22：582 MET·分钟</title></rect><rect x="944" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-23：休息</title></rect><rect x="944" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-24：休息</title></rect><rect x="944" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-25：140 MET·分钟</title></rect><rect x="944" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-26：休息</title></rect><rect x="944" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-27：休息</title></rect><rect x="944" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-28：休息</title></rect><rect x="944" y="130" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-29：572 MET·分钟</title></rect><rect x="963" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-30：休息</title></rect><rect x="963" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-03-31：休息</title></rect><rect x="963" y="54" width="16" height="16" rx="2" fill="#FDBA74" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-01：174 MET·分钟</title></rect><rect x="963" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-02：休息</title></rect><rect x="963" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-03：休息</title></rect><rect x="963" y="111" width="16" height="16" rx="2" fill="#C2410C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-04：675 MET·分钟</title></rect><rect x="963" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-05：休息</title></rect><rect x="982" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-06：休息</title></rect><rect x="982" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-07：休息</title></rect><rect x="982" y="54" width="16" height="16" rx="2" fill="#FED7AA" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-08：147 MET·分钟</title></rect><rect x="982" y="73" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-09：休息</title></rect><rect x="982" y="92" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-10：休息</title></rect><rect x="982" y="111" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-11：休息</title></rect><rect x="982" y="130" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-12：休息</title></rect><rect x="1001" y="16" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-13：休息</title></rect><rect x="1001" y="35" width="16" height="16" rx="2" fill="#F2F2F7" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-14：休息</title></rect><rect x="1001" y="54" width="16" height="16" rx="2" fill="#FB923C" stroke="#E5E7EB" stroke-width="0.5"><title>2026-04-15：331 MET·分钟</title></rect>
+      </svg>
+    </div>
+    <div class="heatmap-legend">
+      <span>少</span>
+      <span class="heatmap-legend__swatches"><span class="heatmap-legend__swatch" style="background:#F2F2F7"></span><span class="heatmap-legend__swatch" style="background:#FED7AA"></span><span class="heatmap-legend__swatch" style="background:#FDBA74"></span><span class="heatmap-legend__swatch" style="background:#FB923C"></span><span class="heatmap-legend__swatch" style="background:#EA580C"></span><span class="heatmap-legend__swatch" style="background:#C2410C"></span></span>
+      <span>多</span>
+    </div>
+  </div>
+          <div class="module-card">
+    <div class="module-card__header">
+      <div>
+        <h3>训练量与恢复支持指数</h3>
+        <p>2026-03 的训练量指数为 119.08，高于个人常态；同时 2026-04 的睡眠支持指数 101.75、HRV 支持指数 100.31、静息心率支持指数 100.34，说明恢复侧没有明显落后于训练侧。</p>
+      </div>
+    </div>
+    <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>训练量指数</span><span class="legend-item"><i style="background:#EF4444"></i>睡眠支持指数</span><span class="legend-item"><i style="background:#0EA5E9"></i>HRV 支持指数</span><span class="legend-item"><i style="background:#22C55E"></i>静息心率支持指数</span></div>
+    <div class="chart-wrap"><svg viewBox="0 0 700 220" role="img" aria-label="趋势图" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="48" y1="16" x2="684" y2="16" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="20" text-anchor="end" font-size="10" fill="#94A3B8">183</text><line x1="48" y1="58" x2="684" y2="58" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="62" text-anchor="end" font-size="10" fill="#94A3B8">140</text><line x1="48" y1="100" x2="684" y2="100" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="104" text-anchor="end" font-size="10" fill="#94A3B8">98.0</text><line x1="48" y1="142" x2="684" y2="142" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="146" text-anchor="end" font-size="10" fill="#94A3B8">55.7</text><line x1="48" y1="184" x2="684" y2="184" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="42" y="188" text-anchor="end" font-size="10" fill="#94A3B8">13.4</text>
+  <text x="48" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="163.63636363636363" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="279.27272727272725" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="394.9090909090909" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="452.72727272727275" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="568.3636363636364" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="684" y="200" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <path d="M 48 30 L 105.81818181818181 78.43291516053581 L 163.63636363636363 79.25650294138492 L 221.45454545454544 47.73194414912467 L 279.27272727272725 59.7980012757814 L 337.09090909090907 132.8591679070097 L 394.9090909090909 121.547239350769 L 452.72727272727275 170 L 510.54545454545456 108.46906230065916 L 568.3636363636364 127.3321993054079 L 626.1818181818181 79.10766177617123 L 684 141.938478985045" fill="none" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><circle cx="48" cy="30" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2025-05: 168.57 指数</title></circle><circle cx="105.81818181818181" cy="78.43291516053581" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2025-06: 119.76 指数</title></circle><circle cx="163.63636363636363" cy="79.25650294138492" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2025-07: 118.93 指数</title></circle><circle cx="221.45454545454544" cy="47.73194414912467" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2025-08: 150.7 指数</title></circle><circle cx="279.27272727272725" cy="59.7980012757814" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2025-09: 138.54 指数</title></circle><circle cx="337.09090909090907" cy="132.8591679070097" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2025-10: 64.91 指数</title></circle><circle cx="394.9090909090909" cy="121.547239350769" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2025-11: 76.31 指数</title></circle><circle cx="452.72727272727275" cy="170" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2025-12: 27.48 指数</title></circle><circle cx="510.54545454545456" cy="108.46906230065916" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2026-01: 89.49 指数</title></circle><circle cx="568.3636363636364" cy="127.3321993054079" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2026-02: 70.48 指数</title></circle><circle cx="626.1818181818181" cy="79.10766177617123" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2026-03: 119.08 指数</title></circle><circle cx="684" cy="141.938478985045" r="3" fill="#F97316" stroke="#fff" stroke-width="1.5"><title>训练量指数 2026-04: 55.76 指数</title></circle><path d="M 48 97.1769792331136 L 105.81818181818181 95.1924303635977 L 163.63636363636363 95.80764051314763 L 221.45454545454544 99.77673825217946 L 279.27272727272725 103.23977602948472" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><path d="M 394.9090909090909 103.12070309731376 L 452.72727272727275 97.42504784180309 L 510.54545454545456 94.56729746970018 L 568.3636363636364 99.8958111843504 L 626.1818181818181 95.80764051314763 L 684 96.3037777305266" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><circle cx="48" cy="97.1769792331136" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2025-05: 100.87 指数</title></circle><circle cx="105.81818181818181" cy="95.1924303635977" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2025-06: 102.87 指数</title></circle><circle cx="163.63636363636363" cy="95.80764051314763" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2025-07: 102.25 指数</title></circle><circle cx="221.45454545454544" cy="99.77673825217946" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2025-08: 98.25 指数</title></circle><circle cx="279.27272727272725" cy="103.23977602948472" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2025-09: 94.76 指数</title></circle><circle cx="394.9090909090909" cy="103.12070309731376" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2025-11: 94.88 指数</title></circle><circle cx="452.72727272727275" cy="97.42504784180309" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2025-12: 100.62 指数</title></circle><circle cx="510.54545454545456" cy="94.56729746970018" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2026-01: 103.5 指数</title></circle><circle cx="568.3636363636364" cy="99.8958111843504" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2026-02: 98.13 指数</title></circle><circle cx="626.1818181818181" cy="95.80764051314763" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2026-03: 102.25 指数</title></circle><circle cx="684" cy="96.3037777305266" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>睡眠支持指数 2026-04: 101.75 指数</title></circle><path d="M 48 100.5804805443334 L 105.81818181818181 89.00063789070805 L 163.63636363636363 85.96427812034871 L 221.45454545454544 95.73818130271457 L 279.27272727272725 89.3677794315685 L 337.09090909090907 91.25310085760862 L 394.9090909090909 99.1218371252392 L 452.72727272727275 109.23311361542277 L 510.54545454545456 102.6642568573251 L 568.3636363636364 108.03246154936564 L 626.1818181818181 107.84392940676163 L 684 97.73265291657806" fill="none" stroke="#0EA5E9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><circle cx="48" cy="100.5804805443334" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2025-05: 97.44 指数</title></circle><circle cx="105.81818181818181" cy="89.00063789070805" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2025-06: 109.11 指数</title></circle><circle cx="163.63636363636363" cy="85.96427812034871" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2025-07: 112.17 指数</title></circle><circle cx="221.45454545454544" cy="95.73818130271457" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2025-08: 102.32 指数</title></circle><circle cx="279.27272727272725" cy="89.3677794315685" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2025-09: 108.74 指数</title></circle><circle cx="337.09090909090907" cy="91.25310085760862" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2025-10: 106.84 指数</title></circle><circle cx="394.9090909090909" cy="99.1218371252392" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2025-11: 98.91 指数</title></circle><circle cx="452.72727272727275" cy="109.23311361542277" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2025-12: 88.72 指数</title></circle><circle cx="510.54545454545456" cy="102.6642568573251" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2026-01: 95.34 指数</title></circle><circle cx="568.3636363636364" cy="108.03246154936564" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2026-02: 89.93 指数</title></circle><circle cx="626.1818181818181" cy="107.84392940676163" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2026-03: 90.12 指数</title></circle><circle cx="684" cy="97.73265291657806" r="3" fill="#0EA5E9" stroke="#fff" stroke-width="1.5"><title>HRV 支持指数 2026-04: 100.31 指数</title></circle><path d="M 48 92.60259408887943 L 105.81818181818181 93.94216457580266 L 163.63636363636363 95.54964916011056 L 221.45454545454544 92.92012190800197 L 279.27272727272725 100.1934935147778 L 337.09090909090907 98.37763129917073 L 394.9090909090909 99.36990573392869 L 452.72727272727275 101.78113261039053 L 510.54545454545456 97.11744276702812 L 568.3636363636364 104.16259125380961 L 626.1818181818181 101.26514990431639 L 684 97.70288468353532" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" /><circle cx="48" cy="92.60259408887943" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2025-05: 105.48 指数</title></circle><circle cx="105.81818181818181" cy="93.94216457580266" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2025-06: 104.13 指数</title></circle><circle cx="163.63636363636363" cy="95.54964916011056" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2025-07: 102.51 指数</title></circle><circle cx="221.45454545454544" cy="92.92012190800197" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2025-08: 105.16 指数</title></circle><circle cx="279.27272727272725" cy="100.1934935147778" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2025-09: 97.83 指数</title></circle><circle cx="337.09090909090907" cy="98.37763129917073" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2025-10: 99.66 指数</title></circle><circle cx="394.9090909090909" cy="99.36990573392869" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2025-11: 98.66 指数</title></circle><circle cx="452.72727272727275" cy="101.78113261039053" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2025-12: 96.23 指数</title></circle><circle cx="510.54545454545456" cy="97.11744276702812" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2026-01: 100.93 指数</title></circle><circle cx="568.3636363636364" cy="104.16259125380961" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2026-02: 93.83 指数</title></circle><circle cx="626.1818181818181" cy="101.26514990431639" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2026-03: 96.75 指数</title></circle><circle cx="684" cy="97.70288468353532" r="3" fill="#22C55E" stroke="#fff" stroke-width="1.5"><title>静息心率支持指数 2026-04: 100.34 指数</title></circle>
+</svg></div>
+  </div>
+          <details class="glossary-card">
+    <summary>看不懂这些指标？点这里</summary>
+    <dl class="glossary-card__body">
+      <div><dt>日常训练量 (CTL)</dt><dd>过去 42 天的日均训练负荷（MET·分钟），衡量你长期练得多不多。CTL 升高意味着体能底子在增厚，下降意味着正在松懈或主动减量。单位 MET·分钟 = 强度倍数 × 分钟。</dd></div><div><dt>累积疲劳 (ATL)</dt><dd>过去 7 天的日均训练负荷，反映最近一周累了多少。ATL 短期升得很快说明刚加量，应注意恢复。</dd></div><div><dt>新鲜度 (TSB)</dt><dd>TSB = CTL − ATL，TrainingPeaks 称为 Form。正值越大越新鲜（体能储备高、疲劳低），负值越大越累。超过 +25 像是减量后的好状态，低于 -30 接近过度训练边缘。</dd></div><div><dt>MET·分钟</dt><dd>训练负荷的计量单位：1 个 MET ≈ 静坐消耗。跑步 ≈ 8.5 MET，步行 ≈ 3.5 MET，力量训练 ≈ 5 MET。60 分钟跑步 ≈ 510 MET·分钟。</dd></div><div><dt>恢复准备度</dt><dd>综合训练状态 + 睡眠 / HRV / 静息心率恢复信号。良好 = 可以维持或加量；中等 = 先守住节奏；偏低 = 优先恢复。</dd></div>
+    </dl>
+  </details>
+        </div>
+      </section>
+
+      <section id="sports">
+        <section id="traditional-strength-training" class="module module--activity sport-module">
+    <div class="module__header module__header--sport">
+      <div class="module__title-wrap">
+        <span class="module__index">02</span>
+        <span class="module__icon module__icon--emoji"><span aria-hidden="true">🏋️</span></span>
+        <div>
+          <h2>传统力量训练</h2>
+          <p>它是你当前最稳定的主项：近 30 天完成 5 次、总 275.96 分钟、平均 55.19 分钟，频率高于基线期的折算水平，单次时长几乎没变，说明结构比较成熟。</p>
+        </div>
+      </div>
+      <div class="pills"><span class="badge badge--warn">负荷上升</span><span class="badge badge--low">恢复不足</span><span class="badge badge--warn">节奏不均</span></div>
+    </div>
+    <div class="module__body">
+      <div class="summary-cards summary-cards--sport">
+        <div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">近 30 天</div>
+    <div class="metric-card__value">5 训练次数</div>
+    <div class="metric-card__sub">275.96 分钟</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">活动能量</div>
+    <div class="metric-card__value">1464.47 kcal</div>
+    <div class="metric-card__sub">近 30 天</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">平均心率</div>
+    <div class="metric-card__value">111.25 bpm</div>
+    <div class="metric-card__sub">近 30 天</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">近 12 个月活跃月份</div>
+    <div class="metric-card__value">11</div>
+    <div class="metric-card__sub">最长空档：35 天</div>
+  </div>
+      </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>训练负荷变化</h3>
+          <ul class="plain-list">
+            <li>近 30 天：5 训练次数 / 275.96 分钟</li><li>基线 90 天：6 训练次数 / 334.01 分钟</li><li>近 180 天：18 训练次数 / 1007.81 分钟</li><li>近 365 天：45 训练次数 / 2509.76 分钟</li><li>全时段：146 训练次数 / 7940.11 分钟</li>
+            <li>节奏趋势：近期节奏变稀</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>恢复支持</h3>
+          <ul class="plain-list">
+            <li>恢复样本数：10</li>
+            <li>次日睡眠偏移：-0.35 小时</li>
+            <li>次日 HRV 偏移：-0.4</li>
+            <li>次日静息心率偏移：-0.56 bpm</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>传统力量训练 月度节奏</h3>
+          <p>过去 12 个月力量训练多数月份保持在 3 到 5 次，2026-03 为 4 次、2026-04 为 3 次，平均单次时长长期稳定在约 55 分钟，是当前最稳定的主项。</p>
+        </div>
+      </div>
+      <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>月度训练次数</span><span class="legend-item"><i style="background:#EF4444"></i>平均单次时长</span></div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 240" role="img" aria-label="趋势图" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="20" x2="648" y2="20" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="24" text-anchor="end" font-size="10" fill="#F97316">5.8</text><text x="654" y="24" text-anchor="start" font-size="10" fill="#EF4444">59.2</text><line x1="52" y1="66" x2="648" y2="66" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="70" text-anchor="end" font-size="10" fill="#F97316">4.3</text><text x="654" y="70" text-anchor="start" font-size="10" fill="#EF4444">56.2</text><line x1="52" y1="112" x2="648" y2="112" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="116" text-anchor="end" font-size="10" fill="#F97316">2.9</text><text x="654" y="116" text-anchor="start" font-size="10" fill="#EF4444">53.2</text><line x1="52" y1="158" x2="648" y2="158" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="162" text-anchor="end" font-size="10" fill="#F97316">1.4</text><text x="654" y="162" text-anchor="start" font-size="10" fill="#EF4444">50.2</text><line x1="52" y1="204" x2="648" y2="204" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="208" text-anchor="end" font-size="10" fill="#F97316">0</text><text x="654" y="208" text-anchor="start" font-size="10" fill="#EF4444">47.1</text>
+  <text x="69.65833333333333" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="171.6007575757576" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="273.54318181818184" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="375.4856060606061" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="426.4568181818182" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="528.3992424242425" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="630.3416666666667" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <g><title>月度训练次数 2025-05: 5 次</title><rect x="56" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-06: 5 次</title><rect x="106.97121212121212" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-07: 5 次</title><rect x="157.94242424242427" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-08: 5 次</title><rect x="208.91363636363636" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-09: 3 次</title><rect x="259.8848484848485" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-10: 3 次</title><rect x="310.85606060606057" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-11: 4 次</title><rect x="361.8272727272727" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-12: 1 次</title><rect x="412.79848484848486" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-01: 4 次</title><rect x="463.769696969697" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-02: 0 次</title><rect x="514.7409090909092" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-03: 4 次</title><rect x="565.7121212121212" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-04: 3 次</title><rect x="616.6833333333334" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g>
+  <path d="M 69.65833333333333 35.33333333333334 L 120.62954545454545 61.16915918909933 L 171.6007575757576 50.31505483549347 L 222.5719696969697 188.66666666666666 L 273.54318181818184 59.79328680624795 L 324.5143939393939 37.77932868062473 L 375.4856060606061 65.29677633765371 L 426.4568181818182 51.07942838152212 L 477.42803030303037 82.87736789631106" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 579.3704545454545 70.95314057826519 L 630.3416666666667 77.52675307411097" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><circle cx="69.65833333333333" cy="35.33333333333334" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-05: 58.18 分钟</title></circle><circle cx="120.62954545454545" cy="61.16915918909933" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-06: 56.49 分钟</title></circle><circle cx="171.6007575757576" cy="50.31505483549347" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-07: 57.2 分钟</title></circle><circle cx="222.5719696969697" cy="188.66666666666666" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-08: 48.15 分钟</title></circle><circle cx="273.54318181818184" cy="59.79328680624795" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-09: 56.58 分钟</title></circle><circle cx="324.5143939393939" cy="37.77932868062473" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-10: 58.02 分钟</title></circle><circle cx="375.4856060606061" cy="65.29677633765371" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-11: 56.22 分钟</title></circle><circle cx="426.4568181818182" cy="51.07942838152212" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-12: 57.15 分钟</title></circle><circle cx="477.42803030303037" cy="82.87736789631106" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-01: 55.07 分钟</title></circle><circle cx="579.3704545454545" cy="70.95314057826519" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-03: 55.85 分钟</title></circle><circle cx="630.3416666666667" cy="77.52675307411097" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-04: 55.42 分钟</title></circle>
+</svg></div>
+    </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>关键信号</h3>
+          <ul class="plain-list">
+            <li>近 30 天 5 次训练，总时长 275.96 分钟，平均每次 55.19 分钟；90 天基线期为 6 次、334.01 分钟、单次 55.67 分钟。</li><li>平均活动消耗 292.89 kcal，高于基线的 263.76 kcal；平均心率 111.25 bpm 也高于基线 106.02 bpm，说明同等时长下刺激略有增强。</li><li>训练后恢复样本 10 次，次日睡眠变化 -0.35 小时、HRV 变化 -0.4 ms、静息心率变化 -0.56 bpm，整体看没有明显恢复崩塌。</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>专项建议</h3>
+          <ul class="plain-list">
+            <li>未来 2 周保持每周 2 到 3 次力量训练，单次仍放在 50 到 60 分钟区间，不需要额外拉长课时。</li><li>避免再次出现超过 5 到 7 天的无力量训练空档，尽量把训练日均匀铺开。</li><li>如果拳击课已经很吃力，力量日优先做维持量，不要把两个高负荷项目叠成同一天。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section><section id="boxing" class="module module--activity sport-module">
+    <div class="module__header module__header--sport">
+      <div class="module__title-wrap">
+        <span class="module__index">03</span>
+        <span class="module__icon module__icon--emoji"><span aria-hidden="true">🥊</span></span>
+        <div>
+          <h2>拳击</h2>
+          <p>拳击仍是高质量高刺激项目，但近期更像维持而不是扩张：最近 30 天 3 次、214.55 分钟，频率低于基线期，但单次容量和强度保持住了。</p>
+        </div>
+      </div>
+      <div class="pills"><span class="badge badge--warn">负荷上升</span><span class="badge badge--low">恢复不足</span><span class="badge badge--warn">节奏不均</span></div>
+    </div>
+    <div class="module__body">
+      <div class="summary-cards summary-cards--sport">
+        <div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">近 30 天</div>
+    <div class="metric-card__value">3 训练次数</div>
+    <div class="metric-card__sub">214.55 分钟</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">活动能量</div>
+    <div class="metric-card__value">1848.31 kcal</div>
+    <div class="metric-card__sub">近 30 天</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">平均心率</div>
+    <div class="metric-card__value">141.08 bpm</div>
+    <div class="metric-card__sub">近 30 天</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">近 12 个月活跃月份</div>
+    <div class="metric-card__value">12</div>
+    <div class="metric-card__sub">最长空档：42 天</div>
+  </div>
+      </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>训练负荷变化</h3>
+          <ul class="plain-list">
+            <li>近 30 天：3 训练次数 / 214.55 分钟</li><li>基线 90 天：6 训练次数 / 444.11 分钟</li><li>近 180 天：14 训练次数 / 1021.64 分钟</li><li>近 365 天：31 训练次数 / 2243.71 分钟</li><li>全时段：172 训练次数 / 12080.63 分钟</li>
+            <li>节奏趋势：近期节奏变稀</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>恢复支持</h3>
+          <ul class="plain-list">
+            <li>恢复样本数：11</li>
+            <li>次日睡眠偏移：-0.44 小时</li>
+            <li>次日 HRV 偏移：0.49</li>
+            <li>次日静息心率偏移：-1.63 bpm</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>拳击 月度节奏</h3>
+          <p>拳击在 2026-03 回到 5 次每月，2026-04 目前为 1 次；单次时长持续在 71 到 79 分钟区间，说明强度型刺激仍在，但月度频率波动较大。</p>
+        </div>
+      </div>
+      <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>月度训练次数</span><span class="legend-item"><i style="background:#EF4444"></i>平均单次时长</span></div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 240" role="img" aria-label="趋势图" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="20" x2="648" y2="20" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="24" text-anchor="end" font-size="10" fill="#F97316">5.8</text><text x="654" y="24" text-anchor="start" font-size="10" fill="#EF4444">81.0</text><line x1="52" y1="66" x2="648" y2="66" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="70" text-anchor="end" font-size="10" fill="#F97316">4.3</text><text x="654" y="70" text-anchor="start" font-size="10" fill="#EF4444">76.6</text><line x1="52" y1="112" x2="648" y2="112" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="116" text-anchor="end" font-size="10" fill="#F97316">2.9</text><text x="654" y="116" text-anchor="start" font-size="10" fill="#EF4444">72.2</text><line x1="52" y1="158" x2="648" y2="158" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="162" text-anchor="end" font-size="10" fill="#F97316">1.4</text><text x="654" y="162" text-anchor="start" font-size="10" fill="#EF4444">67.8</text><line x1="52" y1="204" x2="648" y2="204" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="208" text-anchor="end" font-size="10" fill="#F97316">0</text><text x="654" y="208" text-anchor="start" font-size="10" fill="#EF4444">63.4</text>
+  <text x="69.65833333333333" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="171.6007575757576" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="273.54318181818184" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="375.4856060606061" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="426.4568181818182" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="528.3992424242425" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="630.3416666666667" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <g><title>月度训练次数 2025-05: 3 次</title><rect x="56" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-06: 3 次</title><rect x="106.97121212121212" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-07: 4 次</title><rect x="157.94242424242427" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-08: 3 次</title><rect x="208.91363636363636" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-09: 3 次</title><rect x="259.8848484848485" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-10: 2 次</title><rect x="310.85606060606057" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-11: 2 次</title><rect x="361.8272727272727" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-12: 1 次</title><rect x="412.79848484848486" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-01: 2 次</title><rect x="463.769696969697" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-02: 1 次</title><rect x="514.7409090909092" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-03: 5 次</title><rect x="565.7121212121212" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-04: 1 次</title><rect x="616.6833333333334" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g>
+  <path d="M 69.65833333333333 188.66666666666669 L 120.62954545454545 120.87829246139879 L 171.6007575757576 98.10808356039962 L 222.5719696969697 59.98365122615809 L 273.54318181818184 142.9173478655768 L 324.5143939393939 141.7683923705723 L 375.4856060606061 96.5413260672117 L 426.4568181818182 63.22161671207999 L 477.42803030303037 92.25885558583116 L 528.3992424242425 35.33333333333337 L 579.3704545454545 119.52043596730255 L 630.3416666666667 99.15258855585839" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><circle cx="69.65833333333333" cy="188.66666666666669" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-05: 64.87 分钟</title></circle><circle cx="120.62954545454545" cy="120.87829246139879" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-06: 71.36 分钟</title></circle><circle cx="171.6007575757576" cy="98.10808356039962" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-07: 73.54 分钟</title></circle><circle cx="222.5719696969697" cy="59.98365122615809" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-08: 77.19 分钟</title></circle><circle cx="273.54318181818184" cy="142.9173478655768" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-09: 69.25 分钟</title></circle><circle cx="324.5143939393939" cy="141.7683923705723" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-10: 69.36 分钟</title></circle><circle cx="375.4856060606061" cy="96.5413260672117" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-11: 73.69 分钟</title></circle><circle cx="426.4568181818182" cy="63.22161671207999" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-12: 76.88 分钟</title></circle><circle cx="477.42803030303037" cy="92.25885558583116" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-01: 74.1 分钟</title></circle><circle cx="528.3992424242425" cy="35.33333333333337" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-02: 79.55 分钟</title></circle><circle cx="579.3704545454545" cy="119.52043596730255" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-03: 71.49 分钟</title></circle><circle cx="630.3416666666667" cy="99.15258855585839" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-04: 73.44 分钟</title></circle>
+</svg></div>
+    </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>关键信号</h3>
+          <ul class="plain-list">
+            <li>近 30 天 3 次拳击、总 214.55 分钟、平均 71.52 分钟；基线期 6 次、444.11 分钟、平均 74.02 分钟。</li><li>平均活动消耗 616.1 kcal，高于基线的 593.74 kcal；平均心率 141.08 bpm，高于基线 135.84 bpm，说明单次刺激并没有变轻。</li><li>拳击后恢复样本 11 次，次日 HRV 变化 +0.49 ms、静息心率变化 -1.63 bpm，但睡眠变化 -0.44 小时，说明身体能扛住强度，但课后睡眠支持不能打折。</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>专项建议</h3>
+          <ul class="plain-list">
+            <li>未来 2 周保持 2 到 3 次拳击即可，不建议在当前 TSB -4.6 的情况下再额外加课。</li><li>每次拳击后的次日安排低强度日或休息日，优先保证当晚接近 8 小时睡眠。</li><li>如果想提高拳击总量，先增加一次短课，而不是把单次 70 分钟继续拉长。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section><section id="walking" class="module module--activity sport-module">
+    <div class="module__header module__header--sport">
+      <div class="module__title-wrap">
+        <span class="module__index">04</span>
+        <span class="module__icon module__icon--emoji"><span aria-hidden="true">🚶</span></span>
+        <div>
+          <h2>步行</h2>
+          <p>步行目前更像偶发补充，不足以承担主动恢复角色。近 30 天只有 1 次 32.27 分钟，明显低于基线阶段的 3 次、196.17 分钟。</p>
+        </div>
+      </div>
+      <div class="pills"><span class="badge badge--warn">负荷下降</span><span class="badge badge--low">恢复不足</span><span class="badge badge--warn">节奏不均</span></div>
+    </div>
+    <div class="module__body">
+      <div class="summary-cards summary-cards--sport">
+        <div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">近 180 天</div>
+    <div class="metric-card__value">4 训练次数</div>
+    <div class="metric-card__sub">228.44 分钟</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">活动能量</div>
+    <div class="metric-card__value">759.18 kcal</div>
+    <div class="metric-card__sub">近 180 天</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">距离</div>
+    <div class="metric-card__value">11.37 km</div>
+    <div class="metric-card__sub">近 180 天</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">平均心率</div>
+    <div class="metric-card__value">88 bpm</div>
+    <div class="metric-card__sub">近 180 天</div>
+  </div>
+      </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>训练负荷变化</h3>
+          <ul class="plain-list">
+            <li>近 180 天：4 训练次数 / 228.44 分钟</li><li>近 30 天：1 训练次数 / 32.27 分钟</li><li>基线 90 天：3 训练次数 / 196.17 分钟</li><li>近 365 天：19 训练次数 / 1149.36 分钟</li><li>全时段：106 训练次数 / 6293.31 分钟</li>
+            <li>节奏趋势：近期节奏变稀</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>恢复支持</h3>
+          <ul class="plain-list">
+            <li>恢复样本数：3</li>
+            <li>次日睡眠偏移：-0.54 小时</li>
+            <li>次日 HRV 偏移：-4.08</li>
+            <li>次日静息心率偏移：3.37 bpm</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>步行 月度节奏</h3>
+          <p>柱状 = 每月训练次数（左轴）；折线 = 每次平均时长（右轴）。次数反映频率，平均时长反映课容量，两个维度组合起来比单看一个更能判断节奏变化。</p>
+        </div>
+      </div>
+      <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>月度训练次数</span><span class="legend-item"><i style="background:#EF4444"></i>平均单次时长</span></div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 240" role="img" aria-label="趋势图" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="20" x2="648" y2="20" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="24" text-anchor="end" font-size="10" fill="#F97316">5.8</text><text x="654" y="24" text-anchor="start" font-size="10" fill="#EF4444">80.7</text><line x1="52" y1="66" x2="648" y2="66" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="70" text-anchor="end" font-size="10" fill="#F97316">4.3</text><text x="654" y="70" text-anchor="start" font-size="10" fill="#EF4444">67.5</text><line x1="52" y1="112" x2="648" y2="112" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="116" text-anchor="end" font-size="10" fill="#F97316">2.9</text><text x="654" y="116" text-anchor="start" font-size="10" fill="#EF4444">54.3</text><line x1="52" y1="158" x2="648" y2="158" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="162" text-anchor="end" font-size="10" fill="#F97316">1.4</text><text x="654" y="162" text-anchor="start" font-size="10" fill="#EF4444">41.1</text><line x1="52" y1="204" x2="648" y2="204" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="208" text-anchor="end" font-size="10" fill="#F97316">0</text><text x="654" y="208" text-anchor="start" font-size="10" fill="#EF4444">27.9</text>
+  <text x="69.65833333333333" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="171.6007575757576" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="273.54318181818184" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="375.4856060606061" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="426.4568181818182" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="528.3992424242425" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="630.3416666666667" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <g><title>月度训练次数 2025-05: 5 次</title><rect x="56" y="44" width="27.316666666666666" height="160" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-06: 2 次</title><rect x="106.97121212121212" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-07: 0 次</title><rect x="157.94242424242427" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-08: 3 次</title><rect x="208.91363636363636" y="108" width="27.316666666666666" height="96" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-09: 4 次</title><rect x="259.8848484848485" y="76" width="27.316666666666666" height="128" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-10: 0 次</title><rect x="310.85606060606057" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-11: 0 次</title><rect x="361.8272727272727" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-12: 0 次</title><rect x="412.79848484848486" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-01: 1 次</title><rect x="463.769696969697" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-02: 2 次</title><rect x="514.7409090909092" y="140" width="27.316666666666666" height="64" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-03: 0 次</title><rect x="565.7121212121212" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-04: 1 次</title><rect x="616.6833333333334" y="172" width="27.316666666666666" height="32" rx="3" fill="#F97316" opacity="0.75" /></g>
+  <path d="M 69.65833333333333 105.92032113913505 L 120.62954545454545 148.42581231538287" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 222.5719696969697 35.333333333333314 L 273.54318181818184 52.231008104218716" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 477.42803030303037 64.00711959403165 L 528.3992424242425 77.90850564265696" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 630.3416666666667 188.66666666666666" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><circle cx="69.65833333333333" cy="105.92032113913505" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-05: 56.02 分钟</title></circle><circle cx="120.62954545454545" cy="148.42581231538287" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-06: 43.82 分钟</title></circle><circle cx="222.5719696969697" cy="35.333333333333314" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-08: 76.28 分钟</title></circle><circle cx="273.54318181818184" cy="52.231008104218716" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-09: 71.43 分钟</title></circle><circle cx="477.42803030303037" cy="64.00711959403165" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-01: 68.05 分钟</title></circle><circle cx="528.3992424242425" cy="77.90850564265696" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-02: 64.06 分钟</title></circle><circle cx="630.3416666666667" cy="188.66666666666666" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2026-04: 32.27 分钟</title></circle>
+</svg></div>
+    </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>关键信号</h3>
+          <ul class="plain-list">
+            <li>近 30 天仅 1 次步行、32.27 分钟、1.54 km；基线期为 3 次、196.17 分钟、9.83 km。</li><li>最近 12 个月只有 7 个月出现步行训练，最长空档 103 天，说明恢复性有氧的连续性较弱。</li><li>步行后的恢复样本只有 3 次，次日 HRV 变化 -4.08 ms、静息心率变化 +3.37 bpm，样本太少，不能当作稳定规律。</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>专项建议</h3>
+          <ul class="plain-list">
+            <li>未来 2 周在非拳击日补 4 到 6 次 20 到 40 分钟轻松步行，把它当恢复工具，而不是训练项目。</li><li>把步行固定在拳击后次日或力量后的晚间，优先服务恢复，而不是追求距离。</li><li>如果只做一两次长步行，恢复价值不如多次短步行稳定。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section><section id="cycling" class="module module--activity sport-module">
+    <div class="module__header module__header--sport">
+      <div class="module__title-wrap">
+        <span class="module__index">05</span>
+        <span class="module__icon module__icon--emoji"><span aria-hidden="true">🚴</span></span>
+        <div>
+          <h2>骑行</h2>
+          <p>骑行现在处于休眠状态。近 30、90、180 天都没有记录，最近一次骑行停留在 2025-10-03；它在全量历史里曾是高频项目，但不再是当前训练结构的一部分。</p>
+        </div>
+      </div>
+      <div class="pills"><span class="badge badge--info">负荷稳定</span><span class="badge badge--low">恢复不足</span><span class="badge badge--warn">节奏不均</span></div>
+    </div>
+    <div class="module__body">
+      <div class="summary-cards summary-cards--sport">
+        <div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">近 365 天</div>
+    <div class="metric-card__value">6 训练次数</div>
+    <div class="metric-card__sub">117.01 分钟</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">活动能量</div>
+    <div class="metric-card__value">365.06 kcal</div>
+    <div class="metric-card__sub">近 365 天</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">距离</div>
+    <div class="metric-card__value">23.4 km</div>
+    <div class="metric-card__sub">近 365 天</div>
+  </div><div class="metric-card" style="border-top:3px solid #F97316">
+    <div class="metric-card__label">平均心率</div>
+    <div class="metric-card__value">94.5 bpm</div>
+    <div class="metric-card__sub">近 365 天</div>
+  </div>
+      </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>训练负荷变化</h3>
+          <ul class="plain-list">
+            <li>近 365 天：6 训练次数 / 117.01 分钟</li><li>全时段：270 训练次数 / 5811.88 分钟</li>
+            <li>节奏趋势：近期节奏变稀</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>恢复支持</h3>
+          <ul class="plain-list">
+            <li>恢复样本数：0</li>
+            <li>次日睡眠偏移：数据不足</li>
+            <li>次日 HRV 偏移：数据不足</li>
+            <li>次日静息心率偏移：数据不足</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module-card">
+      <div class="module-card__header">
+        <div>
+          <h3>骑行 月度节奏</h3>
+          <p>柱状 = 每月训练次数（左轴）；折线 = 每次平均时长（右轴）。次数反映频率，平均时长反映课容量，两个维度组合起来比单看一个更能判断节奏变化。</p>
+        </div>
+      </div>
+      <div class="legend"><span class="legend-item"><i style="background:#F97316"></i>月度训练次数</span><span class="legend-item"><i style="background:#EF4444"></i>平均单次时长</span></div>
+      <div class="chart-wrap"><svg viewBox="0 0 700 240" role="img" aria-label="趋势图" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <line x1="52" y1="20" x2="648" y2="20" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="24" text-anchor="end" font-size="10" fill="#F97316">2.3</text><text x="654" y="24" text-anchor="start" font-size="10" fill="#EF4444">30.8</text><line x1="52" y1="66" x2="648" y2="66" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="70" text-anchor="end" font-size="10" fill="#F97316">1.7</text><text x="654" y="70" text-anchor="start" font-size="10" fill="#EF4444">23.4</text><line x1="52" y1="112" x2="648" y2="112" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="116" text-anchor="end" font-size="10" fill="#F97316">1.1</text><text x="654" y="116" text-anchor="start" font-size="10" fill="#EF4444">16.1</text><line x1="52" y1="158" x2="648" y2="158" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="162" text-anchor="end" font-size="10" fill="#F97316">0.6</text><text x="654" y="162" text-anchor="start" font-size="10" fill="#EF4444">8.8</text><line x1="52" y1="204" x2="648" y2="204" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3" /><text x="46" y="208" text-anchor="end" font-size="10" fill="#F97316">0</text><text x="654" y="208" text-anchor="start" font-size="10" fill="#EF4444">1.4</text>
+  <text x="69.65833333333333" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-05</text><text x="171.6007575757576" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-07</text><text x="273.54318181818184" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-09</text><text x="375.4856060606061" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-11</text><text x="426.4568181818182" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2025-12</text><text x="528.3992424242425" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-02</text><text x="630.3416666666667" y="220" text-anchor="middle" font-size="10" fill="#94A3B8">2026-04</text>
+  <g><title>月度训练次数 2025-05: 2 次</title><rect x="56" y="43.99999999999997" width="27.316666666666666" height="160.00000000000003" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-06: 0 次</title><rect x="106.97121212121212" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-07: 0 次</title><rect x="157.94242424242427" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-08: 0 次</title><rect x="208.91363636363636" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-09: 1 次</title><rect x="259.8848484848485" y="123.99999999999999" width="27.316666666666666" height="80.00000000000001" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-10: 1 次</title><rect x="310.85606060606057" y="123.99999999999999" width="27.316666666666666" height="80.00000000000001" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-11: 0 次</title><rect x="361.8272727272727" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2025-12: 0 次</title><rect x="412.79848484848486" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-01: 0 次</title><rect x="463.769696969697" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-02: 0 次</title><rect x="514.7409090909092" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-03: 0 次</title><rect x="565.7121212121212" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g><g><title>月度训练次数 2026-04: 0 次</title><rect x="616.6833333333334" y="203.5" width="27.316666666666666" height="0.5" rx="3" fill="#F97316" opacity="0.75" /></g>
+  <path d="M 69.65833333333333 35.333333333333286" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><path d="M 273.54318181818184 133.96294782727148 L 324.5143939393939 188.66666666666666" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" /><circle cx="69.65833333333333" cy="35.333333333333286" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-05: 28.34 分钟</title></circle><circle cx="273.54318181818184" cy="133.96294782727148" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-09: 12.6 分钟</title></circle><circle cx="324.5143939393939" cy="188.66666666666666" r="3" fill="#EF4444" stroke="#fff" stroke-width="1.5"><title>平均单次时长 2025-10: 3.87 分钟</title></circle>
+</svg></div>
+    </div>
+      <div class="module-card-grid">
+        <div class="module-card">
+          <h3>关键信号</h3>
+          <ul class="plain-list">
+            <li>近 30 天、90 天、180 天骑行均为 0 次；最近一次记录是 2025-10-03。</li><li>过去 12 个月只有 6 次骑行、总 117.01 分钟，而全量历史有 270 次、5811.88 分钟，说明这个项目已从主项退场。</li><li>最近 12 个月只有 3 个月出现骑行，最长空档 126 天，连续性明显不足。</li>
+          </ul>
+        </div>
+        <div class="module-card">
+          <h3>专项建议</h3>
+          <ul class="plain-list">
+            <li>如果你还想保留骑行能力，未来 2 周最多加 1 到 2 次 20 到 30 分钟轻松骑，不要直接恢复到过去的频率。</li><li>如果近期目标只围绕力量和拳击，骑行可以继续视为可选项，不必为了补项目数硬塞进去。</li><li>重新引入骑行时先看第二天主观疲劳和睡眠，不要和拳击高强度周叠加。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+      </section>
+
+      <section id="actions" class="module">
+        <div class="module__header">
+          <div>
+            <h2>接下来两周建议</h2>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="module-card-grid">
+            <div class="module-card">
+              <h3>需要重点留意</h3>
+              <ul class="plain-list"><li>TSB -4.6 说明你不是完全新鲜状态，短期内不适合同时上调拳击频率和力量容量。</li><li>训练种类从 4 种降到 3 种，步行和骑行的恢复或有氧补充偏少，容易让训练周只剩硬课。</li><li>力量训练最长空档 35 天、拳击最长空档 42 天，真正需要优化的是频率均匀度，而不是单次课时。</li><li>最新血氧 92% 虽然未必代表问题，但在确认前不建议冲更高强度。</li></ul>
+            </div>
+            <div class="module-card">
+              <h3>接下来两周建议</h3>
+              <ul class="plain-list"><li>把未来 14 天总训练量控制在 8 到 10 次、450 到 550 分钟之间，优先维持而不是继续加码。</li><li>安排 4 到 5 次力量训练、2 到 3 次拳击，并在其中穿插 4 到 6 次 20 到 40 分钟轻松步行作为恢复日。</li><li>避免连续 3 天都做高负荷训练；每次拳击后至少留 1 个低强度日或休息日。</li><li>在下一次高强度课前复测 3 次静息血氧；如果再次出现小于等于 93% 或伴随不适，当天改为轻松恢复。</li></ul>
+            </div>
+          </div>
+          <div class="module-card-grid">
+            <div class="module-card">
+              <h3>如需看诊可问的问题</h3>
+              <ul class="plain-list"><li>我在维持训练的同时，2026-04-15 的最新血氧读数为 92%；如果复测仍偏低，这会不会影响我继续做拳击和力量训练的安全性？</li><li>近 30 天 VO2 Max 均值 43.43，较 90 天基线 45.56 有所下降；如果训练体感也变差，这是否值得做进一步评估？</li></ul>
+            </div>
+            <div class="module-card">
+              <h3>图表解读</h3>
+              <ul class="plain-list"><li>训练负荷曲线（日常训练量 · 累积疲劳 · 新鲜度）：截至 2026-04-15，CTL 92.25、ATL 96.85、TSB -4.6；近 90 天 CTL 明显抬升，但最近 30 天基本横盘，说明前期上量后已经进入维持和巩固阶段。</li><li>训练量与恢复支持指数：2026-03 的训练量指数为 119.08，高于个人常态；同时 2026-04 的睡眠支持指数 101.75、HRV 支持指数 100.31、静息心率支持指数 100.34，说明恢复侧没有明显落后于训练侧。</li><li>传统力量训练 月度节奏：过去 12 个月力量训练多数月份保持在 3 到 5 次，2026-03 为 4 次、2026-04 为 3 次，平均单次时长长期稳定在约 55 分钟，是当前最稳定的主项。</li><li>拳击 月度节奏：拳击在 2026-03 回到 5 次每月，2026-04 目前为 1 次；单次时长持续在 71 到 79 分钟区间，说明强度型刺激仍在，但月度频率波动较大。</li><li>步行 月度节奏：更适合结合长期趋势一起看，而不是只看某一次训练。</li><li>骑行 月度节奏：更适合结合长期趋势一起看，而不是只看某一次训练。</li></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="appendix" class="module">
+        <div class="module__header">
+          <div>
+            <h2>数据局限与边界</h2>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="module-card-grid">
+            <div class="module-card">
+              <h3>数据局限与边界</h3>
+              <ul class="plain-list"><li>近 30 天只有 9 次训练，短期训练状态更多反映当前节奏，不代表全年能力上限。</li><li>部分项目天然缺少距离指标，例如传统力量训练的距离覆盖为 0%，不能用耐力项目的方式解读。</li><li>步行的训练后恢复样本只有 3 次，骑行最近 180 天为 0 次，对这两个项目的近期判断可信度有限。</li></ul>
+            </div>
+            <div class="module-card">
+              <h3>免责声明</h3>
+              <p>本报告仅供训练管理参考，不构成医学诊断或竞技处方。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <a href="https://github.com/RuochenLyu/apple-health-analyst" class="site-footer__brand" target="_blank" rel="noopener">apple-health-analyst</a>
+      <div class="site-footer__tagline">隐私优先的 Apple Health 运动分析</div>
+      <div class="site-footer__links">
+        <a href="./report.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5l-7 7 7 7M19 12H5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          健康报告
+        </a>
+        <a href="https://github.com/RuochenLyu/apple-health-analyst" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </footer>
+  </body>
+</html>

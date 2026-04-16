@@ -1,6 +1,6 @@
-# `report.llm.json` Schema v2
+# `report.llm.json` Schema v2 (Health Report)
 
-`report.llm.json` is the sole input for the narrative. `render` validates its fields before generating `report.md` and `report.html`.
+`report.llm.json` is the sole narrative input for health mode. `render` validates its fields before generating `report.md` and `report.html`.
 
 ## Required Structure
 ```json

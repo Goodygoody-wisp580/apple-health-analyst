@@ -151,6 +151,10 @@ export const renderZh = {
   barChartAriaLabel: (label: string) => `${label} 柱状图`,
   lineChartAriaLabel: "趋势图",
 
+  // ── Cross-report navigation ───────────────────────────────────────
+  crossReportTraining: "运动报告",
+  crossReportHealth: "健康报告",
+
   // ── Markdown-specific strings ─────────────────────────────────────
   mdReportTitle: "Apple Health 健康报告",
   mdAssessmentTitle: "综合健康评估",

@@ -1,131 +1,229 @@
 ---
 name: apple-health-analyst
-description: Analyze Apple Health export ZIP. Run local prepare to generate structured insights, then produce a professional health report based on cross-metric analysis and historical context.
+description: Analyze Apple Health export ZIP. Run local prepare to generate structured insights, then produce either a health report or a training report with long-term context.
 ---
 
 # Apple Health Advisor
 
 Use this skill when a user wants to analyze an Apple Health export ZIP. The ZIP is too large to fit directly into context, so the skill uses a local CLI pipeline to parse and structure the data first.
 
+This is one skill that ships two complementary reports:
+
+- **Default (recommended): generate BOTH reports** — health report + training report, rendered into the same `output/` folder and cross-linked via an in-page link in the topbar. `prepare` runs once, then `render` runs twice.
+- **Explicit health-only**: user says "只要健康报告" / "health report only" / similar → skip training render.
+- **Explicit training-only**: user says "只要运动报告" / "training report only" / names a sport exclusively → skip health render.
+
 ## Language Detection
 
 Detect the user's language from their message:
-- If the user writes in **Chinese**, use `--lang zh` for all commands
-- For **all other languages** (English or unrecognized), use `--lang en`
 
-The narrative you write in `report.llm.json` **MUST** match the language specified by `narrativeContext.language` in `insights.json`. Write the entire narrative — health_assessment, cross_metric_insights, behavioral_patterns, key_findings, actions, questions, disclaimer — in that language.
+- If the user writes in Chinese, use `--lang zh`
+- For all other languages, use `--lang en`
+
+The narrative language must match the language declared in `insights.json`:
+
+- Health report: `narrativeContext.language`
+- Training report: `training.narrativeContext.language`
+
+## Intent Routing
+
+**Default: generate both health + training reports.** Only drop one when the user is explicit.
+
+- Default (both) examples:
+  - `Analyze my Apple Health export`
+  - `帮我分析 Apple Health 导出`
+  - `Generate a report from my Apple Health export`
+- Health-only examples (skip training render):
+  - `Only generate the health report`
+  - `只要健康报告`
+  - `不用生成运动报告`
+- Training-only examples (skip health render):
+  - `Only generate the training report`
+  - `只要运动报告`
+  - `重点分析拳击训练状态`  (user is only asking about a specific sport)
+  - `分析跑步和骑行训练趋势`
+
+Ambiguous-but-lean-training keywords still default to **both** reports (the training report alone is rarely enough context). The keywords below only matter as hints — they do NOT suppress the health report unless the user also says "只" / "only":
+
+- `training`, `workout`, `运动`, `训练`, `专项`
+- named sports such as `boxing`, `running`, `cycling`, `walking`, `hiking`, `strength training`, `拳击`, `跑步`, `骑行`, `力量训练`
 
 ## Your Role
 
-You are a **health management advisor** (not a data analyst). Users can already see all raw data on their phones. Your value is:
+Two roles share the same pipeline:
 
-1. **Integrated judgment** — combine signals scattered across different metrics into an overall health assessment
-2. **Causal reasoning** — don't just say "HRV dropped," analyze why (insufficient sleep? overtraining? stress?)
-3. **Behavioral attribution** — link data changes to specific behavioral patterns (sleep regularity, training rhythm, recovery habits)
-4. **Priority ranking** — what's most worth improving first? What has the biggest impact?
-5. **Actionable advice** — "go to bed by 23:00" is 100x more useful than "improve sleep quality"
+1. Health management advisor:
+   - Integrate sleep, recovery, activity, and body metrics into an overall health view
+   - Prioritize cross-metric reasoning over metric-by-metric reporting
+2. Training status advisor:
+   - Judge load, recovery support, consistency, and sport-specific trends
+   - Give actionable training-management advice without pretending to be Garmin or a coach writing a periodized plan
 
 ## Workflow
 
-1. Confirm the input is an official Apple Health export ZIP and that it contains an XML whose root node is `HealthData`.
-2. Detect the user's language and run local `prepare` with the appropriate `--lang` flag, outputting `summary.json` and `insights.json`.
-3. Read `summary.json` for stable facts, then read `insights.json` for the keys listed below.
-4. Follow the analysis framework, strictly generate a narrative file per the `report.llm.json` schema v2. The narrative language MUST match `narrativeContext.language`.
-5. Run `render` to output `report.llm.json`, `report.md`, and `report.html`.
+1. Confirm the input is an official Apple Health export ZIP and that the main XML has `HealthData` as its root node.
+2. Run local `prepare` once with the correct `--lang`, producing `summary.json` and `insights.json`.
+3. Read `summary.json`, then `insights.json`.
+4. Decide which reports to produce (default = both unless the user is explicit; see Intent Routing).
+5. For each selected report, write the narrative JSON:
+   - health: `report.llm.json`
+   - training: `training.report.llm.json`
+6. Run `render` for each selected report:
+   - health: default `render`
+   - training: `render --type training`
+7. Both HTML reports share the same `output/` folder. The topbar carries a cross-link between them, so the user can jump back and forth. File names are fixed (`report.html` ↔ `training.report.html`) — do not rename.
 
-### `insights.json` top-level keys
+## `insights.json` Keys You Must Use
+
+### Shared
 
 | Key | What it contains |
 |-----|-----------------|
 | `metadata` | `tool`, `version`, `language`, `schemaVersion`, `generatedAt` |
-| `analysis.sleep` | Sleep duration, stages, timing, regularity analysis |
+| `historicalContext` | Recent 30d, baseline 90d, trailing 180d, all-time context |
+| `charts[]` | Health chart groups |
+| `crossMetric` | Cross-metric health reasoning |
+| `riskFlags[]` | Health risks with evidence |
+| `notableChanges[]` | Significant changes |
+| `dataGaps[]` | Missing or sparse data warnings |
+| `sourceConfidence[]` | Device/source reliability signals |
+
+### Health report
+
+| Key | What it contains |
+|-----|-----------------|
+| `analysis.sleep` | Sleep duration, stages, timing, regularity |
 | `analysis.recovery` | RHR, HRV, blood oxygen, respiratory rate, VO2 max |
 | `analysis.activity` | Active energy, exercise minutes, stand hours, workouts |
 | `analysis.bodyComposition` | Weight, body fat % |
-| `analysis.menstrualCycle` | Cycle analysis (if data present) |
-| `charts[]` | Chart data series (each has `id`, `title`, `series`) |
-| `crossMetric` | **Primary source for narrative** — `compositeAssessment`, `sleepRecoveryLink`, `sleepConsistency`, `activityRecoveryBalance`, `recoveryCoherence`, `patterns`, `notableDays` |
-| `historicalContext` | Multi-time-window context (recent 30d vs baseline 90d vs all-time) |
-| `riskFlags[]` | Flagged health risks with severity and evidence |
-| `notableChanges[]` | Significant metric changes (improvements or deteriorations) |
-| `dataGaps[]` | Missing or sparse data warnings |
-| `sourceConfidence[]` | Device/source reliability signals |
-| `narrativeContext` | `language`, narrative boundaries, and constraints |
+| `analysis.menstrualCycle` | Cycle analysis if present |
+| `narrativeContext` | Health-report audience, goal, schema version, boundaries |
+
+### Training report
+
+| Key | What it contains |
+|-----|-----------------|
+| `training.summary` | Training state, readiness, recent load, recovery support, primary sport |
+| `training.summary.trainingLoad` | CTL / ATL / TSB snapshot + 30-day & 90-day CTL deltas (null when < 28 days of data or < 6 workouts) |
+| `training.sports[]` | Top sports (dormant ones filtered, `topSportCount` configurable via `--top-sports`, default 5) with recent/baseline/trailing/all-time windows, recovery-after-workout, consistency, tags |
+| `training.charts[]` | `training_load` (CTL/ATL monthly curve), `training_recovery`, and `sport_<slug>_trend` charts |
+| `training.narrativeContext` | Training-report audience, goal, schema version, boundaries |
 
 ## Commands
 
+Default flow — **prepare once, render twice** so the folder contains both report sets. Pass `--with-cross-link` to both `render` calls so the topbar/footer cross-link lights up; omit it on single-report runs to avoid a dead link to a file that will not exist.
+
 ```bash
-# English report (default)
+# 1. Prepare once (shared by both reports)
+#    Optional: --top-sports N to cap the training-report sport list (default 5)
 npx apple-health-analyst prepare /path/to/export.zip --lang en --out ./output
 
-# Chinese report
-npx apple-health-analyst prepare /path/to/导出.zip --lang zh --out ./output
+# 2. Health render (fixed file name: report.html)
+npx apple-health-analyst render \
+  --insights ./output/insights.json \
+  --narrative ./output/report.llm.json \
+  --with-cross-link \
+  --out ./output
 
-# Render (language is auto-detected from insights.json metadata)
-npx apple-health-analyst render --insights ./output/insights.json --narrative ./output/report.llm.json --out ./output
+# 3. Training render (fixed file name: training.report.html)
+npx apple-health-analyst render \
+  --type training \
+  --insights ./output/insights.json \
+  --narrative ./output/training.report.llm.json \
+  --with-cross-link \
+  --out ./output
 ```
 
-## Analysis Framework
+The two HTML files auto-link to each other via the topbar and footer **only when `--with-cross-link` is set on both renders**. Always write both into the same `--out` directory to keep the cross-links working.
 
-When writing the narrative, follow this chain of thought:
+**Single-report mode**: if the user is explicit about only wanting the health or the training report (see Intent Routing), run `render` once **without** `--with-cross-link` — otherwise the lone HTML will point at a companion file that never gets generated.
 
-1. **Check `crossMetric.compositeAssessment`** — overall status, scores across three dimensions (sleep/recovery/activity)
-2. **Check `crossMetric.sleepRecoveryLink`** — on nights with insufficient sleep, does next-day HRV drop significantly? Is this person's body sensitive to sleep deprivation?
-3. **Check `crossMetric.sleepConsistency`** — is the schedule regular? How much do bedtime/wake times vary? (Research shows regularity matters more than duration)
-4. **Check `crossMetric.activityRecoveryBalance`** — on high-exercise days, does next-day HRV recover? Does training load match recovery capacity?
-5. **Check `crossMetric.recoveryCoherence`** — are RHR and HRV trends aligned? What does misalignment indicate?
-6. **Check `crossMetric.patterns`** — weekend warrior, night owl drift, sleep compensation, recovery deficit patterns?
-7. **Finally check `riskFlags` and `notableChanges`** in each module — specific risks and improvements
+## Health Narrative Framework
 
-## Writing Principles
+Use the existing health schema in [references/report-llm-json.md](references/report-llm-json.md).
 
-### Data Anchoring
-Don't write "your sleep has improved" — write "your 30-day average sleep is 8.29 hours, up from 8.13 hours over the past 180 days." Every conclusion must be anchored to specific values from `insights.json`. Pay special attention to `crossMetric.notableDays` for best/worst days with specific dates.
+Prioritize:
 
-### Transparent Reasoning
-Don't just give conclusions — show the reasoning chain. Example: "Your bedtime standard deviation is 65 minutes (above the 60-minute social jet lag threshold), and deep sleep is only X% — irregular schedule directly impacts deep sleep quality, which is more worth prioritizing than sleep duration itself."
+1. `crossMetric.compositeAssessment`
+2. `crossMetric.sleepRecoveryLink`
+3. `crossMetric.sleepConsistency`
+4. `crossMetric.activityRecoveryBalance`
+5. `crossMetric.recoveryCoherence`
+6. `crossMetric.patterns`
+7. `riskFlags` and `notableChanges`
 
-### Doctor Visit Preparation
-`questions_for_doctor` should be data-driven questions based on the user's actual data, not generic "ask your doctor" advice. Example: if RHR is trending up, generate "My resting heart rate increased from X to Y — should I get an ECG?"
+Health writing rules:
 
-## Writing Style
+- Every conclusion must cite concrete values or dates from `summary.json` or `insights.json`
+- `key_findings` must be cross-metric, not single-metric trivia
+- `actions_next_2_weeks` must specify time, frequency, or numeric targets
+- `questions_for_doctor` must be data-driven and specific
 
-- **health_assessment**: Like a clinician's "impression" paragraph. Integrated judgment + primary concerns + overall direction. Give conclusions backed by evidence chains.
-- **cross_metric_insights**: Each item is a causal chain of "metric A + metric B → health implication." Must include specific values.
-- **behavioral_patterns**: Describe behavioral pattern + data evidence + health impact + adjustment advice.
-- **key_findings**: Must reference cross-metric evidence, not just single-metric changes. Use `crossMetric.notableDays` to cite specific dates.
-- **actions_next_2_weeks**: Each recommendation must specify time, frequency, or values. "Be in bed by 23:00," not "sleep earlier."
-- **questions_for_doctor**: Data-driven questions with specific values. Help users communicate more efficiently at their next appointment.
+## Training Narrative Framework
 
-## Required Reading Before Generating Narrative
+Use the training schema in [references/training-report-llm-json.md](references/training-report-llm-json.md).
+
+Prioritize:
+
+1. `training.summary.trainingState` and `training.summary.readiness`
+2. `training.summary.trainingLoad` — the CTL / ATL / TSB snapshot (**primary load signal**)
+3. `training.summary.loadTrend` and `training.summary.recoverySupport` (legacy 30d-vs-90d views, use as corroboration)
+4. `training.sports[]` in descending importance
+5. `training.charts[]`
+6. `dataGaps[]` and missing metric coverage
+
+Training writing rules:
+
+- Use neutral wording inspired by public training-status concepts (CTL / ATL / TSB), not branded Garmin claims
+- When `training.summary.trainingLoad` is non-null, lead with CTL direction + TSB value; cite `ctlDelta30dPct` and `ctlDelta90dPct` rather than the legacy 30-day-vs-90-day numbers
+- If `trainingLoad` is null, fall back to `loadTrend` and say so explicitly (e.g. "数据覆盖不足 28 天，暂以 30 天对比为准")
+- Sport sections must focus on the actual top sports in `training.sports[]`
+- Only discuss heart rate or distance when the structured data includes those metrics
+- Recommendations are for training management and health monitoring, not race plans or diagnosis
+
+## Required Reading Before Writing Narrative
 
 - `summary.json`
-- `insights.json` (especially `crossMetric` and `historicalContext`)
-- [references/report-llm-json.md](references/report-llm-json.md) — narrative schema
-- [references/safety-boundaries.md](references/safety-boundaries.md) — safety boundaries
-- [references/analysis-framework.md](references/analysis-framework.md) — health interpretation reference
+- `insights.json`
+- [references/report-llm-json.md](references/report-llm-json.md) for health mode
+- [references/training-report-llm-json.md](references/training-report-llm-json.md) for training mode
+- [references/safety-boundaries.md](references/safety-boundaries.md)
+- [references/analysis-framework.md](references/analysis-framework.md)
 
 ## Constraints
 
-- Only reference facts from `summary.json` and `insights.json` — do not fabricate data.
-- Provide health management advice but do not give medical diagnoses, treatment plans, or disease judgments.
-- Prioritize `crossMetric` cross-metric analysis and `historicalContext` multi-time-window context when writing the narrative.
-- If a module is marked `insufficient_data`, state that data is insufficient.
-- For obvious anomalies or persistent deterioration, provide conservative follow-up/medical consultation reminders.
-- Do not generate final HTML directly; write `report.llm.json` first, then run `render`.
+- Only reference facts from `summary.json` and `insights.json`
+- Do not fabricate sport metrics, chart IDs, or medical risks
+- Provide health management and training adjustment advice, not diagnoses or treatment plans
+- If a module is `insufficient_data`, say so plainly
+- Do not generate final HTML directly; write the narrative JSON first, then run `render`
 
 ## Error Handling
 
-- **ZIP format error**: If `prepare` reports that it cannot find a `HealthData` XML, confirm the user provided an official Apple Health export ZIP. The main XML filename is not fixed: it may be localized (for example `导出.xml`), and some ZIP tools may display it as mojibake. `export_cda.xml` / `ClinicalDocument` is auxiliary only and should not be used as the main analysis input.
-- **Out of memory**: Large ZIPs (>2GB) may cause memory issues. Suggest using `--from` and `--to` to limit the time range.
-- **Narrative validation failure**: `render` validates the structure of `report.llm.json`. If it fails, check that all v2 fields are present (`health_assessment`, `cross_metric_insights`, `behavioral_patterns`, etc.).
-- **npm cache EPERM**: If `npx` fails with "Your cache folder contains root-owned files," prefix with a local cache: `npm_config_cache=./.npm-cache npx apple-health-analyst ...`
-- **Sandbox/policy rejection**: Do not chain `rm -rf` or other destructive commands with `prepare`/`render`. Run `mkdir -p ./output` separately, then run the command.
+- ZIP format error: if `prepare` cannot find the `HealthData` XML, verify the user provided the official Apple Health export ZIP. The main XML filename is not fixed and may be localized (for example `导出.xml`) or appear as mojibake. `export_cda.xml` / `ClinicalDocument` is auxiliary only and should not be used as the main analysis input.
+- Out of memory: large ZIPs may need `--from` and `--to`
+- Health narrative validation failure: verify `report.llm.json` matches schema v2
+- Training narrative validation failure: verify `training.report.llm.json` matches schema v1 and only references existing sport/chart IDs
+- npm cache EPERM: use `npm_config_cache=./.npm-cache`
+- Sandbox/policy rejection: do not chain destructive commands with `prepare` / `render`; create directories separately if needed
 
-## Output Files (default in `./output/`)
+## Output Files
 
-- `summary.json`: Stable machine summary
-- `insights.json`: Rich structured insights with cross-metric analysis
-- `report.llm.json`: Narrative JSON conforming to schema v2
-- `report.md`: Report in the selected language
-- `report.html`: Offline single-file web report
+Always produced by `prepare`:
+
+- `summary.json`
+- `insights.json`
+
+Health render (file names are fixed; do not rename):
+
+- `report.llm.json`
+- `report.md`
+- `report.html`
+
+Training render (file names are fixed; do not rename):
+
+- `training.report.llm.json`
+- `training.report.md`
+- `training.report.html`
+
+The two HTML reports cross-link via the topbar and footer using relative paths (`./report.html` ↔ `./training.report.html`). Keep both in the same `output/` directory for the links to work.

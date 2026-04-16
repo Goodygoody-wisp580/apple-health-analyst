@@ -151,6 +151,10 @@ export const renderEn: RenderT = {
   barChartAriaLabel: (label: string) => `${label} bar chart`,
   lineChartAriaLabel: "Trend chart",
 
+  // ── Cross-report navigation ───────────────────────────────────────
+  crossReportTraining: "Training Report",
+  crossReportHealth: "Health Report",
+
   // ── Markdown-specific strings ─────────────────────────────────────
   mdReportTitle: "Apple Health Report",
   mdAssessmentTitle: "Health Assessment",

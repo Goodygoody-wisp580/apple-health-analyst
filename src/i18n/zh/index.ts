@@ -8,6 +8,8 @@ import { menstrualCycleZh } from "./menstrualCycle.js";
 import { recoveryZh } from "./recovery.js";
 import { renderZh } from "./render.js";
 import { sleepZh } from "./sleep.js";
+import { trainingInsightsZh } from "./trainingInsights.js";
+import { trainingRenderZh } from "./trainingRender.js";
 
 export const zhTranslations: Translations = {
   common: commonZh,
@@ -19,4 +21,6 @@ export const zhTranslations: Translations = {
   menstrualCycle: menstrualCycleZh,
   insights: insightsZh,
   render: renderZh,
+  trainingInsights: trainingInsightsZh,
+  trainingRender: trainingRenderZh,
 };
